@@ -78,7 +78,7 @@ export function SignInView() {
         <Typography variant="body2" color="text.secondary">
           Don’t have an account?
           <Link variant="subtitle2" sx={{ ml: 0.5 }}>
-            Get started
+          Create new account
           </Link>
         </Typography>
       </Box>
@@ -97,12 +97,6 @@ export function SignInView() {
       <Box gap={1} display="flex" justifyContent="center">
         <IconButton color="inherit">
           <Iconify icon="logos:google-icon" />
-        </IconButton>
-        <IconButton color="inherit">
-          <Iconify icon="eva:github-fill" />
-        </IconButton>
-        <IconButton color="inherit">
-          <Iconify icon="ri:twitter-x-fill" />
         </IconButton>
       </Box>
     </>

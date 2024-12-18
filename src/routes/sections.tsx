@@ -14,6 +14,7 @@ export const HomePage = lazy(() => import('src/pages/home'));
 export const BlogPage = lazy(() => import('src/pages/blog'));
 export const UserPage = lazy(() => import('src/pages/user'));
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
+export const SignUpPage = lazy(() => import('src/pages/sign-up'));
 export const OrderPage = lazy(() => import('src/pages/order'));
 export const TablePage = lazy(() => import('src/pages/table'));
 export const BillingPage = lazy(() => import('src/pages/billing'));
@@ -64,6 +65,14 @@ export function Router() {
       element: (
         <AuthLayout>
           <SignInPage />
+        </AuthLayout>
+      ),
+    },
+    {
+      path: 'sign-up',
+      element: (
+        <AuthLayout>
+          <SignUpPage />
         </AuthLayout>
       ),
     },

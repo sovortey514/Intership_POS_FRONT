@@ -15,53 +15,89 @@ export const navData = [
   },
   
   {
-    title: 'Order',
+    title: 'POS',
     path: '/order',
-    icon: icon('ic-ordermanagement'),
-  },
-  {
-    title: 'Table',
-    path: '/table',
     icon: icon('ic-table'),
-  },
-  {
-    title: 'Billing and Payments',
-    path: '/billing',
-    icon: icon('ic-payment'),
-  },
-  {
-    title: 'Menu',
-    path: '/menu',
-    icon: icon('ic-menu'),
+    children: [
+      {
+        title: 'Order',
+        path: '/billing',
+        icon: icon('ic-payment'),
+      },
+      {
+        title: 'Table',
+        path: '/table',
+        icon: icon('ic-ordermanagement'),
+      },
+      {
+        title: 'Menu',
+        path: '/menu',
+        icon: icon('ic-menu'),
+      },
+    ],
   },
   {
     title: 'Inventory Management',
     path: '/products',
     icon: icon('ic-cart'),
-    info: (
-      <Label color="error" variant="inverted">
-        +3
-      </Label>
-    ),
+    children: [
+      {
+        title: 'Food List',
+        path: '/menu',
+        icon: icon('ic-menu'),
+      },
+      {
+        title: 'Categories',
+        path: '/menu',
+        icon: icon('ic-category'),
+      },
+      {
+        title: 'Suppliers',
+        path: '/menu',
+        icon: icon('ic-supplier'),
+      },
+      {
+        title: 'Purchase Orders',
+        path: '/menu',
+        icon: icon('ic-purchaseorders'),
+      },
+      {
+        title: 'Alerts',
+        path: '/menu',
+        icon: icon('ic-alert'),
+      },
+      {
+        title: 'History',
+        path: '/menu',
+        icon: icon('ic-history'),
+      },
+      {
+        title: 'Report',
+        path: '/menu',
+        icon: icon('ic-report'),
+      },
+    ],
   },
   {
     title: 'Staff Management',
     path: '/user',
     icon: icon('ic-user'),
   },
-  // {
-  //   title: 'Blog',
-  //   path: '/blog',
-  //   icon: icon('ic-blog'),
-  // },
   {
-    title: 'Sign in',
-    path: '/sign-in',
-    icon: icon('ic-lock'),
+    title: 'Setting',
+    path: '/order',
+    icon: icon('ic-settings'),
+    children: [
+      {
+        title: 'Logout',
+        path: '/sign-in',
+        icon: icon('ic-lock'),
+      },
+      {
+        title: 'Forget password',
+        path: '/sign-up',
+        icon: icon('ic-forgetpasswrod'),
+      },
+    ],
   },
-  // {
-  //   title: 'Not found',
-  //   path: '/404',
-  //   icon: icon('ic-disabled'),
-  // },
 ];
