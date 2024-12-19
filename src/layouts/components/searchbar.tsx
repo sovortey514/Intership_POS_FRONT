@@ -74,7 +74,22 @@ export function Searchbar({ sx, ...other }: BoxProps) {
               }
               sx={{ fontWeight: 'fontWeightBold' }}
             />
-            <Button variant="contained" onClick={handleClose}>
+            <Button
+              variant="contained"
+              onClick={handleClose}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 'bold',
+                px: 3,
+                bgcolor: 'primary.main',
+                color: 'primary.contrastText',
+                '&:hover': {
+                  bgcolor: 'primary.dark',
+                },
+                borderRadius: 2,
+                boxShadow: 3,
+              }}
+            >
               Search
             </Button>
           </Box>

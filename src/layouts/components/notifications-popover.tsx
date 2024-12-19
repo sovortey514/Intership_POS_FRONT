@@ -34,14 +34,14 @@ type NotificationItemProps = {
   postedAt: string | number | null;
 };
 
-export type NotificationsPopoverProps = IconButtonProps & {
-  data?: NotificationItemProps[];
-};
+// export type NotificationsPopoverProps = IconButtonProps & {
+//   data?: NotificationItemProps[];
+// };
 
-export function NotificationsPopover({ data = [], sx, ...other }: NotificationsPopoverProps) {
-  const [notifications, setNotifications] = useState(data);
+export function NotificationsPopover() {
+  // const [notifications, setNotifications] = useState(data);
 
-  const totalUnRead = notifications.filter((item) => item.isUnRead === true).length;
+  // const totalUnRead = notifications.filter((item) => item.isUnRead === true).length;
 
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
 
@@ -53,24 +53,15 @@ export function NotificationsPopover({ data = [], sx, ...other }: NotificationsP
     setOpenPopover(null);
   }, []);
 
-  const handleMarkAllAsRead = useCallback(() => {
-    const updatedNotifications = notifications.map((notification) => ({
-      ...notification,
-      isUnRead: false,
-    }));
-
-    setNotifications(updatedNotifications);
-  }, [notifications]);
-
   return (
     <>
       <IconButton
         color={openPopover ? 'primary' : 'default'}
         onClick={handleOpenPopover}
-        sx={sx}
-        {...other}
+        // sx={sx}
+        // {...other}
       >
-        <Badge badgeContent={totalUnRead} color="error">
+        <Badge color="default">
           <Iconify width={24} icon="solar:bell-bing-bold-duotone" />
         </Badge>
       </IconButton>
@@ -95,18 +86,16 @@ export function NotificationsPopover({ data = [], sx, ...other }: NotificationsP
         <Box display="flex" alignItems="center" sx={{ py: 2, pl: 2.5, pr: 1.5 }}>
           <Box sx={{ flexGrow: 1 }}>
             <Typography variant="subtitle1">Notifications</Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              You have {totalUnRead} unread messages
-            </Typography>
+
           </Box>
 
-          {totalUnRead > 0 && (
+          {/* {totalUnRead > 0 && (
             <Tooltip title=" Mark all as read">
               <IconButton color="primary" onClick={handleMarkAllAsRead}>
                 <Iconify icon="solar:check-read-outline" />
               </IconButton>
             </Tooltip>
-          )}
+          )} */}
         </Box>
 
         <Divider sx={{ borderStyle: 'dashed' }} />
@@ -120,9 +109,9 @@ export function NotificationsPopover({ data = [], sx, ...other }: NotificationsP
               </ListSubheader>
             }
           >
-            {notifications.slice(0, 2).map((notification) => (
+            {/* {notifications.slice(0, 2).map((notification) => (
               <NotificationItem key={notification.id} notification={notification} />
-            ))}
+            ))} */}
           </List>
 
           <List
@@ -133,9 +122,9 @@ export function NotificationsPopover({ data = [], sx, ...other }: NotificationsP
               </ListSubheader>
             }
           >
-            {notifications.slice(2, 5).map((notification) => (
+            {/* {notifications.slice(2, 5).map((notification) => (
               <NotificationItem key={notification.id} notification={notification} />
-            ))}
+            ))} */}
           </List>
         </Scrollbar>
 
