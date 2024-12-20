@@ -24,6 +24,10 @@ export function SignInView() {
     router.push('/');
   }, [router]);
 
+  const handleCreateAccount = useCallback(() => {
+    router.push('/sign-up');  // Redirect to the sign-up page
+  }, [router]);
+
   const renderForm = (
     <Box display="flex" flexDirection="column" alignItems="flex-end">
       <TextField
@@ -77,8 +81,8 @@ export function SignInView() {
         <Typography variant="h5">Sign in</Typography>
         <Typography variant="body2" color="text.secondary">
           Don’t have an account?
-          <Link variant="subtitle2" sx={{ ml: 0.5 }}>
-          Create new account
+          <Link variant="subtitle2" sx={{ ml: 0.5 }} onClick={handleCreateAccount}> {/* Link click handler */}
+            Create new account
           </Link>
         </Typography>
       </Box>

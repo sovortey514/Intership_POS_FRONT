@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Divider from '@mui/material/Divider';
@@ -29,7 +29,7 @@ export function SignupView() {
       // Simulate success and navigate
       setTimeout(() => {
         setIsLoading(false);
-        router.push('/');
+        router.push('/'); // Redirect to home after successful sign-up
       }, 2000);
     } catch (error) {
       console.error(error);
@@ -37,92 +37,89 @@ export function SignupView() {
     }
   };
 
+  const handleSignIn = useCallback(() => {
+    router.push('/sign-in'); 
+  }, [router]);
+
+  const renderForm = (
+    <Box display="flex" flexDirection="column" alignItems="flex-end">
+      <TextField
+        fullWidth
+        name="email"
+        label="Email Address"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        type="email"
+        required
+        sx={{ mb: 3 }}
+      />
+
+      <TextField
+        fullWidth
+        name="password"
+        label="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        type={showPassword ? 'text' : 'password'}
+        required
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton
+                onClick={() => setShowPassword(!showPassword)}
+                edge="end"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                <Iconify icon={showPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'} />
+              </IconButton>
+            </InputAdornment>
+          ),
+        }}
+        sx={{ mb: 3 }}
+      />
+
+      <LoadingButton
+        fullWidth
+        size="large"
+        type="button"
+        color="inherit"
+        variant="contained"
+        loading={isLoading}
+        onClick={handleSignUp}
+      >
+        Sign Up
+      </LoadingButton>
+    </Box>
+  );
+
   return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      justifyContent="center"
-      alignItems="center"
-      px={3}
-      py={5}
-      maxWidth={400}
-      mx="auto"
-    >
-      {/* Header */}
-      <Box textAlign="center" mb={3}>
-        <Typography variant="h5" mb={1}>
-          Sign up
-        </Typography>
+    <>
+      <Box gap={1.5} display="flex" flexDirection="column" alignItems="center" sx={{ mb: 5 }}>
+        <Typography variant="h5">Sign up</Typography>
         <Typography variant="body2" color="text.secondary">
           Already have an account?
-          <Link variant="subtitle2" sx={{ ml: 0.5 }} onClick={() => router.push('/login')}>
+          <Link variant="subtitle2" sx={{ ml: 0.5 }} onClick={handleSignIn}>
             Sign In
           </Link>
         </Typography>
       </Box>
 
-      {/* Form */}
-      <Box component="form" display="flex" flexDirection="column" gap={3} width="100%">
-        <TextField
-          fullWidth
-          name="email"
-          label="Email Address"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          type="email"
-          required
-        />
+      {renderForm}
 
-        <TextField
-          fullWidth
-          name="password"
-          label="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          type={showPassword ? 'text' : 'password'}
-          required
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  onClick={() => setShowPassword(!showPassword)}
-                  edge="end"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  <Iconify icon={showPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'} />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
-
-        <LoadingButton
-          fullWidth
-          size="large"
-          type="button"
-          color="primary"
-          variant="contained"
-          loading={isLoading}
-          onClick={handleSignUp}
+      <Divider sx={{ my: 3, '&::before, &::after': { borderTopStyle: 'dashed' } }}>
+        <Typography
+          variant="overline"
+          sx={{ color: 'text.secondary', fontWeight: 'fontWeightMedium' }}
         >
-          Sign Up
-        </LoadingButton>
-      </Box>
-
-      {/* Divider */}
-      <Divider sx={{ my: 4, width: '100%', '&::before, &::after': { borderTopStyle: 'dashed' } }}>
-        <Typography variant="overline" sx={{ color: 'text.secondary', fontWeight: 'fontWeightMedium' }}>
           OR
         </Typography>
       </Divider>
 
-      {/* Social Signup */}
-      <Box display="flex" justifyContent="center" gap={2}>
+      <Box gap={1} display="flex" justifyContent="center">
         <IconButton color="inherit">
           <Iconify icon="logos:google-icon" />
         </IconButton>
-        {/* Add more social buttons here */}
       </Box>
-    </Box>
+    </>
   );
 }

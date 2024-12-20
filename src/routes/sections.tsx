@@ -48,6 +48,7 @@ export function Router() {
         </DashboardLayout>
       ),
       children: [
+        { path: '/', element: <Navigate to="/sign-in" /> },
         { element: <HomePage />, index: true },
         { path: 'user', element: <UserPage /> },
         { path: 'products', element: <ProductsPage /> },
