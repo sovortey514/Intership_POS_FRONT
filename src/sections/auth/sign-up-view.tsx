@@ -9,7 +9,12 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import InputAdornment from '@mui/material/InputAdornment';
 
 import { useRouter } from 'src/routes/hooks';
+
+import { signUp } from 'src/api/auth/authService';
+
 import { Iconify } from 'src/components/iconify';
+
+
 
 // ----------------------------------------------------------------------
 
@@ -18,21 +23,30 @@ export function SignupView() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('ADMIN'); // Add role field (or get it from form, depending on your requirements)
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null); // For capturing error messages
 
   const handleSignUp = async () => {
     setIsLoading(true);
     try {
-      // Implement sign-up logic here (e.g., API call)
-      console.log({ email, password });
-      // Simulate success and navigate
-      setTimeout(() => {
+      const signUpData = { email, password }; // Include role in the request
+      const response = await signUp(signUpData);
+
+      // Check for a successful response
+      if (response.statusCode === 200) {
+        // Simulate success and navigate
         setIsLoading(false);
         router.push('/'); // Redirect to home after successful sign-up
-      }, 2000);
-    } catch (error) {
+      } else {
+        // Handle error response
+        setError(response.message || 'Failed to register');
+        setIsLoading(false);
+      }
+    } catch (e) {
       console.error(error);
+      setError('An error occurred during sign-up');
       setIsLoading(false);
     }
   };
@@ -77,6 +91,13 @@ export function SignupView() {
         }}
         sx={{ mb: 3 }}
       />
+
+      {/* Display error message if there is an error */}
+      {error && (
+        <Typography color="error" sx={{ mb: 2 }}>
+          {error}
+        </Typography>
+      )}
 
       <LoadingButton
         fullWidth
