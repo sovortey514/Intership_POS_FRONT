@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Divider from '@mui/material/Divider';
@@ -22,39 +22,41 @@ export function SignInView() {
 
   const handleSignin = async () => {
     setIsLoading(true);
+    setError(null); // Reset error state
+
     try {
-      const signInData = { email, password };
+      // Set role as 'ADMIN' by default
+      const signInData = { email, password, role: 'ADMIN' };
       const response = await signIn(signInData);
-      
-      // Check if sign-in was successful (statusCode 200)
+
       if (response.statusCode === 200) {
-        // Store JWT token in localStorage
+        // Store JWT tokens in localStorage
         localStorage.setItem('token', response.token);
         localStorage.setItem('refreshToken', response.refreshToken);
 
-        // Redirect to the home page after successful login
+        // Redirect to home page
         router.push('/');
       } else {
-        setError(response.message || 'Failed to sign in');
+        setError(response.message || 'Sign-in failed. Please try again.');
       }
     } catch (e) {
-      setError('An error occurred during sign-in');
+      setError('An error occurred during sign-in. Please check your credentials.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleCreateAccount = useCallback(() => {
+  const handleCreateAccount = () => {
     router.push('/sign-up');
-  }, [router]);
+  };
 
   return (
     <>
       <Box gap={1.5} display="flex" flexDirection="column" alignItems="center" sx={{ mb: 5 }}>
         <Typography variant="h5">Sign in</Typography>
         <Typography variant="body2" color="text.secondary">
-          Don’t have an account?
-          <Link variant="subtitle2" sx={{ ml: 0.5 }} onClick={handleCreateAccount}>
+          Don’t have an account?{' '}
+          <Link variant="subtitle2" sx={{ ml: 0.5, cursor: 'pointer' }} onClick={handleCreateAccount}>
             Create new account
           </Link>
         </Typography>
@@ -63,7 +65,6 @@ export function SignInView() {
       <Box display="flex" flexDirection="column" alignItems="flex-end">
         <TextField
           fullWidth
-          name="email"
           label="Email Address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -73,7 +74,6 @@ export function SignInView() {
         />
         <TextField
           fullWidth
-          name="password"
           label="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -95,7 +95,6 @@ export function SignInView() {
           sx={{ mb: 3 }}
         />
 
-        {/* Error Message */}
         {error && (
           <Typography color="error" sx={{ mb: 2 }}>
             {error}

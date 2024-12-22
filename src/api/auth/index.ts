@@ -11,3 +11,5 @@ export interface SignUpRequest {
     message: string;
     error?: string;
   }
+
+  
