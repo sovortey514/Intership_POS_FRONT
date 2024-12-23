@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -15,6 +15,9 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
+import { Alluser } from 'src/api/auth/authTypes';
+import { GetallUsers } from 'src/api/auth/authService';
+import { useFetchUsers } from 'src/hooks/user/user';
 import { TableNoData } from '../table-no-data';
 import { UserTableRow } from '../user-table-row';
 import { UserTableHead } from '../user-table-head';
@@ -29,6 +32,8 @@ import type { UserProps } from '../user-table-row';
 export function UserView() {
   const table = useTable();
 
+  const { users, loading } = useFetchUsers();
+  
   const [filterName, setFilterName] = useState('');
 
   const dataFiltered: UserProps[] = applyFilter({
@@ -43,14 +48,20 @@ export function UserView() {
     <DashboardContent>
       <Box display="flex" alignItems="center" mb={5}>
         <Typography variant="h4" flexGrow={1}>
-          Users
+          Staffs
         </Typography>
         <Button
           variant="contained"
-          color="inherit"
+          sx={{
+            backgroundColor: '#ff6f61', // Main background color
+            color: '#FFFFFF', // Text color
+            '&:hover': {
+              backgroundColor: '#d84315', // Distinct hover color
+            },
+          }}
           startIcon={<Iconify icon="mingcute:add-line" />}
         >
-          New user
+          New Staff
         </Button>
       </Box>
 
