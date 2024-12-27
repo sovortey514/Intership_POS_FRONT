@@ -28,6 +28,9 @@
   }
 
   export interface Alluser  {
+    isVerified: boolean;
+    avatarUrl: string;
+    status: string;
     id: number;
     name: string | null;
     username: string | null;

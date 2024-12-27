@@ -35,9 +35,7 @@ export function UserTableHead({
           <Checkbox
             indeterminate={numSelected > 0 && numSelected < rowCount}
             checked={rowCount > 0 && numSelected === rowCount}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-              onSelectAllRows(event.target.checked)
-            }
+            onChange={(event) => onSelectAllRows(event.target.checked)}
           />
         </TableCell>
 

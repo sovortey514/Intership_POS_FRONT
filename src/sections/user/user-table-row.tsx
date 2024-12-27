@@ -10,18 +10,22 @@ import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
 import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
 
+import { useFetchUsers } from 'src/hooks/user';
+
+// import { deleteUser } from 'src/api/auth';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
-
 export type UserProps = {
   id: string;
-  name: string;
+  name: string | null;
+  username: string | null;
+  email: string;
   role: string;
   status: string;
-  company: string;
-  avatarUrl: string;
+  avatarUrl: string | null;
   isVerified: boolean;
 };
 
@@ -29,11 +33,11 @@ type UserTableRowProps = {
   row: UserProps;
   selected: boolean;
   onSelectRow: () => void;
+  deleteUser: (userId: string) => void;
 };
 
-export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) {
+export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
-
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setOpenPopover(event.currentTarget);
   }, []);
@@ -42,36 +46,37 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
     setOpenPopover(null);
   }, []);
 
+  const handleDeleteUser = () => {
+    deleteUser(row.id);
+    handleClosePopover();
+  };
+
   return (
     <>
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
+        {/* Row Select Checkbox */}
         <TableCell padding="checkbox">
           <Checkbox disableRipple checked={selected} onChange={onSelectRow} />
         </TableCell>
 
         <TableCell component="th" scope="row">
           <Box gap={2} display="flex" alignItems="center">
-            <Avatar alt={row.name} src={row.avatarUrl} />
-            {row.name}
+            {/* Avatar with username */}
+            <Avatar alt={row.username || row.name || 'User'} src={row.avatarUrl || undefined} />
+            <Box>
+              {/* Display username or fallback to email if username is not available */}
+              {row.username || row.email}
+            </Box>
           </Box>
         </TableCell>
 
-        <TableCell>{row.company}</TableCell>
-
+        {/* Role and Status */}
         <TableCell>{row.role}</TableCell>
-
-        <TableCell align="center">
-          {row.isVerified ? (
-            <Iconify width={22} icon="solar:check-circle-bold" sx={{ color: 'success.main' }} />
-          ) : (
-            '-'
-          )}
-        </TableCell>
-
         <TableCell>
-          <Label color={(row.status === 'banned' && 'error') || 'success'}>{row.status}</Label>
+          <Label color={row.status === 'banned' ? 'error' : 'success'}>{row.status}</Label>
         </TableCell>
 
+        {/* Action Menu */}
         <TableCell align="right">
           <IconButton onClick={handleOpenPopover}>
             <Iconify icon="eva:more-vertical-fill" />
@@ -79,6 +84,7 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
         </TableCell>
       </TableRow>
 
+      {/* Popover Menu */}
       <Popover
         open={!!openPopover}
         anchorEl={openPopover}
@@ -106,8 +112,7 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
             <Iconify icon="solar:pen-bold" />
             Edit
           </MenuItem>
-
-          <MenuItem onClick={handleClosePopover} sx={{ color: 'error.main' }}>
+          <MenuItem onClick={handleDeleteUser} sx={{ color: 'error.main' }}>
             <Iconify icon="solar:trash-bin-trash-bold" />
             Delete
           </MenuItem>

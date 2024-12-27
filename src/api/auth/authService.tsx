@@ -51,4 +51,19 @@ export async function GetallUsers(): Promise<Alluser[]> {
   }
 }
 
+export async function deleteUser(userId: number): Promise<void> {
+  try {
+    const response = await axios.delete(`${BASE_URL}/auth/users/${userId}`);
+    if (response.status === 200) {
+      console.log(`User with ID ${userId} deleted successfully.`);
+    }
+  } catch (error: any) {
+    console.error("Error deleting user:", error);
+    throw new Error(error.response?.data?.message || "An error occurred while deleting the user");
+  }
+}
+
+
+
+
 

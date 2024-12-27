@@ -21,8 +21,17 @@ export function useFetchUsers() {
       }
     }
 
-    fetchUsers(); // Call the fetch function when component mounts
+    fetchUsers(); 
   }, []);
 
-  return { users, loading }; // Return users and loading state
+  const deleteUser = async (userId: number) => {
+    try {
+      await deleteUser(userId);
+      const updatedUsers = users.filter((user) => user.id !== userId);
+      setUsers(updatedUsers);
+    } catch (error) {
+      console.error('Error deleting user:', error.message);
+    }
+  };
+  return { users, loading, deleteUser }; 
 }
