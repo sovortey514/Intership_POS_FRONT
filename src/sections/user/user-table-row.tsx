@@ -9,6 +9,7 @@ import MenuList from '@mui/material/MenuList';
 import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
 import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Typography } from '@mui/material';
 
 import { useFetchUsers } from 'src/hooks/user';
 
@@ -38,6 +39,7 @@ type UserTableRowProps = {
 
 export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setOpenPopover(event.currentTarget);
   }, []);
@@ -45,6 +47,15 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
   const handleClosePopover = useCallback(() => {
     setOpenPopover(null);
   }, []);
+
+  const handleOpenConfirmDialog = () => {
+    setOpenConfirmDialog(true); // Open the confirmation dialog
+    handleClosePopover();
+  };
+
+  const handleCloseConfirmDialog = () => {
+    setOpenConfirmDialog(false); // Close the confirmation dialog without doing anything
+  };
 
   const handleDeleteUser = () => {
     deleteUser(row.id);
@@ -112,12 +123,99 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
             <Iconify icon="solar:pen-bold" />
             Edit
           </MenuItem>
-          <MenuItem onClick={handleDeleteUser} sx={{ color: 'error.main' }}>
+          <MenuItem onClick={handleOpenConfirmDialog} sx={{ color: 'error.main' }}>
             <Iconify icon="solar:trash-bin-trash-bold" />
             Delete
           </MenuItem>
         </MenuList>
       </Popover>
+      <Dialog
+  open={openConfirmDialog}
+  onClose={handleCloseConfirmDialog}
+  sx={{
+    borderRadius: 2, 
+    boxShadow: 'none',  // Removed the shadow
+    maxWidth: 400, 
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 'auto',
+  }}
+>
+  <DialogTitle
+    sx={{
+      backgroundColor: 'gray',  // Updated background color to gray
+      color: 'white',
+      textAlign: 'center',
+      borderTopLeftRadius: 2,
+      borderTopRightRadius: 2,
+      py: 2,
+    }}
+  >
+    <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
+      Confirm Deletion
+    </Typography>
+  </DialogTitle>
+
+  <DialogContent
+    sx={{
+      padding: 3, 
+      backgroundColor: 'background.default',
+      borderBottomLeftRadius: 2,
+      borderBottomRightRadius: 2,
+    }}
+  >
+    <Typography
+      variant="body1"
+      color="textSecondary"
+      textAlign="center"
+      sx={{ lineHeight: 1.5, fontSize: '1rem' }}
+    >
+      Are you sure you want to delete this user? This action cannot be undone.
+    </Typography>
+  </DialogContent>
+
+  <DialogActions
+    sx={{
+      justifyContent: 'center', 
+      padding: '16px 24px', 
+      backgroundColor: 'background.paper', 
+      borderBottomLeftRadius: 2, 
+      borderBottomRightRadius: 2,
+    }}
+  >
+    <Button
+      onClick={handleCloseConfirmDialog}
+      variant="outlined"
+      color="primary"
+      sx={{
+        width: 120, 
+        borderRadius: 1.5, 
+        fontWeight: 'bold', 
+        textTransform: 'none',
+      }}
+    >
+      Cancel
+    </Button>
+    <Button
+      onClick={handleDeleteUser}
+      variant="contained"
+      color="error"
+      sx={{
+        width: 120,
+        borderRadius: 1.5,
+        fontWeight: 'bold',
+        textTransform: 'none',
+      }}
+    >
+      Delete
+    </Button>
+  </DialogActions>
+</Dialog>
+
+
+
     </>
   );
 }

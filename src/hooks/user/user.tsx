@@ -22,7 +22,7 @@ export function useFetchUsers() {
     }
 
     fetchUsers(); 
-  }, []);
+  }, [users]);
 
   const deleteUser = async (userId: number) => {
     try {
