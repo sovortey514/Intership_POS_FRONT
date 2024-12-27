@@ -11,7 +11,9 @@ import { useFetchUsers } from 'src/hooks/user/user';
 import { mapAllUserToUserProps } from 'src/utils/user-mapping';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { deleteUser } from 'src/api/auth/authService'; // Correct import of deleteUser
+import { deleteUser } from 'src/api/auth/authService'; 
+import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { CreateView } from 'src/sections/auth';
 import { UserProps, UserTableRow } from '../user-table-row';
 import { UserTableHead } from '../user-table-head';
 import { applyFilter, getComparator } from '../utils';
@@ -20,6 +22,8 @@ import { UserTableToolbar } from '../user-table-toolbar';
 export function UserView() {
   const { users, loading } = useFetchUsers(); 
   const [filterName, setFilterName] = useState('');
+  const [open, setOpen] = useState(false); // Dialog state in the parent component
+
   const table = useTable();
 
   // Transform and filter users
@@ -32,30 +36,49 @@ export function UserView() {
 
   const notFound = !filteredUsers.length && filterName;
 
-  // const handleDeleteUser = async (userId: string) => {
-  //   try {
-  //     await deleteUser(userId); // Call deleteUser function
-  //   } catch (error) {
-  //     console.error('Error deleting user:', error);
-  //   }
-  // };
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
 
   return (
     <Box display="flex" flexDirection="column" gap={3} padding={3}>
-      <Header />
+      <Header handleClickOpen={handleClickOpen} /> {/* Pass handleClickOpen to Header */}
       <UserTable
         users={filteredUsers}
         table={table}
         filterName={filterName}
         setFilterName={setFilterName}
-        // deleteUser={handleDeleteUser}  // Pass deleteUser function here
+        // Pass deleteUser function here if needed
       />
+      {/* Dialog for creating new staff */}
+      <Dialog 
+        open={open} 
+        onClose={handleClose} 
+        maxWidth="sm" 
+        fullWidth
+        BackdropProps={{
+          invisible: true,  // Ensures the background remains visible
+        }}
+      >
+        <DialogContent>
+          <CreateView />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            Cancel
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
 
 // Header component for the page
-function Header() {
+function Header({ handleClickOpen }: { handleClickOpen: () => void }) {
   return (
     <Box display="flex" alignItems="center" mb={4} justifyContent="space-between">
       <Typography variant="h4" fontWeight="bold">
@@ -63,8 +86,9 @@ function Header() {
       </Typography>
       <Button
         variant="contained"
-        sx={buttonStyles}
+        sx={buttonStyles} // Fix button styling
         startIcon={<Iconify icon="mingcute:add-line" />}
+        onClick={handleClickOpen} // Open dialog on click
       >
         New Staff
       </Button>
@@ -83,7 +107,6 @@ function UserTable({
   table: any;
   filterName: string;
   setFilterName: React.Dispatch<React.SetStateAction<string>>;
- 
 }) {
   return (
     <Card sx={{ padding: 3, boxShadow: 2 }}>

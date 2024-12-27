@@ -9,7 +9,14 @@ import MenuList from '@mui/material/MenuList';
 import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
 import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
-import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Typography } from '@mui/material';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Button,
+  Typography,
+} from '@mui/material';
 
 import { useFetchUsers } from 'src/hooks/user';
 
@@ -130,92 +137,89 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
         </MenuList>
       </Popover>
       <Dialog
-  open={openConfirmDialog}
-  onClose={handleCloseConfirmDialog}
-  sx={{
-    borderRadius: 2, 
-    boxShadow: 'none',  // Removed the shadow
-    maxWidth: 400, 
-    width: '100%',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: 'auto',
-  }}
->
-  <DialogTitle
-    sx={{
-      backgroundColor: 'gray',  // Updated background color to gray
-      color: 'white',
-      textAlign: 'center',
-      borderTopLeftRadius: 2,
-      borderTopRightRadius: 2,
-      py: 2,
-    }}
-  >
-    <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
-      Confirm Deletion
-    </Typography>
-  </DialogTitle>
+        open={openConfirmDialog}
+        onClose={handleCloseConfirmDialog}
+        sx={{
+          borderRadius: 2,
+          boxShadow: 'none', // Removed the shadow
+          maxWidth: 400,
+          width: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          margin: 'auto',
+        }}
+      >
+        <DialogTitle
+          sx={{
+            backgroundColor: 'gray', // Updated background color to gray
+            color: 'white',
+            textAlign: 'center',
+            borderTopLeftRadius: 2,
+            borderTopRightRadius: 2,
+            py: 2,
+          }}
+        >
+          <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
+            Confirm Deletion
+          </Typography>
+        </DialogTitle>
 
-  <DialogContent
-    sx={{
-      padding: 3, 
-      backgroundColor: 'background.default',
-      borderBottomLeftRadius: 2,
-      borderBottomRightRadius: 2,
-    }}
-  >
-    <Typography
-      variant="body1"
-      color="textSecondary"
-      textAlign="center"
-      sx={{ lineHeight: 1.5, fontSize: '1rem' }}
-    >
-      Are you sure you want to delete this user? This action cannot be undone.
-    </Typography>
-  </DialogContent>
+        <DialogContent
+          sx={{
+            padding: 3,
+            backgroundColor: 'background.default',
+            borderBottomLeftRadius: 2,
+            borderBottomRightRadius: 2,
+          }}
+        >
+          <Typography
+            variant="body1"
+            color="textSecondary"
+            textAlign="center"
+            sx={{ lineHeight: 1.5, fontSize: '1rem' }}
+          >
+            Are you sure you want to delete this user? This action cannot be undone.
+          </Typography>
+        </DialogContent>
 
-  <DialogActions
-    sx={{
-      justifyContent: 'center', 
-      padding: '16px 24px', 
-      backgroundColor: 'background.paper', 
-      borderBottomLeftRadius: 2, 
-      borderBottomRightRadius: 2,
-    }}
-  >
-    <Button
-      onClick={handleCloseConfirmDialog}
-      variant="outlined"
-      color="primary"
-      sx={{
-        width: 120, 
-        borderRadius: 1.5, 
-        fontWeight: 'bold', 
-        textTransform: 'none',
-      }}
-    >
-      Cancel
-    </Button>
-    <Button
-      onClick={handleDeleteUser}
-      variant="contained"
-      color="error"
-      sx={{
-        width: 120,
-        borderRadius: 1.5,
-        fontWeight: 'bold',
-        textTransform: 'none',
-      }}
-    >
-      Delete
-    </Button>
-  </DialogActions>
-</Dialog>
-
-
-
+        <DialogActions
+          sx={{
+            justifyContent: 'center',
+            padding: '16px 24px',
+            backgroundColor: 'background.paper',
+            borderBottomLeftRadius: 2,
+            borderBottomRightRadius: 2,
+          }}
+        >
+          <Button
+            onClick={handleCloseConfirmDialog}
+            variant="outlined"
+            color="primary"
+            sx={{
+              width: 120,
+              borderRadius: 1.5,
+              fontWeight: 'bold',
+              textTransform: 'none',
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteUser}
+            variant="contained"
+            color="error"
+            sx={{
+              width: 120,
+              borderRadius: 1.5,
+              fontWeight: 'bold',
+              textTransform: 'none',
+            }}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
