@@ -17,6 +17,8 @@ export function CreateView() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('');
+
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null); // For capturing error messages
@@ -24,13 +26,13 @@ export function CreateView() {
   const handleSignUp = async () => {
     setIsLoading(true);
     try {
-      const signUpData = { email, password }; // Include role if necessary
+      const signUpData = { email, password, role }; // Include role if necessary
       const response = await signUp(signUpData);
 
       // Check for a successful response
       if (response.statusCode === 200) {
         setIsLoading(false);
-         // Redirect to home after successful sign-up
+        // Redirect to home after successful sign-up
       } else {
         setError(response.message || 'Failed to register');
         setIsLoading(false);
@@ -51,6 +53,15 @@ export function CreateView() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         type="email"
+        required
+        sx={{ mb: 3 }}
+      />
+      <TextField
+        fullWidth
+        name="role"
+        label="Role"
+        value={role}
+        onChange={(e) => setRole(e.target.value)}
         required
         sx={{ mb: 3 }}
       />
