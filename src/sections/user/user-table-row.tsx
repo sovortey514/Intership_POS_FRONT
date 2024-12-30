@@ -47,6 +47,9 @@ type UserTableRowProps = {
 export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+ 
+  const [users, setUsers] = useState<UserProps[]>([]);
+
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setOpenPopover(event.currentTarget);
   }, []);
@@ -67,7 +70,10 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
   const handleDeleteUser = () => {
     deleteUser(row.id);
     handleClosePopover();
+    handleCloseConfirmDialog();
   };
+
+  
 
   return (
     <>

@@ -1,37 +1,35 @@
 import { useState, useEffect } from 'react';
-import { GetallUsers } from 'src/api/auth/authService';
-
-import { Alluser } from 'src/api/auth/authTypes'; // Adjust the import as needed
+import { GetallUsers, deleteUser } from 'src/api/auth/authService'; // Adjust as needed
+import { Alluser } from 'src/api/auth/authTypes'; // Adjust import path as needed
 
 export function useFetchUsers() {
   const [users, setUsers] = useState<Alluser[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
-  useEffect(() => {
-    async function fetchUsers() {
-      try {
-        setLoading(true);
-        const fetchedUsers = await GetallUsers(); // Call the API to fetch users
-        setUsers(fetchedUsers); // Update state with the fetched users
-        console.log(fetchedUsers); // Optionally log the fetched users
-      } catch (error) {
-        console.error('Error fetching users:', error.message);
-      } finally {
-        setLoading(false); // Set loading state to false after fetching
-      }
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const fetchedUsers = await GetallUsers();
+      setUsers(fetchedUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error.message);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    fetchUsers(); 
-  }, [users]);
-
-  const deleteUser = async (userId: number) => {
+  const handleDeleteUser = async (userId: number) => {
     try {
       await deleteUser(userId);
-      const updatedUsers = users.filter((user) => user.id !== userId);
-      setUsers(updatedUsers);
+      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
     } catch (error) {
       console.error('Error deleting user:', error.message);
     }
   };
-  return { users, loading, deleteUser }; 
+
+  useEffect(() => {
+    fetchUsers(); // Fetch users on component mount
+  }, []);
+
+  return { users, loading, fetchUsers, handleDeleteUser };
 }
