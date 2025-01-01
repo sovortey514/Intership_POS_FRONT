@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
@@ -7,23 +8,30 @@ import TableBody from '@mui/material/TableBody';
 import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
-import { useFetchUsers } from 'src/hooks/user/user';
-import { mapAllUserToUserProps } from 'src/utils/user-mapping';
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import { deleteUser } from 'src/api/auth/authService'; 
 import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+
+import { useFetchUsers } from 'src/hooks/user/user';
+
+import { mapAllUserToUserProps } from 'src/utils/user-mapping';
+
+import { deleteUser } from 'src/api/auth/authService';
+
+import { Iconify } from 'src/components/iconify'; 
+import { Scrollbar } from 'src/components/scrollbar';
+
 import { CreateView } from 'src/sections/auth';
-import { UserProps, UserTableRow } from '../user-table-row';
+
 import { UserTableHead } from '../user-table-head';
 import { applyFilter, getComparator } from '../utils';
 import { UserTableToolbar } from '../user-table-toolbar';
 
+import { UserProps, UserTableRow } from '../user-table-row';
+
 export function UserView() {
-  const { users, loading } = useFetchUsers(); 
+  const { users, loading, handleDeleteUser } = useFetchUsers();
   const [filterName, setFilterName] = useState('');
   const [open, setOpen] = useState(false); // Dialog state in the parent component
-
+  
   const table = useTable();
 
   // Transform and filter users
@@ -44,6 +52,18 @@ export function UserView() {
     setOpen(false);
   };
 
+  // const handleDeleteUser = async (userId: number) => {
+  //   try {
+  //     // Call API to delete user
+  //     await deleteUser(userId); // Replace with your actual API function
+  //     // Update state or refetch users if needed
+  //     setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
+  //   } catch (error) {
+  //     console.error('Error deleting user:', error);
+  //   }
+  // };
+  
+
   return (
     <Box display="flex" flexDirection="column" gap={3} padding={3}>
       <Header handleClickOpen={handleClickOpen} /> {/* Pass handleClickOpen to Header */}
@@ -52,6 +72,7 @@ export function UserView() {
         table={table}
         filterName={filterName}
         setFilterName={setFilterName}
+        handleDeleteUser={handleDeleteUser}
         // Pass deleteUser function here if needed
       />
       {/* Dialog for creating new staff */}
@@ -86,9 +107,9 @@ function Header({ handleClickOpen }: { handleClickOpen: () => void }) {
       </Typography>
       <Button
         variant="contained"
-        sx={buttonStyles} // Fix button styling
+        sx={buttonStyles}
         startIcon={<Iconify icon="mingcute:add-line" />}
-        onClick={handleClickOpen} // Open dialog on click
+        onClick={handleClickOpen} 
       >
         New Staff
       </Button>
@@ -102,12 +123,15 @@ function UserTable({
   table,
   filterName,
   setFilterName,
+  handleDeleteUser,
 }: {
   users: UserProps[];
   table: any;
   filterName: string;
   setFilterName: React.Dispatch<React.SetStateAction<string>>;
+  handleDeleteUser: (userId: number) => void;
 }) {
+  
   return (
     <Card sx={{ padding: 3, boxShadow: 2 }}>
       <UserTableToolbar
@@ -149,7 +173,8 @@ function UserTable({
                     row={row}
                     selected={table.selected.includes(row.id)}
                     onSelectRow={() => table.onSelectRow(row.id)}
-                    deleteUser={() => deleteUser(Number(row.id))}
+                    deleteUser={() => handleDeleteUser(Number(row.id))}
+                    // deleteUser={handleDeleteUser}
                   />
                 ))}
             </TableBody>
@@ -170,7 +195,6 @@ function UserTable({
   );
 }
 
-// Handle filter input change
 function handleFilterChange(
   setFilterName: React.Dispatch<React.SetStateAction<string>>,
   table: any
@@ -181,7 +205,6 @@ function handleFilterChange(
   };
 }
 
-// Table styling
 const buttonStyles = {
   backgroundColor: '#ff6f61',
   color: '#FFFFFF',
@@ -252,3 +275,7 @@ function useTable() {
     onChangeRowsPerPage,
   };
 }
+function setModalOpen(arg0: boolean) {
+  throw new Error('Function not implemented.');
+}
+

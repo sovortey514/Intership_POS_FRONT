@@ -48,7 +48,7 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
  
-  const [users, setUsers] = useState<UserProps[]>([]);
+  // const [users, setUsers] = useState<UserProps[]>([]);
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setOpenPopover(event.currentTarget);
@@ -59,12 +59,12 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
   }, []);
 
   const handleOpenConfirmDialog = () => {
-    setOpenConfirmDialog(true); // Open the confirmation dialog
+    setOpenConfirmDialog(true);
     handleClosePopover();
   };
 
   const handleCloseConfirmDialog = () => {
-    setOpenConfirmDialog(false); // Close the confirmation dialog without doing anything
+    setOpenConfirmDialog(false);
   };
 
   const handleDeleteUser = () => {
@@ -72,35 +72,34 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
     handleClosePopover();
     handleCloseConfirmDialog();
   };
+  
 
   
 
   return (
     <>
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
-        {/* Row Select Checkbox */}
         <TableCell padding="checkbox">
           <Checkbox disableRipple checked={selected} onChange={onSelectRow} />
         </TableCell>
 
         <TableCell component="th" scope="row">
           <Box gap={2} display="flex" alignItems="center">
-            {/* Avatar with username */}
+            
             <Avatar alt={row.username || row.name || 'User'} src={row.avatarUrl || undefined} />
             <Box>
-              {/* Display username or fallback to email if username is not available */}
+          
               {row.username || row.email}
             </Box>
           </Box>
         </TableCell>
 
-        {/* Role and Status */}
+
         <TableCell>{row.role}</TableCell>
         <TableCell>
           <Label color={row.status === 'banned' ? 'error' : 'success'}>{row.status}</Label>
         </TableCell>
 
-        {/* Action Menu */}
         <TableCell align="right">
           <IconButton onClick={handleOpenPopover}>
             <Iconify icon="eva:more-vertical-fill" />
@@ -147,7 +146,7 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
         onClose={handleCloseConfirmDialog}
         sx={{
           borderRadius: 2,
-          boxShadow: 'none', // Removed the shadow
+          boxShadow: 'none',
           maxWidth: 400,
           width: '100%',
           display: 'flex',
@@ -158,7 +157,7 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
       >
         <DialogTitle
           sx={{
-            backgroundColor: 'gray', // Updated background color to gray
+            backgroundColor: 'gray', 
             color: 'white',
             textAlign: 'center',
             borderTopLeftRadius: 2,

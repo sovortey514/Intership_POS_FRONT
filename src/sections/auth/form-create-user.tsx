@@ -28,11 +28,8 @@ export function CreateView() {
     try {
       const signUpData = { email, password, role }; // Include role if necessary
       const response = await signUp(signUpData);
-
-      // Check for a successful response
       if (response.statusCode === 200) {
         setIsLoading(false);
-        // Redirect to home after successful sign-up
       } else {
         setError(response.message || 'Failed to register');
         setIsLoading(false);
@@ -72,7 +69,6 @@ export function CreateView() {
         label="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        type={showPassword ? 'text' : 'password'}
         required
         InputProps={{
           endAdornment: (
@@ -89,8 +85,6 @@ export function CreateView() {
         }}
         sx={{ mb: 3 }}
       />
-
-      {/* Display error message if there is an error */}
       {error && (
         <Typography color="error" sx={{ mb: 2 }}>
           {error}

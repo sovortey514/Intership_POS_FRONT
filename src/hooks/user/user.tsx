@@ -20,16 +20,20 @@ export function useFetchUsers() {
 
   const handleDeleteUser = async (userId: number) => {
     try {
+      setLoading(true);
       await deleteUser(userId);
-      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
+      console.log(`User with ID ${userId} deleted successfully.`);
+      setUsers(prevUsers => prevUsers.filter((user) => user.id !== userId));
     } catch (error) {
       console.error('Error deleting user:', error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers(); // Fetch users on component mount
+    fetchUsers();
   }, []);
 
-  return { users, loading, fetchUsers, handleDeleteUser };
+  return { users, loading, handleDeleteUser };
 }
