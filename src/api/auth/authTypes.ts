@@ -12,6 +12,7 @@
     refreshToken: string;
     expirationTime: string;
     message: string;
+    
     error?: string;
   };
 
@@ -19,12 +20,14 @@
     email: string;
     password: string;
     role?: string;
+    userId?: number;
   }
   
   export interface SignUpResponse {
     statusCode: number;
     message: string;
     error?: string;
+    imageUrl?: string;
   }
 
   export interface Alluser  {

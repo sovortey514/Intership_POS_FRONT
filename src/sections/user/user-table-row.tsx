@@ -24,6 +24,7 @@ import { useFetchUsers } from 'src/hooks/user';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { UpdateformView } from '../auth';
 
 // ----------------------------------------------------------------------
 export type UserProps = {
@@ -47,7 +48,9 @@ type UserTableRowProps = {
 export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
- 
+
+  const [openUpdateDialog, setOpenUpdateDialog] = useState(false);
+
   // const [users, setUsers] = useState<UserProps[]>([]);
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
@@ -63,6 +66,15 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
     handleClosePopover();
   };
 
+  const handleOpenUpdateDialog = () => {
+    setOpenUpdateDialog(true); // Open the update dialog
+    handleClosePopover();
+  };
+
+  const handleCloseUpdateDialog = () => {
+    setOpenUpdateDialog(false); // Close the update dialog
+  };
+
   const handleCloseConfirmDialog = () => {
     setOpenConfirmDialog(false);
   };
@@ -72,9 +84,11 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
     handleClosePopover();
     handleCloseConfirmDialog();
   };
-  
 
-  
+  // const handleUpdateSuccess = () => {
+  //   handleCloseConfirmDialog();
+  //   console.log('Update successful!');
+  // };
 
   return (
     <>
@@ -85,15 +99,10 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
 
         <TableCell component="th" scope="row">
           <Box gap={2} display="flex" alignItems="center">
-            
             <Avatar alt={row.username || row.name || 'User'} src={row.avatarUrl || undefined} />
-            <Box>
-          
-              {row.username || row.email}
-            </Box>
+            <Box>{row.username || row.email}</Box>
           </Box>
         </TableCell>
-
 
         <TableCell>{row.role}</TableCell>
         <TableCell>
@@ -131,7 +140,7 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
             },
           }}
         >
-          <MenuItem onClick={handleClosePopover}>
+          <MenuItem onClick={handleOpenUpdateDialog}>
             <Iconify icon="solar:pen-bold" />
             Edit
           </MenuItem>
@@ -141,6 +150,7 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
           </MenuItem>
         </MenuList>
       </Popover>
+      {/* //popform for delete user// */}
       <Dialog
         open={openConfirmDialog}
         onClose={handleCloseConfirmDialog}
@@ -157,7 +167,7 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
       >
         <DialogTitle
           sx={{
-            backgroundColor: 'gray', 
+            backgroundColor: 'gray',
             color: 'white',
             textAlign: 'center',
             borderTopLeftRadius: 2,
@@ -222,6 +232,25 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
             }}
           >
             Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={openUpdateDialog}
+        onClose={handleCloseUpdateDialog}
+        maxWidth="sm"
+        fullWidth
+        BackdropProps={{
+          invisible: true, // Ensures the background remains visible
+        }}
+      >
+        <DialogContent sx={{ overflow: 'hidden' }}>
+          <UpdateformView />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseUpdateDialog} color="primary">
+            Cancel
           </Button>
         </DialogActions>
       </Dialog>

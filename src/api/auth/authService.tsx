@@ -1,6 +1,6 @@
 import axios from "axios";
 
-import type { Alluser, SignInRequest, SignInResponse, SignUpRequest, SignUpResponse } from "./authTypes";
+import type { Alluser, SignInRequest, SignUpRequest, SignInResponse, SignUpResponse } from "./authTypes";
 
 const BASE_URL = "http://localhost:9090"; // Ensure this matches your backend's base URL
 
@@ -12,13 +12,59 @@ export async function signUp(data: SignUpRequest): Promise<SignUpResponse> {
     });
     return response.data; // Return the response data from the server
   } catch (error: any) {
-    // Handle errors gracefully and return a consistent response format
+   
     return {
       statusCode: error.response?.status || 500,
       message: error.response?.data?.message || "An error occurred during sign-up",
     } as SignUpResponse;
   }
 }
+
+// Function for User Sign-Up (similar to createFixedAsset process)
+// export async function signUp(
+//   signUpData: SignUpRequest,
+//   imageFile: File
+// ): Promise<SignUpResponse> {
+//   try {
+//     const signUpResponse = await axios.post<SignUpResponse>(`${BASE_URL}/auth/signup`, signUpData, {
+//       headers: { "Content-Type": "application/json" },
+//     });
+
+//     if (signUpResponse.status === 200) {
+
+//       const formData = new FormData();
+//       formData.append("file", imageFile);
+
+//       const uploadImageResponse = await axios.post(`${BASE_URL}/auth/upload_image`, formData, {
+//         headers: { "Content-Type": "multipart/form-data" },
+//       });
+
+//       if (uploadImageResponse.status === 200) {
+//         const uploadedImage = uploadImageResponse.data.files?.[0];
+//         return {
+//           statusCode: 200,
+//           message: "Sign-up successful and image uploaded.",
+//           imageUrl: uploadedImage ? uploadedImage.fileUrl : undefined,
+//         };
+//       } 
+//     }
+
+//     return {
+//       statusCode: 400,
+//       message: "Sign-up failed.",
+//     } as SignUpResponse;
+
+//   } catch (error: any) {
+//     return {
+//       statusCode: error.response?.status || 500,
+//       message: error.response?.data?.message || "An error occurred during sign-up or image upload.",
+//     } as SignUpResponse;
+//   }
+// }
+
+
+
+
 
 // Sign-in function
 export async function signIn(data: SignInRequest): Promise<SignInResponse> {
@@ -43,8 +89,18 @@ export async function GetallUsers(): Promise<Alluser[]> {
     return response.data; 
   } catch (error: any) {
     console.error("Error fetching users:", error);
+    throw new Error(
+      error.response?.data?.message || "An error occurred while fetching users"
+    );
+  }
+}
 
-    // Throw an error for the caller to handle
+export async function GetallUserswithimage(): Promise<Alluser[]> {
+  try {
+    const response = await axios.get<Alluser[]>(`${BASE_URL}/auth/get_all_user_with_images`);
+    return response.data; 
+  } catch (error: any) {
+    console.error("Error fetching users:", error);
     throw new Error(
       error.response?.data?.message || "An error occurred while fetching users"
     );
@@ -62,6 +118,23 @@ export async function deleteUser(userId: number): Promise<void> {
     throw new Error(error.response?.data?.message || "An error occurred while deleting the user");
   }
 }
+
+export async function Update(data: SignUpRequest): Promise<SignUpResponse> {
+  try {
+    const response = await axios.post<SignUpResponse>(`${BASE_URL}/auth/signup`, data, {
+      headers: { "Content-Type": "application/json" },
+    });
+    return response.data; // Return the response data from the server
+  } catch (error: any) {
+    // Handle errors gracefully and return a consistent response format
+    return {
+      statusCode: error.response?.status || 500,
+      message: error.response?.data?.message || "An error occurred during sign-up",
+    } as SignUpResponse;
+  }
+}
+
+
 
 
 

@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
-import { GetallUsers, deleteUser } from 'src/api/auth/authService'; // Adjust as needed
-import { Alluser } from 'src/api/auth/authTypes'; // Adjust import path as needed
+
+import { deleteUser, GetallUsers, GetallUserswithimage } from 'src/api/auth/authService'; // Adjust as needed
+import type { Alluser } from 'src/api/auth/authTypes'; // Adjust import path as needed
 
 export function useFetchUsers() {
   const [users, setUsers] = useState<Alluser[]>([]);
+  const [userswithimage, setUserswithimage] = useState<Alluser[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [userId, setUserId] = useState<number | null>(null); // Add state for userId
 
   const fetchUsers = async () => {
     try {
@@ -18,12 +21,37 @@ export function useFetchUsers() {
     }
   };
 
-  const handleDeleteUser = async (userId: number) => {
+  // const fetchUserById = async (id: number) => {
+  //   try {
+  //     if (!id) return; // Prevent fetching if id is not provided
+  //     setLoading(true);
+  //     const fetchedUser = await GetUserById(id);
+  //     setUsers([fetchedUser]); // Assuming setUsers expects an array
+  //   } catch (error) {
+  //     console.error('Error fetching user by ID:', error.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  const fetchUserswithimage = async () => {
     try {
       setLoading(true);
-      await deleteUser(userId);
-      console.log(`User with ID ${userId} deleted successfully.`);
-      setUsers(prevUsers => prevUsers.filter((user) => user.id !== userId));
+      const fetchedUsersWithImage = await GetallUserswithimage();
+      setUserswithimage(fetchedUsersWithImage);
+    } catch (error: any) {
+      console.error('Error fetching users with images:', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (id: number) => {
+    try {
+      setLoading(true);
+      await deleteUser(id);
+      console.log(`User with ID ${id} deleted successfully.`);
+      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
     } catch (error) {
       console.error('Error deleting user:', error.message);
     } finally {
@@ -31,9 +59,25 @@ export function useFetchUsers() {
     }
   };
 
+  // Fetch all users and users with images on mount
   useEffect(() => {
     fetchUsers();
+    fetchUserswithimage();
   }, []);
 
-  return { users, loading, handleDeleteUser };
+  // Fetch user by ID when userId changes
+  // useEffect(() => {
+  //   if (userId !== null) {
+  //     fetchUserById(userId);
+  //   }
+  // }, [userId]);
+
+  return {
+    users,
+    userswithimage,
+    loading,
+    handleDeleteUser,
+    fetchUsers,
+    setUserId, // Expose setUserId to allow setting the userId dynamically
+  };
 }

@@ -19,7 +19,7 @@ import { deleteUser } from 'src/api/auth/authService';
 import { Iconify } from 'src/components/iconify'; 
 import { Scrollbar } from 'src/components/scrollbar';
 
-import { CreateView } from 'src/sections/auth';
+import { CreateView, UpdateformView } from 'src/sections/auth';
 
 import { UserTableHead } from '../user-table-head';
 import { applyFilter, getComparator } from '../utils';
@@ -28,7 +28,7 @@ import { UserTableToolbar } from '../user-table-toolbar';
 import { UserProps, UserTableRow } from '../user-table-row';
 
 export function UserView() {
-  const { users, loading, handleDeleteUser } = useFetchUsers();
+  const { users, loading, handleDeleteUser, fetchUsers } = useFetchUsers();
   const [filterName, setFilterName] = useState('');
   const [open, setOpen] = useState(false); // Dialog state in the parent component
   
@@ -48,21 +48,16 @@ export function UserView() {
     setOpen(true);
   };
 
-  const handleClose = () => {
-    setOpen(false);
+  // const handleClose = () => {
+  //   setOpen(false);
+  // };
+
+  const handleUserCreated = () => {
+    fetchUsers();
+    setOpen(false)  // Re-fetch the users when a new user is created
   };
 
-  // const handleDeleteUser = async (userId: number) => {
-  //   try {
-  //     // Call API to delete user
-  //     await deleteUser(userId); // Replace with your actual API function
-  //     // Update state or refetch users if needed
-  //     setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
-  //   } catch (error) {
-  //     console.error('Error deleting user:', error);
-  //   }
-  // };
-  
+
 
   return (
     <Box display="flex" flexDirection="column" gap={3} padding={3}>
@@ -73,23 +68,22 @@ export function UserView() {
         filterName={filterName}
         setFilterName={setFilterName}
         handleDeleteUser={handleDeleteUser}
-        // Pass deleteUser function here if needed
       />
-      {/* Dialog for creating new staff */}
       <Dialog 
         open={open} 
-        onClose={handleClose} 
+        onClose={handleUserCreated} 
         maxWidth="sm" 
+
         fullWidth
         BackdropProps={{
           invisible: true,  // Ensures the background remains visible
         }}
       >
-        <DialogContent>
-          <CreateView />
+        <DialogContent sx={{ overflow: 'hidden' }}>
+          <CreateView onUserCreated={handleUserCreated} />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose} color="primary">
+          <Button onClick={handleUserCreated} color="primary">
             Cancel
           </Button>
         </DialogActions>

@@ -1,20 +1,17 @@
 import { useState } from 'react';
-
 import Box from '@mui/material/Box';
-import { Avatar, Button } from '@mui/material';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import InputAdornment from '@mui/material/InputAdornment';
-
 import { signUp } from 'src/api/auth/authService';
-
 import { Iconify } from 'src/components/iconify';
+import { Avatar, Button } from '@mui/material';
 
 // ----------------------------------------------------------------------
 
-export function CreateView({ onUserCreated }: { onUserCreated: () => void }) {
+export function UpdateformView() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('');
@@ -26,11 +23,11 @@ export function CreateView({ onUserCreated }: { onUserCreated: () => void }) {
   const handleSignUp = async () => {
     setIsLoading(true);
     try {
-      const signUpData = { email, password, role };
+      const signUpData = { email, password, role, userId };
       const response = await signUp(signUpData);
       if (response.statusCode === 200) {
         setIsLoading(false);
-        onUserCreated();
+        // onUserCreated();
       } else {
         setError(response.message || 'Failed to register');
         setIsLoading(false);
@@ -149,7 +146,7 @@ export function CreateView({ onUserCreated }: { onUserCreated: () => void }) {
     <>
       <Box gap={1.5} display="flex" flexDirection="column" alignItems="center" sx={{ mb: 4 }}>
         <Typography variant="h5" fontWeight="bold">
-        Create Staff
+        Update Staff
         </Typography>
       </Box>
       {renderForm}
