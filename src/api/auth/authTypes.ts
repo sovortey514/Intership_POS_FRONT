@@ -12,7 +12,6 @@
     refreshToken: string;
     expirationTime: string;
     message: string;
-    
     error?: string;
   };
 
@@ -23,14 +22,30 @@
     userId?: number;
   }
   
+  // export interface SignUpResponse {
+  //   // OurUsers: number;
+  //   statusCode: number;
+  //   message: string;
+  //   error?: string;
+  //   id: number;
+  //   imageUrl?: string;
+  // }
   export interface SignUpResponse {
     statusCode: number;
     message: string;
     error?: string;
+    id?: number; 
     imageUrl?: string;
+    ourUsers?: {
+      id: number;
+      email: string;
+      role: string;
+      enabled: boolean;
+    };
   }
+  
 
-  export interface Alluser  {
+  export interface Alluser {
     isVerified: boolean;
     avatarUrl: string;
     status: string;
@@ -40,10 +55,11 @@
     email: string;
     role: string;
     profileImage: string | null;
+    files: { fileName: string; fileType: string; fileUrl: string }[]; // Array of files
     accountNonLocked: boolean;
     credentialsNonExpired: boolean;
     accountNonExpired: boolean;
     enabled: boolean;
     authorities: { authority: string }[];
-  };
-
+  }
+  

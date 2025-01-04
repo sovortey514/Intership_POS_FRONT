@@ -34,8 +34,14 @@ export type UserProps = {
   email: string;
   role: string;
   status: string;
+  image: string;
   avatarUrl: string | null;
   isVerified: boolean;
+  files: {
+    fileName: string;
+    fileType: string;
+    fileUrl: string;
+  }[];
 };
 
 type UserTableRowProps = {
@@ -51,7 +57,7 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
 
   const [openUpdateDialog, setOpenUpdateDialog] = useState(false);
 
-  // const [users, setUsers] = useState<UserProps[]>([]);
+  const [usersWithImage, setUsersWithImage] = useState<any[]>([]);
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setOpenPopover(event.currentTarget);
@@ -85,10 +91,14 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
     handleCloseConfirmDialog();
   };
 
+  // console.log('Row Data:', row);
   // const handleUpdateSuccess = () => {
   //   handleCloseConfirmDialog();
   //   console.log('Update successful!');
   // };
+  const profileImageUrl =
+    row.files && row.files.length > 0 ? row.files[0].fileUrl : '/default-avatar.png';
+  // console.log('Profile Image URL:', profileImageUrl);
 
   return (
     <>
@@ -98,8 +108,22 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
         </TableCell>
 
         <TableCell component="th" scope="row">
-          <Box gap={2} display="flex" alignItems="center">
-            <Avatar alt={row.username || row.name || 'User'} src={row.avatarUrl || undefined} />
+          <Box gap={2} display="flex" alignItems="center" className="mb-8 text-center">
+          {/* {console.log('Files Array:', row.files)} */}
+            {row.files?.length > 0 ? (
+              //  console.log('Image URL:', `http://localhost:9090/auth/get_image/${row.files[0].fileName}`),
+              <Avatar
+                alt={row.username || row.name || 'User'}
+                src={`http://localhost:9090/auth/get_image/${row.files[0].fileName}`} // Assuming fileName holds 'cat1.jpg'
+                sx={{ width: 40, height: 40 }}
+              />
+            ) : (
+              <Avatar
+                alt={row.username || row.name || 'User'}
+                src="/default-avatar.png" // Fallback image
+                sx={{ width: 40, height: 40 }}
+              />
+            )}
             <Box>{row.username || row.email}</Box>
           </Box>
         </TableCell>

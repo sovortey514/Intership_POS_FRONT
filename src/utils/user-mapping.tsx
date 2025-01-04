@@ -1,15 +1,21 @@
-import { Alluser } from "src/api/auth/authTypes";
-import { UserProps } from "src/sections/user/user-table-row";
+import type { Alluser } from "src/api/auth/authTypes";
+import type { UserProps } from "src/sections/user/user-table-row";
 
 export function mapAllUserToUserProps(allUser: Alluser[]): UserProps[] {
-  return allUser.map((user) => ({
-    id: String(user.id), // Convert `id` to a string
-    name: user.name || '', // Provide a default value for `name`
-    username: user.username || user.email || '', // If `username` is not available, fallback to `email`
-    email: user.email || '', // Ensure `email` is included and has a value
-    role: user.role, // Assuming `role` exists in `Alluser`
-    status: user.status || 'Active', // Provide a default if `status` is missing
-    avatarUrl: user.avatarUrl || '', // Provide a default if `avatarUrl` is missing
-    isVerified: user.isVerified || false, // Provide a default if `isVerified` is missing
-  }));
+  return allUser.map((user) => {
+    const image = user.files && user.files.length > 0 ? user.files[0].fileUrl : '/path/to/default-image.jpg';
+
+    return {
+      id: String(user.id),
+      name: user.name || '',
+      username: user.username || user.email || '',
+      email: user.email || '',
+      role: user.role,
+      status: user.status || 'Active',
+      image,
+      avatarUrl: user.avatarUrl || user.profileImage || null,
+      isVerified: user.isVerified || false,
+      files: user.files || [], // Ensure files is always defined
+    };
+  });
 }

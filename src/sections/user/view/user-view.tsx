@@ -28,14 +28,14 @@ import { UserTableToolbar } from '../user-table-toolbar';
 import { UserProps, UserTableRow } from '../user-table-row';
 
 export function UserView() {
-  const { users, loading, handleDeleteUser, fetchUsers } = useFetchUsers();
+  const { users, loading, handleDeleteUser, fetchUserswithimage ,userswithimage} = useFetchUsers();
   const [filterName, setFilterName] = useState('');
   const [open, setOpen] = useState(false); // Dialog state in the parent component
   
   const table = useTable();
 
-  // Transform and filter users
-  const transformedUsers = mapAllUserToUserProps(users);
+  // Transform and filter userswithimage
+  const transformedUsers = mapAllUserToUserProps(userswithimage);
   const filteredUsers = applyFilter({
     inputData: transformedUsers,
     comparator: getComparator(table.order, table.orderBy),
@@ -53,8 +53,8 @@ export function UserView() {
   // };
 
   const handleUserCreated = () => {
-    fetchUsers();
-    setOpen(false)  // Re-fetch the users when a new user is created
+    fetchUserswithimage();
+    setOpen(false)  
   };
 
 
@@ -63,7 +63,7 @@ export function UserView() {
     <Box display="flex" flexDirection="column" gap={3} padding={3}>
       <Header handleClickOpen={handleClickOpen} /> {/* Pass handleClickOpen to Header */}
       <UserTable
-        users={filteredUsers}
+        userswithimage={filteredUsers}
         table={table}
         filterName={filterName}
         setFilterName={setFilterName}
@@ -73,7 +73,6 @@ export function UserView() {
         open={open} 
         onClose={handleUserCreated} 
         maxWidth="sm" 
-
         fullWidth
         BackdropProps={{
           invisible: true,  // Ensures the background remains visible
@@ -113,13 +112,13 @@ function Header({ handleClickOpen }: { handleClickOpen: () => void }) {
 
 // User Table component
 function UserTable({
-  users,
+  userswithimage,
   table,
   filterName,
   setFilterName,
   handleDeleteUser,
 }: {
-  users: UserProps[];
+  userswithimage: UserProps[];
   table: any;
   filterName: string;
   setFilterName: React.Dispatch<React.SetStateAction<string>>;
@@ -135,17 +134,18 @@ function UserTable({
       />
       <Scrollbar>
         <TableContainer sx={{ overflow: 'unset', maxHeight: 400 }}>
+        {/* {console.log('Users:', userswithimage)} */}
           <Table sx={{ minWidth: 800 }}>
             <UserTableHead
               order={table.order}
               orderBy={table.orderBy}
-              rowCount={users.length}
+              rowCount={userswithimage.length}
               numSelected={table.selected.length}
               onSort={table.onSort}
               onSelectAllRows={(checked) =>
                 table.onSelectAllRows(
                   checked,
-                  users.map((user) => user.id)
+                  userswithimage.map((user) => user.id)
                 )
               }
               headLabel={[
@@ -156,7 +156,7 @@ function UserTable({
               ]}
             />
             <TableBody>
-              {users
+              {userswithimage
                 .slice(
                   table.page * table.rowsPerPage,
                   table.page * table.rowsPerPage + table.rowsPerPage
@@ -178,7 +178,7 @@ function UserTable({
       <TablePagination
         component="div"
         page={table.page}
-        count={users.length}
+        count={userswithimage.length}
         rowsPerPage={table.rowsPerPage}
         onPageChange={table.onChangePage}
         rowsPerPageOptions={[5, 10, 25]}

@@ -78,6 +78,7 @@ export function useFetchUsers() {
     loading,
     handleDeleteUser,
     fetchUsers,
-    setUserId, // Expose setUserId to allow setting the userId dynamically
+    fetchUserswithimage,
+    setUserId // Expose setUserId to allow setting the userId dynamically
   };
 }

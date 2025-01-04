@@ -27,7 +27,7 @@ export function CreateView({ onUserCreated }: { onUserCreated: () => void }) {
     setIsLoading(true);
     try {
       const signUpData = { email, password, role };
-      const response = await signUp(signUpData);
+      const response = await signUp(signUpData,image);
       if (response.statusCode === 200) {
         setIsLoading(false);
         onUserCreated();
