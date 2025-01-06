@@ -51,7 +51,8 @@ export function useFetchUsers() {
       setLoading(true);
       await deleteUser(id);
       console.log(`User with ID ${id} deleted successfully.`);
-      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
+      // setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
+      setUserswithimage((prevUsers) => prevUsers.filter((user) => user.id !== id));
     } catch (error) {
       console.error('Error deleting user:', error.message);
     } finally {
@@ -59,18 +60,10 @@ export function useFetchUsers() {
     }
   };
 
-  // Fetch all users and users with images on mount
   useEffect(() => {
     fetchUsers();
     fetchUserswithimage();
   }, []);
-
-  // Fetch user by ID when userId changes
-  // useEffect(() => {
-  //   if (userId !== null) {
-  //     fetchUserById(userId);
-  //   }
-  // }, [userId]);
 
   return {
     users,
@@ -79,6 +72,6 @@ export function useFetchUsers() {
     handleDeleteUser,
     fetchUsers,
     fetchUserswithimage,
-    setUserId // Expose setUserId to allow setting the userId dynamically
+    setUserId 
   };
 }

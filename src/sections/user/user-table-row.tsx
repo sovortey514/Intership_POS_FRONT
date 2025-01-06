@@ -91,11 +91,6 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
     handleCloseConfirmDialog();
   };
 
-  // console.log('Row Data:', row);
-  // const handleUpdateSuccess = () => {
-  //   handleCloseConfirmDialog();
-  //   console.log('Update successful!');
-  // };
   const profileImageUrl =
     row.files && row.files.length > 0 ? row.files[0].fileUrl : '/default-avatar.png';
   // console.log('Profile Image URL:', profileImageUrl);
@@ -109,9 +104,9 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
 
         <TableCell component="th" scope="row">
           <Box gap={2} display="flex" alignItems="center" className="mb-8 text-center">
-          {/* {console.log('Files Array:', row.files)} */}
+
             {row.files?.length > 0 ? (
-              //  console.log('Image URL:', `http://localhost:9090/auth/get_image/${row.files[0].fileName}`),
+              
               <Avatar
                 alt={row.username || row.name || 'User'}
                 src={`http://localhost:9090/auth/get_image/${row.files[0].fileName}`} // Assuming fileName holds 'cat1.jpg'
