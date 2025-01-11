@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-globals */
 import { useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
@@ -24,6 +25,8 @@ import { useFetchUsers } from 'src/hooks/user';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { disableUser, enableUser, getUserById } from 'src/api/auth/authService';
+import { UpdateRequest } from 'src/api/auth/authTypes';
 import { UpdateformView } from '../auth';
 
 // ----------------------------------------------------------------------
@@ -54,10 +57,7 @@ type UserTableRowProps = {
 export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
-
   const [openUpdateDialog, setOpenUpdateDialog] = useState(false);
-
-  const [usersWithImage, setUsersWithImage] = useState<any[]>([]);
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setOpenPopover(event.currentTarget);
@@ -91,9 +91,38 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
     handleCloseConfirmDialog();
   };
 
-  const profileImageUrl =
-    row.files && row.files.length > 0 ? row.files[0].fileUrl : '/default-avatar.png';
-  // console.log('Profile Image URL:', profileImageUrl);
+  const handleEnableDisable = async (userId: string, isActive: boolean): Promise<void> => {
+    try {
+        const numericUserId = parseInt(userId, 10);
+        if (isNaN(numericUserId)) {
+            console.error('Invalid userId: Unable to convert to number');
+            return;
+        }
+
+        // Fetch the user details by ID
+        const user = await getUserById(numericUserId);
+        if (!user) {
+            console.error('User not found');
+            return;
+        }
+
+        const updateRequest: UpdateRequest = {
+            email: user.email,
+            password: '',  // Assuming password is not required for enable/disable operation
+            role: user.role,
+        };
+
+        if (isActive) {
+            await disableUser(numericUserId, updateRequest);
+        } else {
+            await enableUser(numericUserId, updateRequest);
+        }
+
+        console.log(`User ${isActive ? 'disabled' : 'enabled'} successfully.`);
+    } catch (error: any) {
+        console.error('Error updating user status:', error.message);
+    }
+};
 
   return (
     <>
@@ -104,9 +133,7 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
 
         <TableCell component="th" scope="row">
           <Box gap={2} display="flex" alignItems="center" className="mb-8 text-center">
-
             {row.files?.length > 0 ? (
-              
               <Avatar
                 alt={row.username || row.name || 'User'}
                 src={`http://localhost:9090/auth/get_image/${row.files[0].fileName}`} // Assuming fileName holds 'cat1.jpg'
@@ -124,8 +151,19 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
         </TableCell>
 
         <TableCell>{row.role}</TableCell>
-        <TableCell>
+        {/* <TableCell>
           <Label color={row.status === 'banned' ? 'error' : 'success'}>{row.status}</Label>
+        </TableCell> */}
+
+        <TableCell>
+          <Button
+            className={`${
+              row.status === 'Active' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'
+            } border-none rounded-lg p-3 shadow-lg transition-transform duration-300 ease-in-out transform hover:scale-105 focus:outline-none`}
+            onClick={() => handleEnableDisable(row.id, row.status === 'Active')}
+          >
+            {row.status === 'Active' ? 'Active' : 'Inactive'}
+          </Button>
         </TableCell>
 
         <TableCell align="right">
@@ -169,7 +207,8 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
           </MenuItem>
         </MenuList>
       </Popover>
-      {/* //popform for delete user// */}
+
+      {/* Confirm Deletion Dialog */}
       <Dialog
         open={openConfirmDialog}
         onClose={handleCloseConfirmDialog}
@@ -255,6 +294,7 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
         </DialogActions>
       </Dialog>
 
+      {/* Update Dialog */}
       <Dialog
         open={openUpdateDialog}
         onClose={handleCloseUpdateDialog}

@@ -5,17 +5,19 @@ export function mapAllUserToUserProps(allUser: Alluser[]): UserProps[] {
   return allUser.map((user) => {
     const image = user.files && user.files.length > 0 ? user.files[0].fileUrl : '/path/to/default-image.jpg';
 
+    const status = user.enabled ? 'Inactive' : 'Active';
+
     return {
       id: String(user.id),
       name: user.name || '',
       username: user.username || user.email || '',
       email: user.email || '',
       role: user.role,
-      status: user.status || 'Active',
+      status: status || 'Active',
       image,
       avatarUrl: user.avatarUrl || user.profileImage || null,
       isVerified: user.isVerified || false,
-      files: user.files || [], // Ensure files is always defined
+      files: user.files || [], 
     };
   });
 }

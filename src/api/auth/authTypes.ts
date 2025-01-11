@@ -6,6 +6,22 @@
     role: string;
   };
   
+  export interface UpdateRequest  {
+    email: string;
+    password: string;
+    role: string;
+    
+  };
+
+  export interface  UpdateResponse  {
+    statusCode: number;
+    token: string;
+    refreshToken: string;
+    expirationTime: string;
+    message: string;
+    error?: string;
+  };
+
   export interface SignInResponse  {
     statusCode: number;
     token: string;
