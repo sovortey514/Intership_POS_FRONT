@@ -33,6 +33,8 @@
     "@mui/icons-material": "^5.16.11",
     "@mui/lab": "^5.0.0-alpha.173",
     "@mui/material": "^5.16.14",
+    "@types/antd": "^1.0.4",
+    "antd": "^5.23.0",
     "apexcharts": "^3.52.0",
     "axios": "^1.7.9",
     "dayjs": "^1.11.13",

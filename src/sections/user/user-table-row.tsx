@@ -12,23 +12,23 @@ import IconButton from '@mui/material/IconButton';
 import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
 import {
   Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Button,
   Typography,
+  DialogTitle,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
 } from '@mui/material';
-
-import { useFetchUsers } from 'src/hooks/user';
 
 // import { deleteUser } from 'src/api/auth';
 
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import { disableUser, enableUser, getUserById } from 'src/api/auth/authService';
-import { UpdateRequest } from 'src/api/auth/authTypes';
-import { UpdateformView } from '../auth';
+import type { UpdateRequest } from 'src/api/auth/authTypes';
 
+import { enableUser, disableUser, getUserById } from 'src/api/auth/authService';
+
+import { Iconify } from 'src/components/iconify';
+
+import { UpdateformView } from '../auth';
 // ----------------------------------------------------------------------
 export type UserProps = {
   id: string;
@@ -58,6 +58,8 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [openUpdateDialog, setOpenUpdateDialog] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserProps | null>(null);
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setOpenPopover(event.currentTarget);
@@ -73,12 +75,12 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
   };
 
   const handleOpenUpdateDialog = () => {
-    setOpenUpdateDialog(true); // Open the update dialog
+    setOpenUpdateDialog(true);
     handleClosePopover();
   };
 
   const handleCloseUpdateDialog = () => {
-    setOpenUpdateDialog(false); // Close the update dialog
+    setOpenUpdateDialog(false);
   };
 
   const handleCloseConfirmDialog = () => {
@@ -90,39 +92,59 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
     handleClosePopover();
     handleCloseConfirmDialog();
   };
+  const handleClickOpen = () => {
+    setSelectedUser(row);
+    setOpen(true);
+  };
+  const handleClose = () => {
+    setOpen(false);
+    setSelectedUser(null);
+  };
 
-  const handleEnableDisable = async (userId: string, isActive: boolean): Promise<void> => {
-    try {
-        const numericUserId = parseInt(userId, 10);
-        if (isNaN(numericUserId)) {
-            console.error('Invalid userId: Unable to convert to number');
-            return;
-        }
-
-        // Fetch the user details by ID
-        const user = await getUserById(numericUserId);
-        if (!user) {
-            console.error('User not found');
-            return;
-        }
-
-        const updateRequest: UpdateRequest = {
-            email: user.email,
-            password: '',  // Assuming password is not required for enable/disable operation
-            role: user.role,
-        };
-
-        if (isActive) {
-            await disableUser(numericUserId, updateRequest);
-        } else {
-            await enableUser(numericUserId, updateRequest);
-        }
-
-        console.log(`User ${isActive ? 'disabled' : 'enabled'} successfully.`);
-    } catch (error: any) {
-        console.error('Error updating user status:', error.message);
+  const handleConfirm = async () => {
+    if (selectedUser) {
+      const isEnabled = selectedUser.status === 'Active';
+      try {
+        await handleEnableDisable(selectedUser.id, !isEnabled);
+        selectedUser.status = isEnabled ? 'Inactive' : 'Active';
+        setOpen(false);
+      } catch (error) {
+        console.error("Error during user status update", error);
+      }
     }
-};
+  };
+
+  const handleEnableDisable = async (userId: string, isEnabled: boolean) => {
+    try {
+      const numericUserId = parseInt(userId, 10);
+      if (isNaN(numericUserId)) {
+        console.error('Invalid userId: Unable to convert to number');
+        return;
+      }
+
+      const user = await getUserById(numericUserId);
+      if (!user) {
+        console.error('User not found');
+        return;
+      }
+
+      const updateRequest = {
+        email: user.email,
+        password: '',
+        role: user.role,
+      };
+
+      if (isEnabled) {
+        await enableUser(numericUserId, updateRequest);
+        user.status = "Active"
+      } else {
+        await disableUser(numericUserId, updateRequest);
+        user.status = "Inactive"
+      }
+    } catch (error: any) {
+      console.error('Error updating user status:', error.message);
+    }
+  };
 
   return (
     <>
@@ -155,16 +177,33 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
           <Label color={row.status === 'banned' ? 'error' : 'success'}>{row.status}</Label>
         </TableCell> */}
 
-        <TableCell>
-          <Button
-            className={`${
-              row.status === 'Active' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'
-            } border-none rounded-lg p-3 shadow-lg transition-transform duration-300 ease-in-out transform hover:scale-105 focus:outline-none`}
-            onClick={() => handleEnableDisable(row.id, row.status === 'Active')}
-          >
-            {row.status === 'Active' ? 'Active' : 'Inactive'}
+<TableCell>
+      <Button
+        className={`${
+          row.status === 'Active' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'
+        } border-none rounded-lg p-3 shadow-lg transition-transform duration-300 ease-in-out transform hover:scale-105 focus:outline-none`}
+        onClick={handleClickOpen}
+      >
+        {row.status === 'Active' ? 'Active' : 'Inactive'}
+      </Button>
+
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>{`Are you sure you want to ${row.status === 'Active' ? 'disable' : 'enable'} this user?`}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Confirm your action to {row.status === 'Active' ? 'disable' : 'enable'} the user.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            No
           </Button>
-        </TableCell>
+          <Button onClick={handleConfirm} color="primary" autoFocus>
+            Yes
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </TableCell>
 
         <TableCell align="right">
           <IconButton onClick={handleOpenPopover}>
