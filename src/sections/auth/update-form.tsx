@@ -18,16 +18,24 @@ export function UpdateformView() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [image, setImage] = useState<File | null>(null); // Define image state to handle uploaded image
+  const [image, setImage] = useState<File | null>(null);
+  const [userId, setUserId] = useState<string>(''); // Add userId state if needed
 
   const handleSignUp = async () => {
     setIsLoading(true);
+    if (!email || !password || !role) {
+      setError('Please fill in all fields');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const signUpData = { email, password, role, userId };
-      const response = await signUp(signUpData);
+      const signUpData = { email, password, role };
+      const response = await signUp(signUpData,image);
+
       if (response.statusCode === 200) {
         setIsLoading(false);
-        // onUserCreated();
+        // onUserCreated(); You can trigger this if needed.
       } else {
         setError(response.message || 'Failed to register');
         setIsLoading(false);
@@ -55,7 +63,7 @@ export function UpdateformView() {
         onChange={(e) => setEmail(e.target.value)}
         type="email"
         required
-        sx={{ mb: 2 }} // Adjusted spacing
+        sx={{ mb: 2 }} 
       />
       <TextField
         fullWidth
@@ -64,7 +72,7 @@ export function UpdateformView() {
         value={role}
         onChange={(e) => setRole(e.target.value)}
         required
-        sx={{ mb: 2 }} // Adjusted spacing
+        sx={{ mb: 2 }} 
       />
       <TextField
         fullWidth
@@ -86,7 +94,8 @@ export function UpdateformView() {
             </InputAdornment>
           ),
         }}
-        sx={{ mb: 2 }} // Adjusted spacing
+        type={showPassword ? 'text' : 'password'}
+        sx={{ mb: 2 }} 
       />
 
       <Box display="flex" flexDirection="column" alignItems="center" sx={{ mb: 2, width: '100%' }}>
@@ -146,7 +155,7 @@ export function UpdateformView() {
     <>
       <Box gap={1.5} display="flex" flexDirection="column" alignItems="center" sx={{ mb: 4 }}>
         <Typography variant="h5" fontWeight="bold">
-        Update Staff
+          Update Staff
         </Typography>
       </Box>
       {renderForm}

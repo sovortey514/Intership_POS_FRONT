@@ -109,7 +109,7 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
         selectedUser.status = isEnabled ? 'Inactive' : 'Active';
         setOpen(false);
       } catch (error) {
-        console.error("Error during user status update", error);
+        console.error('Error during user status update', error);
       }
     }
   };
@@ -136,10 +136,10 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
 
       if (isEnabled) {
         await enableUser(numericUserId, updateRequest);
-        user.status = "Active"
+        user.status = 'Active';
       } else {
         await disableUser(numericUserId, updateRequest);
-        user.status = "Inactive"
+        user.status = 'Inactive';
       }
     } catch (error: any) {
       console.error('Error updating user status:', error.message);
@@ -177,33 +177,33 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
           <Label color={row.status === 'banned' ? 'error' : 'success'}>{row.status}</Label>
         </TableCell> */}
 
-<TableCell>
-      <Button
-        className={`${
-          row.status === 'Active' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'
-        } border-none rounded-lg p-3 shadow-lg transition-transform duration-300 ease-in-out transform hover:scale-105 focus:outline-none`}
-        onClick={handleClickOpen}
-      >
-        {row.status === 'Active' ? 'Active' : 'Inactive'}
-      </Button>
+        <TableCell>
+          <Button
+            className={`${
+              row.status === 'Active' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'
+            } border-none rounded-lg p-3 shadow-lg transition-transform duration-300 ease-in-out transform hover:scale-105 focus:outline-none`}
+            onClick={handleClickOpen}
+          >
+            {row.status === 'Active' ? 'Active' : 'Inactive'}
+          </Button>
 
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>{`Are you sure you want to ${row.status === 'Active' ? 'disable' : 'enable'} this user?`}</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Confirm your action to {row.status === 'Active' ? 'disable' : 'enable'} the user.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} color="primary">
-            No
-          </Button>
-          <Button onClick={handleConfirm} color="primary" autoFocus>
-            Yes
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </TableCell>
+          <Dialog open={open} onClose={handleClose}>
+            <DialogTitle>{`Are you sure you want to ${row.status === 'Active' ? 'disable' : 'enable'} this user?`}</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                Confirm your action to {row.status === 'Active' ? 'disable' : 'enable'} the user.
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleClose} color="primary">
+                No
+              </Button>
+              <Button onClick={handleConfirm} color="primary" autoFocus>
+                Yes
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </TableCell>
 
         <TableCell align="right">
           <IconButton onClick={handleOpenPopover}>
@@ -355,3 +355,7 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
     </>
   );
 }
+
+// function setUsers(arg0: (prevUsers: any) => any) {
+//   throw new Error('Function not implemented.');
+// }

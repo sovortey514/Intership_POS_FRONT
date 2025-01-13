@@ -68,6 +68,7 @@ export function UserView() {
         filterName={filterName}
         setFilterName={setFilterName}
         handleDeleteUser={handleDeleteUser}
+        
       />
       <Dialog 
         open={open} 
