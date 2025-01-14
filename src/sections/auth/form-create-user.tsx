@@ -58,7 +58,7 @@ export function CreateView({ onUserCreated }: { onUserCreated: () => void }) {
         onChange={(e) => setEmail(e.target.value)}
         type="email"
         required
-        sx={{ mb: 2 }} // Adjusted spacing
+        sx={{ mb: 2 }}
       />
       <TextField
         fullWidth
@@ -67,7 +67,7 @@ export function CreateView({ onUserCreated }: { onUserCreated: () => void }) {
         value={role}
         onChange={(e) => setRole(e.target.value)}
         required
-        sx={{ mb: 2 }} // Adjusted spacing
+        sx={{ mb: 2 }}
       />
       <TextField
         fullWidth
@@ -89,7 +89,7 @@ export function CreateView({ onUserCreated }: { onUserCreated: () => void }) {
             </InputAdornment>
           ),
         }}
-        sx={{ mb: 2 }} // Adjusted spacing
+        sx={{ mb: 2 }}
       />
 
       <Box display="flex" flexDirection="column" alignItems="center" sx={{ mb: 2, width: '100%' }}>

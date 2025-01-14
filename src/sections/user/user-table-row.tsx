@@ -24,7 +24,7 @@ import {
 
 import type { UpdateRequest } from 'src/api/auth/authTypes';
 
-import { enableUser, disableUser, getUserById } from 'src/api/auth/authService';
+import { enableUser, disableUser, getUserById, Update } from 'src/api/auth/authService';
 
 import { Iconify } from 'src/components/iconify';
 
@@ -60,8 +60,11 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
   const [openUpdateDialog, setOpenUpdateDialog] = useState(false);
   const [open, setOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProps | null>(null);
-
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState('');
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
     setOpenPopover(event.currentTarget);
   }, []);
 
@@ -92,6 +95,15 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
     handleClosePopover();
     handleCloseConfirmDialog();
   };
+
+  const handlUserUpdate = () => {
+    const updateData = { email, password, role };
+    Update(Number(row.id), updateData); 
+    handleClosePopover();
+    handleCloseConfirmDialog();
+  };
+  
+
   const handleClickOpen = () => {
     setSelectedUser(row);
     setOpen(true);
@@ -344,7 +356,7 @@ export function UserTableRow({ row, selected, onSelectRow, deleteUser }: UserTab
         }}
       >
         <DialogContent sx={{ overflow: 'hidden' }}>
-          <UpdateformView />
+          <UpdateformView onUserUpdate={handlUserUpdate} userId={Number(row.id)}/>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseUpdateDialog} color="primary">

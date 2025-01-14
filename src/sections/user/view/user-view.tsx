@@ -28,7 +28,7 @@ import { UserTableToolbar } from '../user-table-toolbar';
 import { UserProps, UserTableRow } from '../user-table-row';
 
 export function UserView() {
-  const { users, loading, handleDeleteUser, fetchUserswithimage ,userswithimage} = useFetchUsers();
+  const { users, loading, handleDeleteUser, fetchUserswithimage ,userswithimage, handleUserUpdated} = useFetchUsers();
   const [filterName, setFilterName] = useState('');
   const [open, setOpen] = useState(false); // Dialog state in the parent component
   
@@ -68,6 +68,7 @@ export function UserView() {
         filterName={filterName}
         setFilterName={setFilterName}
         handleDeleteUser={handleDeleteUser}
+        handleUserUpdated={handleUserUpdated}
         
       />
       <Dialog 
@@ -118,12 +119,14 @@ function UserTable({
   filterName,
   setFilterName,
   handleDeleteUser,
+  handleUserUpdated
 }: {
   userswithimage: UserProps[];
   table: any;
   filterName: string;
   setFilterName: React.Dispatch<React.SetStateAction<string>>;
   handleDeleteUser: (userId: number) => void;
+  handleUserUpdated: (userId: number) => void;
 }) {
   
   return (
@@ -169,7 +172,6 @@ function UserTable({
                     selected={table.selected.includes(row.id)}
                     onSelectRow={() => table.onSelectRow(row.id)}
                     deleteUser={() => handleDeleteUser(Number(row.id))}
-                    // deleteUser={handleDeleteUser}
                   />
                 ))}
             </TableBody>
@@ -273,4 +275,5 @@ function useTable() {
 function setModalOpen(arg0: boolean) {
   throw new Error('Function not implemented.');
 }
+
 

@@ -7,6 +7,7 @@ import type {
   UpdateRequest,
   SignInResponse,
   SignUpResponse,
+  UpdateResponse,
 } from './authTypes';
 
 const BASE_URL = 'http://localhost:9090'; // Ensure this matches your backend's base URL
@@ -111,11 +112,6 @@ export async function deleteUser(userId: number): Promise<void> {
   }
 }
 
-
-
-
-
-
 export async function disableUser(userId: number, data: UpdateRequest ): Promise<void> {
   try {
     const response = await axios.put(`${BASE_URL}/auth/users/${userId}/disable`,data);
@@ -155,17 +151,15 @@ export async function getUserById(userId: number): Promise<Alluser | null> {
 }
 
 
-export async function Update(data: SignUpRequest): Promise<SignUpResponse> {
+export async function Update(userId: number, data: UpdateRequest): Promise<SignUpResponse> {
   try {
-    const response = await axios.post<SignUpResponse>(`${BASE_URL}/auth/signup`, data, {
-      headers: { 'Content-Type': 'application/json' },
-    });
-    return response.data; // Return the response data from the server
-  } catch (error: any) {
-    // Handle errors gracefully and return a consistent response format
+    const response = await axios.put<UpdateResponse>(`${BASE_URL}/auth/user/${userId}`, data);
+    return response.data; 
+  } catch (error: any) { 
     return {
       statusCode: error.response?.status || 500,
       message: error.response?.data?.message || 'An error occurred during sign-up',
-    } as SignUpResponse;
+    } as UpdateResponse;
   }
 }
+

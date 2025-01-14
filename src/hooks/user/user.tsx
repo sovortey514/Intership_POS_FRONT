@@ -1,13 +1,19 @@
 import { useState, useEffect } from 'react';
 
-import { deleteUser, GetallUsers, GetallUserswithimage, getUserById } from 'src/api/auth/authService'; // Adjust as needed
-import type { Alluser } from 'src/api/auth/authTypes'; // Adjust import path as needed
+import { deleteUser, GetallUsers, GetallUserswithimage, getUserById, Update } from 'src/api/auth/authService'; // Adjust as needed
+import type { Alluser, UpdateRequest } from 'src/api/auth/authTypes'; // Adjust import path as needed
 
 export function useFetchUsers() {
   const [users, setUsers] = useState<Alluser[]>([]);
   const [userswithimage, setUserswithimage] = useState<Alluser[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [userId, setUserId] = useState<number | null>(null); // Add state for userId
+  const [userId, setUserId] = useState<number | null>(null);
+  const [email, setEmail] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState('');
+  const [image, setImage] = useState<File | null>(null); 
+  // Add state for userId
   
   const fetchUsers = async () => {
     try {
@@ -47,6 +53,32 @@ export function useFetchUsers() {
     }
   };
 
+  const handleUserUpdated = async () => {
+    if (userId === null) {
+      console.error('User ID is null, cannot update user.');
+      return;
+    }
+  
+    setLoading(true);
+    try {
+      const updateData: UpdateRequest = { email, password, role };
+      const response = await Update(userId, updateData);
+  
+      if (response.statusCode === 200) {
+        console.log('User updated successfully.');
+        // Optionally, refetch the updated user data
+        await handleGetUserById(userId);
+        // Call a function like onUserUpdated() if needed
+      } else {
+        console.error('Failed to update user:', response.message || 'Unknown error');
+      }
+    } catch (error: any) {
+      console.error('Error updating user:', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGetUserById = async (id: number) => {
     try {
       setLoading(true);
@@ -64,6 +96,8 @@ export function useFetchUsers() {
       setLoading(false);
     }
   };
+
+
   
 
   useEffect(() => {
@@ -76,6 +110,7 @@ export function useFetchUsers() {
   useEffect(() => {
     fetchUsers();
     fetchUserswithimage();
+    
   }, []);
 
  
@@ -90,6 +125,7 @@ export function useFetchUsers() {
     fetchUsers,
     fetchUserswithimage,
     setUserId,
-    handleGetUserById 
+    handleGetUserById,
+    handleUserUpdated 
   };
 }

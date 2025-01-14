@@ -1,41 +1,54 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
 import Box from '@mui/material/Box';
+import { Avatar, Button } from '@mui/material';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import InputAdornment from '@mui/material/InputAdornment';
-import { signUp } from 'src/api/auth/authService';
+
+import { getUserById, Update } from 'src/api/auth/authService';
+
 import { Iconify } from 'src/components/iconify';
-import { Avatar, Button } from '@mui/material';
 
 // ----------------------------------------------------------------------
 
-export function UpdateformView() {
+export function UpdateformView({ userId, onUserUpdate }:{ userId: number,onUserUpdate: () => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [image, setImage] = useState<File | null>(null);
-  const [userId, setUserId] = useState<string>(''); // Add userId state if needed
+  const [image, setImage] = useState<File | null>(null); 
+  
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userData = await getUserById(userId);
+        console.log('User data retrieved:', userData);
+        if (userData) {
+          setEmail(userData.email);
+          setRole(userData.role);
+        }
+      } catch (err) {
+        setError('Failed to load user data');
+        console.error('Error fetching user data:', err);
+      }
+    };
 
-  const handleSignUp = async () => {
+    fetchUserData();
+  }, [userId]);
+
+  const handleUpdateUser = async () => {
     setIsLoading(true);
-    if (!email || !password || !role) {
-      setError('Please fill in all fields');
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      const signUpData = { email, password, role };
-      const response = await signUp(signUpData,image);
-
+      const updateData = { email, password, role };
+      const response = await Update(userId, updateData);
       if (response.statusCode === 200) {
         setIsLoading(false);
-        // onUserCreated(); You can trigger this if needed.
+        onUserUpdate();
       } else {
         setError(response.message || 'Failed to register');
         setIsLoading(false);
@@ -63,7 +76,7 @@ export function UpdateformView() {
         onChange={(e) => setEmail(e.target.value)}
         type="email"
         required
-        sx={{ mb: 2 }} 
+        sx={{ mb: 2 }}
       />
       <TextField
         fullWidth
@@ -72,31 +85,31 @@ export function UpdateformView() {
         value={role}
         onChange={(e) => setRole(e.target.value)}
         required
-        sx={{ mb: 2 }} 
+        sx={{ mb: 2 }}
       />
       <TextField
-        fullWidth
-        name="password"
-        label="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              <IconButton
-                onClick={() => setShowPassword(!showPassword)}
-                edge="end"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-                <Iconify icon={showPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'} />
-              </IconButton>
-            </InputAdornment>
-          ),
-        }}
-        type={showPassword ? 'text' : 'password'}
-        sx={{ mb: 2 }} 
-      />
+  fullWidth
+  name="password"
+  label="Password"
+  value={password}
+  onChange={(e) => setPassword(e.target.value)}
+  required
+  type={showPassword ? 'text' : 'password'}  
+  InputProps={{
+    endAdornment: (
+      <InputAdornment position="end">
+        <IconButton
+          onClick={() => setShowPassword(!showPassword)}
+          edge="end"
+          aria-label={showPassword ? 'Hide password' : 'Show password'}
+        >
+          <Iconify icon={showPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'} />
+        </IconButton>
+      </InputAdornment>
+    ),
+  }}
+  sx={{ mb: 2 }}
+/>
 
       <Box display="flex" flexDirection="column" alignItems="center" sx={{ mb: 2, width: '100%' }}>
         <Avatar
@@ -138,7 +151,7 @@ export function UpdateformView() {
         color="inherit"
         variant="contained"
         loading={isLoading}
-        onClick={handleSignUp}
+        onClick={handleUpdateUser}
         sx={{
           backgroundColor: '#FF5722',
           '&:hover': {
@@ -155,7 +168,7 @@ export function UpdateformView() {
     <>
       <Box gap={1.5} display="flex" flexDirection="column" alignItems="center" sx={{ mb: 4 }}>
         <Typography variant="h5" fontWeight="bold">
-          Update Staff
+        Create Staff
         </Typography>
       </Box>
       {renderForm}
