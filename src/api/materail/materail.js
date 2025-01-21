@@ -149,6 +149,29 @@ export const fetchFixedAssetById = async (id, token) => {
   }
 };
 
+// export const deleteFixedAssetById = async (id, token) => {
+//   try {
+//     const response = await fetch(`${API_URL}/deleteFixedAsset/${id}`, {
+//       method: "DELETE",
+//       headers: {
+//         "Content-Type": "application/json",
+//         Authorization: `Bearer ${token}`,
+//       },
+//     });
+
+//     if (!response.ok) {
+//       const errorMessage = await response.json();
+//       console.error("Error deleting fixed asset by ID:", errorMessage);
+//       throw new Error(errorMessage.message || "Failed to delete fixed asset by ID.");
+//     }
+
+//     return response;
+//   } catch (error) {
+//     console.error("Error deleting fixed asset by ID:", error);
+//     throw new Error(error.message || "An unknown error occurred.");
+//   }
+// };
+
 export const deleteFixedAssetById = async (id, token) => {
   try {
     const response = await fetch(`${API_URL}/deleteFixedAsset/${id}`, {
@@ -165,7 +188,7 @@ export const deleteFixedAssetById = async (id, token) => {
       throw new Error(errorMessage.message || "Failed to delete fixed asset by ID.");
     }
 
-    return response;
+    return response.json(); // Return response data if any (for success/failure message)
   } catch (error) {
     console.error("Error deleting fixed asset by ID:", error);
     throw new Error(error.message || "An unknown error occurred.");

@@ -36,6 +36,7 @@ import {
   createMaterail,
   fetchMaterials,
   fetchCategories,
+  deleteFixedAssetById,
   uploadImage,
 } from "../../../api/materail/materail";
 const { Option } = Select;
@@ -142,42 +143,42 @@ const TotalAsset = () => {
     },
   ];
 
-  useEffect(() => {
-    const data = async () => {
-      try {
-        const headers = {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        };
-        const response = await fetch(
-          `http://localhost:6060/admin/getFixedAssetById/${a}`,
-          {
-            method: "GET",
-            headers,
-          }
-        );
-        if (response.ok) {
-          const assetDetails = await response.json();
-          setAssetById(assetDetails.id);
-        } else {
-          const errorData = await response.json();
-          notification.error({
-            message: "Failed to Fetch Asset Details",
-            description:
-              errorData.message ||
-              "There was an error fetching the asset details.",
-          });
-        }
-      } catch (error) {
-        notification.error({
-          message: "Failed to Update Asset",
-          description: "There was an error updating the asset.",
-        });
-        console.error("Error updating visibility:", error);
-      }
-    };
-    data();
-  }, [a]);
+  // useEffect(() => {
+  //   const data = async () => {
+  //     try {
+  //       const headers = {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       };
+  //       const response = await fetch(
+  //         `http://localhost:6060/admin/getFixedAssetById/${a}`,
+  //         {
+  //           method: "GET",
+  //           headers,
+  //         }
+  //       );
+  //       if (response.ok) {
+  //         const assetDetails = await response.json();
+  //         setAssetById(assetDetails.id);
+  //       } else {
+  //         const errorData = await response.json();
+  //         notification.error({
+  //           message: "Failed to Fetch Asset Details",
+  //           description:
+  //             errorData.message ||
+  //             "There was an error fetching the asset details.",
+  //         });
+  //       }
+  //     } catch (error) {
+  //       notification.error({
+  //         message: "Failed to Update Asset",
+  //         description: "There was an error updating the asset.",
+  //       });
+  //       console.error("Error updating visibility:", error);
+  //     }
+  //   };
+  //   data();
+  // }, [a]);
 
   useEffect(() => {
     console.log("Data state updated: ", data);
@@ -394,35 +395,73 @@ const TotalAsset = () => {
     setIsModalVisible(true);
   };
 
+  // const handleDelete = async (assetDetails) => {
+  //   console.log("Deleting asset with id:", assetDetails.id); // Using assetDetails.id directly
+  
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     const headers = {
+  //       "Content-Type": "application/json",
+  //       Authorization: `Bearer ${token}`,
+  //     };
+  
+  //     const response = await fetch(
+  //       `http://localhost:6060/admin/deleteFixedAsset/${assetDetails.id}`, 
+  //       {
+  //         method: "DELETE",
+  //         headers,
+  //       }
+  //     );
+  
+  //     if (response.ok) {
+  //       setData((prevData) => prevData.filter((item) => item.id !== assetDetails.id));
+  //       notification.success({
+  //         message: "Asset Deleted",
+  //         description: "Fixed asset has been deleted successfully.",
+  //       });
+  //     } else {
+  //       const errorData = await response.json();
+  //       notification.error({
+  //         message: "Failed to delete asset",
+  //         description: errorData.message || "An unknown error occurred.",
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error("Error deleting fixed asset:", error);
+  //     notification.error({
+  //       message: "Failed to delete asset",
+  //       description: error.message || "An unknown error occurred.",
+  //     });
+  //   }
+  // };
   const handleDelete = async (assetDetails) => {
-    console.log("Deleting asset with id:", assetDetails.id); // Using assetDetails.id directly
+    console.log("Deleting asset with id:", assetDetails.id);
   
     try {
-      const token = localStorage.getItem("token");
-      const headers = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      };
+      const token = localStorage.getItem("token"); // Retrieve the token
+      if (!token) {
+        notification.error({
+          message: "Authentication Error",
+          description: "Please log in again.",
+        });
+        return;
+      }
   
-      const response = await fetch(
-        `http://localhost:6060/admin/deleteFixedAsset/${assetDetails.id}`, 
-        {
-          method: "DELETE",
-          headers,
-        }
-      );
+      // Call the API function to delete the asset by ID
+      const response = await deleteFixedAssetById(assetDetails.id, token);
   
-      if (response.ok) {
+      // Check if the response indicates a success
+      if (response.statusCode === 200) {
         setData((prevData) => prevData.filter((item) => item.id !== assetDetails.id));
         notification.success({
           message: "Asset Deleted",
           description: "Fixed asset has been deleted successfully.",
         });
       } else {
-        const errorData = await response.json();
+        // Handle any error response from the server
         notification.error({
           message: "Failed to delete asset",
-          description: errorData.message || "An unknown error occurred.",
+          description: response.message || "An unknown error occurred.",
         });
       }
     } catch (error) {
@@ -433,6 +472,7 @@ const TotalAsset = () => {
       });
     }
   };
+  
   
 
   const handleCategoryEdit = (category) => {
