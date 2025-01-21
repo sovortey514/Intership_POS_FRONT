@@ -73,12 +73,12 @@ const SidebarRoutes = () => {
               {
                 path: "/app/inventory-foodlist",
                 icon: <WalletIcon className={submenuIconClasses} />,
-                name: "Food List",
+                name: "Material List",
               },
               {
                 path: "/app/inventory-category",
                 icon: <NewspaperIcon className={submenuIconClasses} />,
-                name: "Category",
+                name: "Food Category",
               },
 
               {
