@@ -14,6 +14,7 @@ import {
   Col,
   Row,
 } from "antd";
+
 import {
   DownOutlined,
   EditOutlined,
@@ -112,10 +113,28 @@ const TotalAsset = () => {
       key: "action",
       render: (_, assetDetails) => (
         <Space size="middle">
-          <Button type="primary" onClick={() => handleEdit(assetDetails)}>
+          <Button
+            type="default"
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(assetDetails)}
+            style={{
+              borderColor: 'green',
+              color: 'green',
+              backgroundColor: 'white',
+            }}
+          >
             Edit
           </Button>
-          <Button type="danger" onClick={() => handleDelete(assetDetails)}>
+          <Button
+            type="default"
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(assetDetails)}
+            style={{
+              borderColor: 'red',
+              color: 'red',
+              backgroundColor: 'white', 
+            }}
+          >
             Delete
           </Button>
         </Space>
@@ -139,7 +158,7 @@ const TotalAsset = () => {
         );
         if (response.ok) {
           const assetDetails = await response.json();
-          setAssetById(assetDetails.fixedAsset);
+          setAssetById(assetDetails.id);
         } else {
           const errorData = await response.json();
           notification.error({
@@ -161,11 +180,13 @@ const TotalAsset = () => {
   }, [a]);
 
   useEffect(() => {
+    console.log("Data state updated: ", data);
+  }, [data]);
+
+  useEffect(() => {
     fetchCategories();
     fetchMaterail();
   }, []);
-
-  
 
   const handleSearch = (e) => {
     const value = e.target.value;
@@ -203,14 +224,7 @@ const TotalAsset = () => {
 
   const fetchCategorie = async () => {
     try {
-      // const headers = {
-      //   "Content-Type": "application/json",
-      //   Authorization: `Bearer ${token}`,
-      // };
-
-      // const response = await fetch("http://localhost:6060/admin/categories", {
-      //   headers,
-      // });
+    
       console.log("Sending request to fetch fixed assets...");
 
       const result = await fetchCategories(token); 
@@ -381,36 +395,45 @@ const TotalAsset = () => {
   };
 
   const handleDelete = async (assetDetails) => {
-    console.log("Deleting asset with key:", assetDetails.fixedAssetId);
+    console.log("Deleting asset with id:", assetDetails.id); // Using assetDetails.id directly
+  
     try {
       const token = localStorage.getItem("token");
       const headers = {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       };
-      await fetch(
-        `http://localhost:6060/admin/deleteFixeAsset/${assetDetails.fixedAssetId}`,
+  
+      const response = await fetch(
+        `http://localhost:6060/admin/deleteFixedAsset/${assetDetails.id}`, 
         {
           method: "DELETE",
           headers,
         }
       );
-      console.log("Deleting asset with key:", assetDetails.key);
-      setData((prevData) =>
-        prevData.filter((item) => item.id !== assetDetails.fixedAssetId)
-      );
-      notification.success({
-        message: "Asset Deleted",
-        description: "Fixed asset has been deleted successfully.",
-      });
+  
+      if (response.ok) {
+        setData((prevData) => prevData.filter((item) => item.id !== assetDetails.id));
+        notification.success({
+          message: "Asset Deleted",
+          description: "Fixed asset has been deleted successfully.",
+        });
+      } else {
+        const errorData = await response.json();
+        notification.error({
+          message: "Failed to delete asset",
+          description: errorData.message || "An unknown error occurred.",
+        });
+      }
     } catch (error) {
       console.error("Error deleting fixed asset:", error);
       notification.error({
         message: "Failed to delete asset",
-        description: error.message,
+        description: error.message || "An unknown error occurred.",
       });
     }
   };
+  
 
   const handleCategoryEdit = (category) => {
     setModalType("category");
@@ -569,6 +592,7 @@ const TotalAsset = () => {
           <Table
             columns={columns(handleEdit, handleDelete)}
             dataSource={data}
+            rowKey="id" 
             className="mt-5"
           />
         </div>

@@ -60,8 +60,6 @@ export const createMaterail = async (values, token) => {
   return response;  
 };
 
-
-
 export const uploadImage = async (file, fixedAssetId, token) => {
   const formData = new FormData();
   formData.append("file", file);
@@ -126,5 +124,54 @@ export const fetchCategories = async (token) => {
     throw new Error(error.message || "An unknown error occurred.");
   }
 };
+
+export const fetchFixedAssetById = async (id, token) => {
+  try {
+    const response = await fetch(`${API_URL}/getFixedAssetById/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorMessage = await response.json();
+      console.error("Error fetching fixed asset by ID:", errorMessage);
+      throw new Error(errorMessage.message || "Failed to fetch fixed asset by ID.");
+    }
+
+    const result = await response.json();
+    return result.fixedAsset;
+  } catch (error) {
+    console.error("Error fetching fixed asset by ID:", error);
+    throw new Error(error.message || "An unknown error occurred.");
+  }
+};
+
+export const deleteFixedAssetById = async (id, token) => {
+  try {
+    const response = await fetch(`${API_URL}/deleteFixedAsset/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorMessage = await response.json();
+      console.error("Error deleting fixed asset by ID:", errorMessage);
+      throw new Error(errorMessage.message || "Failed to delete fixed asset by ID.");
+    }
+
+    return response;
+  } catch (error) {
+    console.error("Error deleting fixed asset by ID:", error);
+    throw new Error(error.message || "An unknown error occurred.");
+  }
+};
+
+
 
 
