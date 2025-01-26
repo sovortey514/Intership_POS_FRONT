@@ -24,8 +24,8 @@ export const createCategory = async (values, token) => {
   return response;
 };
 
-export const updateFixedAsset = async (id, values, token) => {
-  const response = await fetch(`${API_URL}/updateFixedAsset/${id}`, {
+export const updateMaterial = async (id, values, token) => {
+  const response = await fetch(`${API_URL}/update/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -148,29 +148,6 @@ export const fetchFixedAssetById = async (id, token) => {
     throw new Error(error.message || "An unknown error occurred.");
   }
 };
-
-// export const deleteFixedAssetById = async (id, token) => {
-//   try {
-//     const response = await fetch(`${API_URL}/deleteFixedAsset/${id}`, {
-//       method: "DELETE",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${token}`,
-//       },
-//     });
-
-//     if (!response.ok) {
-//       const errorMessage = await response.json();
-//       console.error("Error deleting fixed asset by ID:", errorMessage);
-//       throw new Error(errorMessage.message || "Failed to delete fixed asset by ID.");
-//     }
-
-//     return response;
-//   } catch (error) {
-//     console.error("Error deleting fixed asset by ID:", error);
-//     throw new Error(error.message || "An unknown error occurred.");
-//   }
-// };
 
 export const deleteFixedAssetById = async (id, token) => {
   try {

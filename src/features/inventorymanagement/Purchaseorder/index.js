@@ -32,12 +32,11 @@ import { SearchOutlined } from "@ant-design/icons";
 import {
   updateCategory,
   createCategory,
-  updateFixedAsset,
   createMaterail,
   fetchMaterials,
   fetchCategories,
   deleteFixedAssetById,
-  uploadImage,
+  updateMaterial,
 } from "../../../api/materail/materail";
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -46,21 +45,20 @@ const { confirm } = Modal;
 const TotalAsset = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isViewModalVisible, setIsViewModalVisible] = useState(false);
-  const [modalType, setModalType] = useState(""); // 'fixedasset' or 'category'
+  const [modalType, setModalType] = useState(""); // 'Material' or 'category'
   const [editCategory, setEditCategory] = useState(null);
   const [editKey, setEditKey] = useState(null);
   const [form] = Form.useForm();
   const [categories, setCategories] = useState([]);
   const [data, setData] = useState([]);
   const token = localStorage.getItem("token");
-  // const [visibleAssets, setVisibleAssets] = useState([]);
   const [assetDetails, setViewAsset] = useState(null);
   const [currentRecord, setCurrentRecord] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState(null);
-
+  const [filteredData, setFilteredData] = useState(data);
   const [a, setA] = useState(0);
   const [assetById, setAssetById] = useState([]);
 
@@ -119,9 +117,9 @@ const TotalAsset = () => {
             icon={<EditOutlined />}
             onClick={() => handleEdit(assetDetails)}
             style={{
-              borderColor: 'green',
-              color: 'green',
-              backgroundColor: 'white',
+              borderColor: "green",
+              color: "green",
+              backgroundColor: "white",
             }}
           >
             Edit
@@ -129,11 +127,11 @@ const TotalAsset = () => {
           <Button
             type="default"
             icon={<DeleteOutlined />}
-            onClick={() => handleDelete(assetDetails)}
+            onClick={() => showDeleteConfirmation(assetDetails)}
             style={{
-              borderColor: 'red',
-              color: 'red',
-              backgroundColor: 'white', 
+              borderColor: "red",
+              color: "red",
+              backgroundColor: "white",
             }}
           >
             Delete
@@ -143,43 +141,6 @@ const TotalAsset = () => {
     },
   ];
 
-  // useEffect(() => {
-  //   const data = async () => {
-  //     try {
-  //       const headers = {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`,
-  //       };
-  //       const response = await fetch(
-  //         `http://localhost:6060/admin/getFixedAssetById/${a}`,
-  //         {
-  //           method: "GET",
-  //           headers,
-  //         }
-  //       );
-  //       if (response.ok) {
-  //         const assetDetails = await response.json();
-  //         setAssetById(assetDetails.id);
-  //       } else {
-  //         const errorData = await response.json();
-  //         notification.error({
-  //           message: "Failed to Fetch Asset Details",
-  //           description:
-  //             errorData.message ||
-  //             "There was an error fetching the asset details.",
-  //         });
-  //       }
-  //     } catch (error) {
-  //       notification.error({
-  //         message: "Failed to Update Asset",
-  //         description: "There was an error updating the asset.",
-  //       });
-  //       console.error("Error updating visibility:", error);
-  //     }
-  //   };
-  //   data();
-  // }, [a]);
-
   useEffect(() => {
     console.log("Data state updated: ", data);
   }, [data]);
@@ -188,6 +149,27 @@ const TotalAsset = () => {
     fetchCategories();
     fetchMaterail();
   }, []);
+
+  useEffect(() => {
+    const filtered = data.filter((item) => {
+      const searchLower = searchTerm.toLowerCase();
+
+      const nameMatch = item.name.toLowerCase().includes(searchLower);
+      const categoryMatch = item.category.name
+        .toLowerCase()
+        .includes(searchLower);
+      const dateMatch =
+        item.purchaseDate &&
+        moment(item.purchaseDate)
+          .format("YYYY-MM-DD")
+          .toLowerCase()
+          .includes(searchLower);
+
+      return nameMatch || categoryMatch || dateMatch;
+    });
+
+    setFilteredData(filtered);
+  }, [searchTerm, data]);
 
   const handleSearch = (e) => {
     const value = e.target.value;
@@ -225,10 +207,9 @@ const TotalAsset = () => {
 
   const fetchCategorie = async () => {
     try {
-    
       console.log("Sending request to fetch fixed assets...");
 
-      const result = await fetchCategories(token); 
+      const result = await fetchCategories(token);
 
       console.log("Response received:", result);
       // const result = await response.json();
@@ -249,7 +230,7 @@ const TotalAsset = () => {
     try {
       console.log("Sending request to fetch fixed assets...");
 
-      const result = await fetchMaterials(token); 
+      const result = await fetchMaterials(token);
 
       console.log("Response received:", result);
 
@@ -316,9 +297,9 @@ const TotalAsset = () => {
               errorMessage || "Category with this name already exists.";
           }
         }
-      } else if (modalType === "fixedasset") {
+      } else if (modalType === "Material") {
         if (editKey !== null) {
-          await updateFixedAsset(editKey.fixedAssetId, values, token);
+          await updateMaterial(editKey.fixedAssetId, values, token);
           success = true;
           message = "Asset Updated";
           description = "Fixed asset has been updated successfully.";
@@ -368,77 +349,34 @@ const TotalAsset = () => {
   };
 
   const handleEdit = (assetDetails) => {
-    // console.log(assetDetails.category.name);
     console.log(assetDetails);
-    setModalType("fixedasset");
+    console.log("Asset Details:", assetDetails);
+    console.log(assetDetails.category.name);
+    setModalType("Material");
     setEditKey(assetDetails);
-
     form.setFieldsValue({
-      name: assetDetails.fixedAssetName,
-      categoryId: assetDetails.fixedAssetCategory,
-      model: assetDetails.fixedAssetModel,
-      year: assetDetails.fixedAssetYear,
-      serialNumber: assetDetails.fixedAssetSerialNumber,
-      purchaseDate: assetDetails.fixedAssetPurchaseDate
+      name: assetDetails.name,
+      categoryId: assetDetails.category.name,
+      model: assetDetails.model || null,
+      year: assetDetails.year || null,
+      serialNumber: assetDetails.serialNumber || null,
+      purchaseDate: assetDetails.purchaseDate
         ? moment(assetDetails.purchaseDate)
         : null,
-      price: assetDetails.fixedAssetPrice,
-      unit: assetDetails.fixedAssetUnit,
-      quantity: assetDetails.fixedAssetQuantity,
+      price: assetDetails.price,
+      unit: assetDetails.unit || null,
+      quantity: assetDetails.quantity,
+      remark: assetDetails.remarks || "",
     });
 
-    if (Array.isArray(assetDetails.files)) {
-      setImages(assetDetails.files.map((file) => file.fileUrl));
-    } else {
-      setImages([]);
-    }
     setIsModalVisible(true);
   };
 
-  // const handleDelete = async (assetDetails) => {
-  //   console.log("Deleting asset with id:", assetDetails.id); // Using assetDetails.id directly
-  
-  //   try {
-  //     const token = localStorage.getItem("token");
-  //     const headers = {
-  //       "Content-Type": "application/json",
-  //       Authorization: `Bearer ${token}`,
-  //     };
-  
-  //     const response = await fetch(
-  //       `http://localhost:6060/admin/deleteFixedAsset/${assetDetails.id}`, 
-  //       {
-  //         method: "DELETE",
-  //         headers,
-  //       }
-  //     );
-  
-  //     if (response.ok) {
-  //       setData((prevData) => prevData.filter((item) => item.id !== assetDetails.id));
-  //       notification.success({
-  //         message: "Asset Deleted",
-  //         description: "Fixed asset has been deleted successfully.",
-  //       });
-  //     } else {
-  //       const errorData = await response.json();
-  //       notification.error({
-  //         message: "Failed to delete asset",
-  //         description: errorData.message || "An unknown error occurred.",
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.error("Error deleting fixed asset:", error);
-  //     notification.error({
-  //       message: "Failed to delete asset",
-  //       description: error.message || "An unknown error occurred.",
-  //     });
-  //   }
-  // };
   const handleDelete = async (assetDetails) => {
     console.log("Deleting asset with id:", assetDetails.id);
-  
+
     try {
-      const token = localStorage.getItem("token"); // Retrieve the token
+      const token = localStorage.getItem("token"); 
       if (!token) {
         notification.error({
           message: "Authentication Error",
@@ -446,13 +384,15 @@ const TotalAsset = () => {
         });
         return;
       }
-  
+
       // Call the API function to delete the asset by ID
       const response = await deleteFixedAssetById(assetDetails.id, token);
-  
+
       // Check if the response indicates a success
       if (response.statusCode === 200) {
-        setData((prevData) => prevData.filter((item) => item.id !== assetDetails.id));
+        setData((prevData) =>
+          prevData.filter((item) => item.id !== assetDetails.id)
+        );
         notification.success({
           message: "Asset Deleted",
           description: "Fixed asset has been deleted successfully.",
@@ -472,8 +412,22 @@ const TotalAsset = () => {
       });
     }
   };
-  
-  
+
+  const showDeleteConfirmation = (assetDetails) => {
+    Modal.confirm({
+      title: "Are you sure you want to delete?",
+      content: "This action cannot be undone.",
+      okText: "Yes, delete",
+      okType: "danger",
+      cancelText: "Cancel",
+      onOk(){
+        handleDelete(assetDetails);
+      },
+      onCancel(){
+        console.log("Delete action canceled");
+      }
+    })
+  }
 
   const handleCategoryEdit = (category) => {
     setModalType("category");
@@ -517,8 +471,8 @@ const TotalAsset = () => {
   const menu = (
     <Menu>
       <Menu.Item key="1">
-        <Button type="link" onClick={() => showModal("fixedasset")}>
-          Create Fixed Asset
+        <Button type="link" onClick={() => showModal("Material")}>
+          Create Material
         </Button>
       </Menu.Item>
       <Menu.Item key="2">
@@ -528,12 +482,6 @@ const TotalAsset = () => {
       </Menu.Item>
     </Menu>
   );
-
-  // const handleMenuClick = (e) => {
-  //   setSelectedStatus(e.key);
-  //   console.log(e.key);
-  // };
-
   const handleCategorySelect = (categoryId) => {
     setSelectedCategory(categoryId);
   };
@@ -631,8 +579,8 @@ const TotalAsset = () => {
         <div className="flex-1 overflow-auto">
           <Table
             columns={columns(handleEdit, handleDelete)}
-            dataSource={data}
-            rowKey="id" 
+            dataSource={filteredData}
+            rowKey="id"
             className="mt-5"
           />
         </div>
@@ -644,10 +592,10 @@ const TotalAsset = () => {
             ? editCategory
               ? "Edit Category"
               : "Create Category"
-            : modalType === "fixedasset"
+            : modalType === "Material"
             ? editKey
-              ? "Edit Fixed Asset"
-              : "Create Fixed Asset"
+              ? "Edit Material"
+              : "Create Material"
             : "Assign Fixed Asset"
         }
         visible={isModalVisible}
@@ -666,7 +614,7 @@ const TotalAsset = () => {
             boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
           }}
         >
-          {modalType === "fixedasset" && (
+          {modalType === "Material" && (
             <>
               <Row gutter={16}>
                 <Col span={12}>
