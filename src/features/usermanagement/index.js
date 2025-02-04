@@ -641,7 +641,7 @@ function TotalUser() {
                   <ErrorText>{errorMessage}</ErrorText>
                   <button
                     type="submit"
-                    className={`btn w-full bg-yellow-500 hover:bg-yellow-200 text-white hover:text-black ${
+                    className={`btn w-full bg-pink-500 hover:bg-pink-200 text-white hover:text-black ${
                       loading ? "loading" : ""
                     }`}
                   >
@@ -682,7 +682,7 @@ function TotalUser() {
 
                 <button
                   type="submit"
-                  className={`btn w-full bg-yellow-500 hover:bg-yellow-200 text-white hover:text-black ${
+                  className={`btn w-full bg-pink-500 hover:bg-pink-200 text-white hover:text-black ${
                     loading ? "loading" : ""
                   }`}
                 >
