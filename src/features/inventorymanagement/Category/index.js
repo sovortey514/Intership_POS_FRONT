@@ -136,7 +136,7 @@ function CategoryFoodManagement() {
         parentCategory:
           createType === "subcategory" ? values.parentCategory : null,
       };
-
+      fetchCategories()
       if (createType === "food") {
         setFoods([...foods, newItem]);
       } else if (createType === "subcategory") {
@@ -155,14 +155,14 @@ function CategoryFoodManagement() {
   };
 
   const handledeleteCategory = async (categories) => {
-      console.log("Deleting CagoryFoodDrink with id:", categories.id);
+      // console.log("Deleting CagoryFoodDrink with id:", categories.id);
       const response = await deleteCagoryFoodDrinkById(categories.id, token);
-  
+      console.log(response)
       if (response.ok) {
-        setCategories((prevData) =>
-          prevData.filter((item) => item.id !== categories.id)
-        );
-        // fetchCategories();
+        // setCategories((prevData) =>
+        //   prevData.filter((item) => item.id !== categories.id)
+        // );
+        fetchCategories();
         notification.success({
           message: "CagoryFoodDrink Deleted",
           description: "CagoryFoodDrink has been deleted successfully.",
@@ -206,20 +206,9 @@ function CategoryFoodManagement() {
     fetchCategories(); 
   }, []);
 
-  // const handleDelete = (key, type) => {
-  //   if (type === "category") {
-  //     setCategories(categories.filter((category) => category.key !== key));
-  //   } else if (type === "subcategory") {
-  //     setSubcategories(
-  //       subcategories.filter((subcategory) => subcategory.key !== key)
-  //     );
-  //   } else {
-  //     setFoods(foods.filter((food) => food.key !== key));
-  //   }
-  // };
-
   const toggleView = (view) => {
     setCurrentView(view);
+    // setSelectedCategory(null);
     setSelectedCategory(null);
   };
 

@@ -60,16 +60,18 @@ export const deleteCagoryFoodDrinkById = async (id, token) => {
         Authorization: `Bearer ${token}`,
       },
     });
+    console.log("Response Status:", response);
 
-    if (!response.ok) {
+    if(!response.status===200){  
       const errorMessage = await response.json();
-      console.error("Error deleting fixed asset by ID:", errorMessage);
+      console.error("Error deleting Cagory by ID:", errorMessage);
       throw new Error(errorMessage.message || "Failed to delete fixed asset by ID.");
     }
 
-    return response.json();
+    return response;
   } catch (error) {
-    console.error("Error deleting fixed asset by ID:", error);
+    console.error("Error deleting Cagory by ID:", error);
     throw new Error(error.message || "An unknown error occurred.");
   }
 };
+
