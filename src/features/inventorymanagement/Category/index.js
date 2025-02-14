@@ -27,6 +27,7 @@ import {
   EyeOutlined,
   DownloadOutlined,
   FilterOutlined,
+
 } from "@ant-design/icons";
 import moment from "moment";
 import {
@@ -39,6 +40,9 @@ import {
   deleteSubCagoryFoodDrinkById,
   updateSubCategory,
   createSize,
+  fetchSize
+  
+
 } from "../../../api/Food_Category/food_category";
 
 function CategoryFoodManagement() {
@@ -58,6 +62,7 @@ function CategoryFoodManagement() {
       tags: ["vegan", "fresh"],
     },
   ]);
+
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [createType, setCreateType] = useState("category");
@@ -66,17 +71,15 @@ function CategoryFoodManagement() {
   const [isViewMode, setIsViewMode] = useState(false);
   const [editingData, setEditingData] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [size, setSize] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [currentView, setCurrentView] = useState("category");
+  const [size, setSize] = useState([]);
   const token = localStorage.getItem("token");
 
   const showCreateModal = () => {
     form.resetFields();
     setIsModalVisible(true);
   };
-
- 
 
   const showEditModal = (record) => {
     console.log("Editing category/subcategory:", record);
@@ -91,9 +94,9 @@ function CategoryFoodManagement() {
 
     let type = "category";
     if (record.parentCategory) {
-      type = "subcategory";
+      type = "subcategory"; 
     } else if (record.category) {
-      type = "food";
+      type = "food"; 
     }
     setCreateType(type);
 
@@ -101,7 +104,7 @@ function CategoryFoodManagement() {
       name: record.name,
       description: record.description,
       parentCategory: record.parentCategory
-        ? String(record.parentCategory.id || record.parentCategory)
+        ? String(record.parentCategory.id || record.parentCategory) 
         : undefined,
       date: record.create_at ? moment(record.create_at) : null,
     });
@@ -181,38 +184,6 @@ function CategoryFoodManagement() {
       form.resetFields();
     } catch (error) {
       console.error("Error:", error);
-      message.error(error.message || "An error occurred. Please try again.");
-    }
-  };
-
-  const handleCreateSize = async () => {
-    try {
-      const values = await form.validateFields();
-
-      const payload = {
-        name: values.name,
-        description: values.description || "",
-      };
-
-      const data = await createSize(payload, token);
-
-      console.log("✅ Size Created Successfully:", data);
-
-      const newItem = {
-        key: data.id.toString(),
-        name: data.name,
-        description: data.description,
-      };
-
-      fetchSize();
-
-      setSize((prevSizes) => [...prevSizes, newItem]);
-
-      message.success("Size successfully added!");
-      setIsModalVisible(false);
-      form.resetFields();
-    } catch (error) {
-      console.error("Error creating size:", error);
       message.error(error.message || "An error occurred. Please try again.");
     }
   };
@@ -381,32 +352,6 @@ function CategoryFoodManagement() {
     }
   };
 
-  const fetchSize = async () => {
-    try {
-      console.log("Sending request to fetch Size...");
-      const token = localStorage.getItem("token");
-      const result = await fetchSize(token);
-
-      console.log("Response received:", result);
-
-      if (result) {
-        setSize(result);
-      } else {
-        notification.error({
-          message: "Failed to fetch size",
-          description: "There was an issue fetching size.",
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching size:", error);
-      notification.error({
-        message: "Error fetching size",
-        description:
-          error.message || "An error occurred while fetching size.",
-      });
-    }
-  };
-
   const handlefetchSubcategory = async () => {
     try {
       console.log("Sending request to fetch subcategories...");
@@ -433,10 +378,71 @@ function CategoryFoodManagement() {
     }
   };
 
+  const handleCreateSize = async () => {
+    try {
+      const values = await form.validateFields();
+  
+      const payload = {
+        name: values.name,
+        description: values.description || "",
+      };
+  
+      const data = await createSize(payload, token);
+  
+      // if (!data || data.error) {
+      //   throw new Error(data?.error || "Failed to create Size");
+      // }
+  
+      console.log("✅ Size Created Successfully:", data);
+  
+      message.success("Size successfully added!");
+  
+      // 🛑 Remove unnecessary setState to prevent extra re-renders
+      await handlefetchSize(); // ✅ Fetch new data only after successful creation
+  
+      setIsModalVisible(false);
+      form.resetFields();
+    } catch (error) {
+      console.error("🚨 Error creating size:", error);
+      message.error(error.message || "An error occurred. Please try again.");
+    }
+  };
+  
+
+  const handlefetchSize = async () => {
+    try {
+      console.log("📤 Sending request to fetch size...");
+      const token = localStorage.getItem("token");
+  
+      if (!token) {
+        notification.error({
+          message: "Authentication Error",
+          description: "Please log in again.",
+        });
+        return;
+      }
+  
+      const result = await fetchSize(token);
+      console.log("✅ Response received:", result);
+  
+      // 🛑 Prevent unnecessary updates & re-renders
+      if (JSON.stringify(size) !== JSON.stringify(result)) {
+        setSize(result);
+      }
+    } catch (error) {
+      console.error("🚨 Error fetching size:", error);
+      notification.error({
+        message: "Error fetching size",
+        description: error.message || "An error occurred while fetching size.",
+      });
+    }
+  };
+  
+
   useEffect(() => {
     fetchCategories();
     handlefetchSubcategory();
-    fetchSize();
+    handlefetchSize();
   }, []);
 
   const toggleView = (view) => {
@@ -466,7 +472,6 @@ function CategoryFoodManagement() {
           >
             Food List
           </Button>
-
           <Button
             type="primary"
             shape="circle"
@@ -539,7 +544,7 @@ function CategoryFoodManagement() {
                 <Button
                   icon={<FilterOutlined />}
                   style={{
-                    border: "1px solid #ff4d94",
+                    border: "1px solid #ff4d94", // Pink outline
                     color: "#ff4d94",
                     backgroundColor: "transparent",
                   }}
@@ -563,68 +568,31 @@ function CategoryFoodManagement() {
                   key: "no",
                   render: (_, __, index) => index + 1,
                 },
-                ...(currentView === "food"
+                { title: "Name", dataIndex: "name", key: "name" },
+                {
+                  title: "Description",
+                  dataIndex: "description",
+                  key: "description",
+                },
+                ...(currentView === "subcategory"
                   ? [
-                      { title: "Name", dataIndex: "name", key: "name" },
-                      {
-                        title: "Image",
-                        dataIndex: "imageUrl",
-                        key: "imageUrl",
-                        render: (imageUrl) =>
-                          imageUrl ? (
-                            <img
-                              src={imageUrl}
-                              alt="Food"
-                              width={50}
-                              height={50}
-                            />
-                          ) : (
-                            "N/A"
-                          ),
-                      },
                       {
                         title: "Category",
-                        dataIndex: "category",
-                        key: "category",
-                        render: (category) => category?.name || "N/A",
-                      },
-                      {
-                        title: "Subcategory",
-                        dataIndex: "subcategory",
-                        key: "subcategory",
-                        render: (subcategory) => subcategory?.name || "N/A",
-                      },
-                      {
-                        title: "Size",
-                        dataIndex: "size",
-                        key: "size",
-                        render: (size) => size?.name || "N/A",
-                      },
-                      {
-                        title: "Price",
-                        dataIndex: "price",
-                        key: "price",
-                        render: (price) =>
-                          price ? `$${price.toFixed(2)}` : "N/A",
+                        dataIndex: "parentCategory",
+                        key: "parentCategory",
+                        render: (parentCategory) => parentCategory || "N/A",
                       },
                     ]
-                  : [
-                      { title: "Name", dataIndex: "name", key: "name" },
-                      {
-                        title: "Description",
-                        dataIndex: "description",
-                        key: "description",
-                      },
-                      {
-                        title: "Date",
-                        dataIndex: "create_at",
-                        key: "create_at",
-                        render: (create_at) =>
-                          create_at
-                            ? new Date(create_at).toLocaleDateString()
-                            : "N/A",
-                      },
-                    ]),
+                  : []),
+                {
+                  title: "Date",
+                  dataIndex: "create_at",
+                  key: "create_at",
+                  render: (create_at) =>
+                    create_at
+                      ? new Date(create_at).toLocaleDateString()
+                      : "N/A",
+                },
                 {
                   title: "Action",
                   key: "action",
@@ -644,7 +612,7 @@ function CategoryFoodManagement() {
                       <Button
                         icon={<EditOutlined />}
                         onClick={() => {
-                          console.log("Clicked Edit for record:", record);
+                          console.log("Clicked Edit for record:", record); 
                           showEditModal(record);
                         }}
                         style={{
@@ -685,21 +653,14 @@ function CategoryFoodManagement() {
                 },
               ]}
               dataSource={
-                currentView === "food"
-                  ? foods.map((food) => ({
-                      ...food,
-                      imageUrl: food.imageUrl || null,
-                      category: food.category || null,
-                      subcategory: food.subCategory || null,
-                      size: food.size || null,
-                      price: food.price || null,
-                    }))
-                  : currentView === "category"
+                currentView === "category"
                   ? categories
-                  : subCategories.map((sub) => ({
+                  : currentView === "subcategory"
+                  ? subCategories.map((sub) => ({
                       ...sub,
-                      parentCategory: sub.category?.name || "N/A",
+                      parentCategory: sub.category?.name || "N/A", 
                     }))
+                  : foods
               }
               bordered
             />
@@ -707,132 +668,129 @@ function CategoryFoodManagement() {
         </Col>
       </Row>
 
-      <Modal
-        title={`${isViewMode ? "View" : editingData ? "Edit" : "Create"} ${
-          createType.charAt(0).toUpperCase() + createType.slice(1)
-        }`}
-        open={isModalVisible}
-        onOk={
-          !isViewMode
-            ? editingData
-              ? handleUpdate
-              : createType === "subcategory"
-              ? handleSaveSubCategory
-              : createType === "size"
-              ? handleCreateSize
-              : // : createType === "ingredient"
-                // ? handleCreateIngredient
-                // : createType === "tag"
-                // ? handleCreateTag
-                handleCreateCategory
-            : undefined
-        }
-        onCancel={handleCancel}
-        footer={isViewMode ? null : undefined}
-        okButtonProps={{
-          style: {
-            backgroundColor: "#ff4d94",
-            borderColor: "#ff4d94",
-            color: "#fff",
-          },
-        }}
-      >
-        <Form form={form} layout="vertical">
-          {!editingData && !isViewMode && (
-            <Form.Item label="Create Type">
-              <Radio.Group
-                value={createType}
-                onChange={(e) => setCreateType(e.target.value)}
-              >
-                <Radio value="category">Category</Radio>
-                <Radio value="subcategory">Subcategory</Radio>
-                <Radio value="food">Food</Radio>
-                <Radio value="size">Size</Radio>
-              </Radio.Group>
-            </Form.Item>
-          )}
+      
 
+<Modal
+  title={`${
+    isViewMode ? "View" : editingData ? "Edit" : "Create"
+  } ${createType.charAt(0).toUpperCase() + createType.slice(1)}`}
+  open={isModalVisible}
+  onOk={
+    !isViewMode
+      ? editingData
+        ? handleUpdate
+        : createType === "subcategory"
+        ? handleSaveSubCategory
+        : createType === "size"
+        ? handleCreateSize
+        : handleCreateCategory
+      : undefined
+  }
+  onCancel={handleCancel}
+  footer={isViewMode ? null : undefined}
+  okButtonProps={{
+    style: {
+      backgroundColor: "#ff4d94",
+      borderColor: "#ff4d94",
+      color: "#fff",
+    },
+  }}
+>
+  <Form form={form} layout="vertical">
+    {!editingData && !isViewMode && (
+      <Form.Item label="Create Type">
+        <Radio.Group
+          value={createType}
+          onChange={(e) => setCreateType(e.target.value)}
+        >
+          <Radio value="category">Category</Radio>
+          <Radio value="subcategory">Subcategory</Radio>
+          <Radio value="food">Food</Radio>
+          <Radio value="size">Size</Radio>
+          
+        </Radio.Group>
+      </Form.Item>
+    )}
+
+    <Form.Item
+      name="name"
+      label="Name"
+      rules={[{ required: true, message: "Please enter name" }]}
+    >
+      <Input placeholder="Enter name" disabled={isViewMode} />
+    </Form.Item>
+
+    <Form.Item name="description" label="Description">
+      <Input placeholder="Enter description" disabled={isViewMode} />
+    </Form.Item>
+
+    {createType === "subcategory" && (
+      <Form.Item label="Category">
+        {isViewMode ? (
+          <Input
+            value={form.getFieldValue("parentCategory") || "N/A"}
+            disabled
+          />
+        ) : (
           <Form.Item
-            name="name"
-            label="Name"
-            rules={[{ required: true, message: "Please enter name" }]}
+            name="parentCategory"
+            rules={[
+              {
+                required: true,
+                message: "Please select a parent category",
+              },
+            ]}
           >
-            <Input placeholder="Enter name" disabled={isViewMode} />
+            <Select placeholder="Select parent category">
+              {categories.map((category) => (
+                <Select.Option key={category.id} value={String(category.id)}>
+                  {category.name}
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
+        )}
+      </Form.Item>
+    )}
 
-          <Form.Item name="description" label="Description">
-            <Input placeholder="Enter description" disabled={isViewMode} />
-          </Form.Item>
+    {createType === "food" && (
+      <Form.Item
+        name="category"
+        label="Category"
+        rules={[{ required: true, message: "Please select a category" }]}
+      >
+        <Select placeholder="Select a category" disabled={isViewMode}>
+          {categories.map((category) => (
+            <Select.Option key={category.key} value={category.name}>
+              {category.name}
+            </Select.Option>
+          ))}
+        </Select>
+      </Form.Item>
+    )}
 
-          {createType === "subcategory" && (
-            <Form.Item label="Category">
-              {isViewMode ? (
-                <Input
-                  value={form.getFieldValue("parentCategory") || "N/A"}
-                  disabled
-                />
-              ) : (
-                <Form.Item
-                  name="parentCategory"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please select a parent category",
-                    },
-                  ]}
-                >
-                  <Select placeholder="Select parent category">
-                    {categories.map((category) => (
-                      <Select.Option
-                        key={category.id}
-                        value={String(category.id)}
-                      >
-                        {category.name}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              )}
-            </Form.Item>
-          )}
-          {createType === "food" && (
-            <Form.Item
-              name="category"
-              label="Category"
-              rules={[{ required: true, message: "Please select a category" }]}
-            >
-              <Select placeholder="Select a category" disabled={isViewMode}>
-                {categories.map((category) => (
-                  <Select.Option key={category.key} value={category.name}>
-                    {category.name}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Form.Item>
-          )}
-
-          {isViewMode ? (
-            <Form.Item label="Created Date">
-              <Input
-                value={
-                  selectedCategory?.create_at
-                    ? new Date(selectedCategory.create_at).toLocaleString()
-                    : "N/A"
-                }
-                disabled
-              />
-            </Form.Item>
-          ) : (
-            <Form.Item
-              name="date"
-              label="Select Date"
-              rules={[{ required: true, message: "Please select a date" }]}
-            >
-              <DatePicker style={{ width: "100%" }} disabled={isViewMode} />
-            </Form.Item>
-          )}
-        </Form>
-      </Modal>
+    {isViewMode ? (
+      <Form.Item label="Created Date">
+        <Input
+          value={
+            selectedCategory?.create_at
+              ? new Date(selectedCategory.create_at).toLocaleString()
+              : "N/A"
+          }
+          disabled
+        />
+      </Form.Item>
+    ) : (
+      <Form.Item
+        name="date"
+        label="Select Date"
+        rules={[{ required: true, message: "Please select a date" }]}
+      >
+        <DatePicker style={{ width: "100%" }} disabled={isViewMode} />
+      </Form.Item>
+    )}
+  </Form>
+</Modal>
 
     </div>
   );

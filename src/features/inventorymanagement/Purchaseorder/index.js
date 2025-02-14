@@ -176,55 +176,86 @@ const TotalAsset = () => {
     setSearchTerm(value);
   };
 
-  const handleExport = () => {
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    };
+  // const handleExport = () => {
+  //   const headers = {
+  //     "Content-Type": "application/json",
+  //     Authorization: `Bearer ${token}`,
+  //   };
 
-    fetch("http://localhost:6060/admin/fixed-assets", { headers })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        return response.blob();
-      })
-      .then((blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute("download", "fixed_assets.xlsx");
-        document.body.appendChild(link);
-        link.click();
+  //   fetch("http://localhost:6060/admin/fixed-assets", { headers })
+  //     .then((response) => {
+  //       if (!response.ok) {
+  //         throw new Error("Network response was not ok");
+  //       }
+  //       return response.blob();
+  //     })
+  //     .then((blob) => {
+  //       const url = window.URL.createObjectURL(blob);
+  //       const link = document.createElement("a");
+  //       link.href = url;
+  //       link.setAttribute("download", "fixed_assets.xlsx");
+  //       document.body.appendChild(link);
+  //       link.click();
 
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-      })
-      .catch((error) => {
-        console.error("Export failed:", error);
-      });
-  };
+  //       document.body.removeChild(link);
+  //       window.URL.revokeObjectURL(url);
+  //     })
+  //     .catch((error) => {
+  //       console.error("Export failed:", error);
+  //     });
+  // };
+
+  // const fetchCategorie = async () => {
+  //   try {
+  //     console.log("Sending request to fetch fixed assets...");
+
+  //     const result = await fetchCategories(token);
+
+  //     console.log("Response received:", result);
+  //     // const result = await response.json();
+  //     if (result.statusCode === 200) {
+  //       setCategories(result.categories || []);
+  //     } else {
+  //       notification.error({
+  //         message: "Failed to fetch categories",
+  //         description: result.error,
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching categories:", error);
+  //   }
+  // };
 
   const fetchCategorie = async () => {
     try {
-      console.log("Sending request to fetch fixed assets...");
-
+      console.log("Fetching categories...");
+  
       const result = await fetchCategories(token);
-
-      console.log("Response received:", result);
-      // const result = await response.json();
+  
+      console.log("API Response:", result);
+  
+      // Check if response contains valid JSON
+      if (!result || Object.keys(result).length === 0) {
+        throw new Error("Empty response from API");
+      }
+  
       if (result.statusCode === 200) {
         setCategories(result.categories || []);
       } else {
         notification.error({
           message: "Failed to fetch categories",
-          description: result.error,
+          description: result.error || "Unknown error",
         });
       }
     } catch (error) {
       console.error("Error fetching categories:", error);
+      notification.error({
+        message: "Fetch Error",
+        description: error.message || "An unknown error occurred.",
+      });
     }
   };
+  
 
   const fetchMaterail = async () => {
     try {
@@ -561,7 +592,7 @@ const TotalAsset = () => {
               size="middle"
               style={{ marginLeft: 8 }}
               icon={<DownloadOutlined />}
-              onClick={handleExport}
+              // onClick={handleExport}
             >
               Download
             </Button>
