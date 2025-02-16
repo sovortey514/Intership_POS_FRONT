@@ -2,29 +2,29 @@ const API_URL = "http://localhost:6060/admin";
 
 
 export const createFood_Category = async (values, token) => {
-    try {
-      const response = await fetch(`${API_URL}/CreateCategoryFoodDrink`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(values),
-      });
+  try {
+    const response = await fetch(`${API_URL}/CreateCategoryFoodDrink`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(values),
+    });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "Failed to create category");
-      }
-
-      const data = await response.text();
-      return data ? JSON.parse(data) : {}; 
-  
-    } catch (error) {
-      console.error("Error creating category:", error.message);
-      return { error: error.message || "An error occurred" };
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || "Failed to create category");
     }
-  };
+
+    const data = await response.text();
+    return data ? JSON.parse(data) : {};
+
+  } catch (error) {
+    console.error("Error creating category:", error.message);
+    return { error: error.message || "An error occurred" };
+  }
+};
 
 export const fetchcreateFood_Category = async (token) => {
   try {
@@ -35,8 +35,8 @@ export const fetchcreateFood_Category = async (token) => {
         Authorization: `Bearer ${token}`,
       },
     });
-    
-    
+
+
     if (!response.ok) {
       const errorMessage = await response.json();
       console.error("Error fetching materials:", errorMessage);
@@ -44,7 +44,7 @@ export const fetchcreateFood_Category = async (token) => {
     }
 
     const result = await response.json();
-    return result; 
+    return result;
   } catch (error) {
     console.error("Error fetching materials:", error);
     throw new Error(error.message || "An unknown error occurred.");
@@ -62,7 +62,7 @@ export const deleteCagoryFoodDrinkById = async (id, token) => {
     });
     console.log("Response", response);
 
-    if(!response.status===200){  
+    if (!response.status === 200) {
       const errorMessage = await response.json();
       console.error("Error deleting Cagory by ID:", errorMessage);
       throw new Error(errorMessage.message || "Failed to delete fixed asset by ID.");
@@ -101,10 +101,10 @@ export const createSubCategory = async (categoryId, subCategories, token) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(subCategories), 
+      body: JSON.stringify(subCategories),
     });
 
-    const responseText = await response.text(); 
+    const responseText = await response.text();
     if (!response.ok) {
       throw new Error(responseText || "Failed to create subcategory.");
     }
@@ -133,8 +133,8 @@ export const fetchSubcategory = async (token) => {
         Authorization: `Bearer ${token}`,
       },
     });
-    
-    
+
+
     if (!response.ok) {
       const errorMessage = await response.json();
       console.error("Error fetching subcategory:", errorMessage);
@@ -142,7 +142,7 @@ export const fetchSubcategory = async (token) => {
     }
 
     const result = await response.json();
-    return result; 
+    return result;
   } catch (error) {
     console.error("Error fetching subcategory:", error);
     throw new Error(error.message || "An unknown error occurred.");
@@ -160,7 +160,7 @@ export const deleteSubCagoryFoodDrinkById = async (id, token) => {
     });
     console.log("Response", response);
 
-    if(!response.status===200){  
+    if (!response.status === 200) {
       const errorMessage = await response.json();
       console.error("Error deleting Cagory by ID:", errorMessage);
       throw new Error(errorMessage.message || "Failed to delete fixed asset by ID.");
@@ -175,26 +175,26 @@ export const deleteSubCagoryFoodDrinkById = async (id, token) => {
 
 export const updateSubCategory = async (id, values, token) => {
   try {
-      const response = await fetch(`${API_URL}/updateSubcategoryFoodDrink/${id}`, {
-          method: "PUT",
-          headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(values),
-      });
+    const response = await fetch(`${API_URL}/updateSubcategoryFoodDrink/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(values),
+    });
 
-      const data = await response.json();
-      console.log("Update Subcategory Response:", data);
+    const data = await response.json();
+    console.log("Update Subcategory Response:", data);
 
-      return response;
+    return response;
   } catch (error) {
-      console.error("Error updating subcategory:", error);
-      throw new Error("Failed to update subcategory.");
+    console.error("Error updating subcategory:", error);
+    throw new Error("Failed to update subcategory.");
   }
 };
 
-export const createSize= async (values, token) => {
+export const createSize = async (values, token) => {
   try {
     const response = await fetch(`${API_URL}/createSize`, {
       method: "POST",
@@ -211,7 +211,7 @@ export const createSize= async (values, token) => {
     }
 
     const data = await response.text();
-    return data ? JSON.parse(data) : {}; 
+    return data ? JSON.parse(data) : {};
 
   } catch (error) {
     console.error("Error creating Size:", error.message);
@@ -228,8 +228,8 @@ export const fetchSize = async (token) => {
         Authorization: `Bearer ${token}`,
       },
     });
-    
-    
+
+
     if (!response.ok) {
       const errorMessage = await response.json();
       console.error("Error fetching size:", errorMessage);
@@ -237,12 +237,118 @@ export const fetchSize = async (token) => {
     }
 
     const result = await response.json();
-    return result; 
+    return result;
   } catch (error) {
     console.error("Error fetching size:", error);
     throw new Error(error.message || "An unknown error occurred.");
   }
 };
+
+export const createFood = async (values, token) => {
+  try {
+
+    console.log("✅ Sending FormData to API:");
+
+    const response = await fetch(`${API_URL}/Createfoods`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: values,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || "Failed to create Food");
+    }
+
+    const data = await response.json();
+    console.log("✅ Food Created Successfully:", data);
+    return data;
+
+  } catch (error) {
+    console.error("🚨 Error creating Food:", error.message);
+    return { error: error.message || "An error occurred" };
+  }
+};
+
+
+
+export const uploadFoodImage = async (foodId, imageFile, token) => {
+  try {
+
+    if (!foodId) {
+      throw new Error("Food ID is required.");
+    }
+    if (!imageFile) {
+      throw new Error("No image file provided.");
+    }
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
+    if (!allowedTypes.includes(imageFile.type)) {
+      throw new Error("Invalid file type. Only JPG, JPEG, and PNG are allowed.");
+    }
+
+
+    const maxSize = 5 * 1024 * 1024;
+    if (imageFile.size > maxSize) {
+      throw new Error("File size exceeds 5MB limit.");
+    }
+
+    const formData = new FormData();
+    formData.append("file", imageFile);
+    formData.append("foodId", foodId);
+
+    const response = await fetch(`${API_URL}/upload_food_image`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || "Failed to upload image");
+    }
+
+    const data = await response.json();
+    console.log("✅ Image uploaded successfully:", data);
+    return data;
+
+  } catch (error) {
+    console.error("🚨 Error uploading food image:", error.message);
+    return { error: error.message || "An error occurred during image upload." };
+  }
+};
+
+export const fetchFoods = async (token) => {
+  try {
+    const response = await fetch(`${API_URL}/get_all_foods_with_images`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+
+    if (!response.ok) {
+      const errorMessage = await response.json();
+      console.error("Error fetching foods:", errorMessage);
+      throw new Error(errorMessage.message || "Failed to fetch foods.");
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error("Error fetching foods:", error);
+    throw new Error(error.message || "An unknown error occurred.");
+  }
+};
+
+
+
 
 
 
