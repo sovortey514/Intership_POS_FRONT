@@ -75,7 +75,6 @@ export const deleteCagoryFoodDrinkById = async (id, token) => {
   }
 };
 
-
 export const updateCategory = async (id, values, token) => {
   const response = await fetch(`${API_URL}/UpdateCategoryFoodDrink/${id}`, {
     method: "PUT",
@@ -87,7 +86,6 @@ export const updateCategory = async (id, values, token) => {
   });
   return response;
 };
-
 
 export const createSubCategory = async (categoryId, subCategories, token) => {
   try {
@@ -272,11 +270,8 @@ export const createFood = async (values, token) => {
   }
 };
 
-
-
 export const uploadFoodImage = async (foodId, imageFile, token) => {
   try {
-
     if (!foodId) {
       throw new Error("Food ID is required.");
     }
@@ -288,7 +283,6 @@ export const uploadFoodImage = async (foodId, imageFile, token) => {
     if (!allowedTypes.includes(imageFile.type)) {
       throw new Error("Invalid file type. Only JPG, JPEG, and PNG are allowed.");
     }
-
 
     const maxSize = 5 * 1024 * 1024;
     if (imageFile.size > maxSize) {
@@ -309,13 +303,21 @@ export const uploadFoodImage = async (foodId, imageFile, token) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(errorText || "Failed to upload image");
+      console.error("❌ Image Upload Error:", errorText);
+      throw new Error(errorText || "Failed to upload image.");
     }
 
-    const data = await response.json();
+    let data;
+    const responseText = await response.text();
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.warn("Response is not JSON, using plain text:", responseText);
+      data = { message: responseText }; // Default message for success
+    }
+
     console.log("✅ Image uploaded successfully:", data);
     return data;
-
   } catch (error) {
     console.error("🚨 Error uploading food image:", error.message);
     return { error: error.message || "An error occurred during image upload." };
@@ -332,7 +334,6 @@ export const fetchFoods = async (token) => {
       },
     });
 
-
     if (!response.ok) {
       const errorMessage = await response.json();
       console.error("Error fetching foods:", errorMessage);
@@ -346,6 +347,85 @@ export const fetchFoods = async (token) => {
     throw new Error(error.message || "An unknown error occurred.");
   }
 };
+
+export const deleteFoodsById = async (foodId, token) => {
+  try {
+    if (!foodId) {
+      throw new Error("Food ID is required.");
+    }
+
+    console.log("🗑️ Deleting Food with ID:", foodId);
+
+    const response = await fetch(`${API_URL}/deletefoods/${foodId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      let errorMessage = "Failed to delete food.";
+      
+      try {
+        const errorData = await response.json(); 
+        errorMessage = errorData.message || errorMessage;
+      } catch (jsonError) {
+        console.warn("⚠️ Response error but no JSON body:", jsonError);
+      }
+
+      console.error("❌ Error deleting food:", errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    const text = await response.text();
+    const data = text ? JSON.parse(text) : {}; 
+
+    console.log("✅ Food deleted successfully:", data);
+    return data;
+
+  } catch (error) {
+    console.error("🚨 Error deleting food:", error);
+    throw new Error(error.message || "An unknown error occurred.");
+  }
+};
+
+
+export const updateFood = async (foodId, values, token) => {
+  try {
+      const response = await fetch(`${API_URL}/Updatefoods/${foodId}`, {
+          method: "PUT",
+          headers: {
+              Authorization: `Bearer ${token}`, 
+          },
+          body: values,
+      });
+
+      console.log("Raw Response Status:", response.status);
+
+      if (response.status === 204) { 
+          console.log("No content returned from server.");
+          return { message: "No content" };
+      }
+
+      const textResponse = await response.text();
+      console.log("Raw Response:", textResponse);
+
+      if (!textResponse) {
+          console.warn("Empty response from server. Returning default object.");
+          return {};
+      }
+
+      const data = JSON.parse(textResponse);
+      console.log("Update Food Response:", data);
+
+      return data; 
+  } catch (error) {
+      console.error("Error updating Food:", error);
+      throw new Error("Failed to update Food.");
+  }
+};
+
 
 
 

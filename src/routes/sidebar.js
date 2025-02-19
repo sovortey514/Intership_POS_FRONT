@@ -108,28 +108,28 @@ const SidebarRoutes = () => {
               },
             ],
           },
-          {
-            path: "",
-            icon: <DocumentTextIcon className={`${iconClasses} inline`} />,
-            name: "Asset Management",
-            submenu: [
-              {
-                path: "/app/assetmanagement-totalasset",
-                icon: <WalletIcon className={submenuIconClasses} />,
-                name: "Total Asset",
-              },
-              {
-                path: "/app/assetmanagement-assetcount",
-                icon: <DocumentTextIcon className={submenuIconClasses} />,
-                name: "Audit Asset",
-              },
-              {
-                path: "/app/assetmanagement-historyasset",
-                icon: <TableCellsIcon className={submenuIconClasses} />,
-                name: "History",
-              },
-            ],
-          },
+          // {
+          //   path: "",
+          //   icon: <DocumentTextIcon className={`${iconClasses} inline`} />,
+          //   name: "Asset Management",
+          //   submenu: [
+          //     {
+          //       path: "/app/assetmanagement-totalasset",
+          //       icon: <WalletIcon className={submenuIconClasses} />,
+          //       name: "Total Asset",
+          //     },
+          //     {
+          //       path: "/app/assetmanagement-assetcount",
+          //       icon: <DocumentTextIcon className={submenuIconClasses} />,
+          //       name: "Audit Asset",
+          //     },
+          //     {
+          //       path: "/app/assetmanagement-historyasset",
+          //       icon: <TableCellsIcon className={submenuIconClasses} />,
+          //       name: "History",
+          //     },
+          //   ],
+          // },
           
           {
             path: "/app/usermanagement",
