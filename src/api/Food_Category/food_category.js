@@ -390,7 +390,6 @@ export const deleteFoodsById = async (foodId, token) => {
   }
 };
 
-
 export const updateFood = async (foodId, values, token) => {
   try {
       const response = await fetch(`${API_URL}/Updatefoods/${foodId}`, {
