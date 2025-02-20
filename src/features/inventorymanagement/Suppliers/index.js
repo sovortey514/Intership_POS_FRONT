@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import {
   EditOutlined,
@@ -25,6 +25,12 @@ import {
   Popconfirm,
 } from "antd";
 import { Select } from "antd";
+import { notification } from "antd";
+
+import {
+  createSupplier,
+  fetchSuppliers
+} from "../../../api/suppliers/suppliers";
 
 
 const { Meta } = Card;
@@ -48,12 +54,10 @@ const Suppliers = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
 
-  // Handle search input
   const handleSearch = (event) => {
     setSearchText(event.target.value.toLowerCase());
   };
 
-  // Handle Create Supplier Button Click
   const handleCreateSupplier = () => {
     setIsModalVisible(true);
   };
@@ -73,22 +77,99 @@ const Suppliers = () => {
     form.resetFields();
   };
 
-  const handleFormSubmit = (values) => {
-    const matchedCover = coverImages[values.type] || coverImages["Default"];
-    const newSupplier = {
-      id: (suppliers.length + 1).toString(),
-      ...values,
-      avatar: `https://api.dicebear.com/7.x/miniavs/svg?seed=${suppliers.length + 1}`,
-      cover: matchedCover,
-    };
-    setSuppliers([...suppliers, newSupplier]);
-    setIsModalVisible(false);
-    form.resetFields();
+
+  const handleFormSubmit = async (values) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        notification.error({
+          message: "Authentication Error",
+          description: "Please log in again.",
+        });
+        return;
+      }
+
+      const newSupplierPayload = {
+        contactName: values.contactName,
+        phone: values.phone,
+        email: values.email,
+        address: values.address,
+        country: values.country,
+        type: values.type,
+      };
+
+      const response = await createSupplier(newSupplierPayload, token);
+
+      if (response.error) {
+        throw new Error(response.error);
+      }
+
+      const newSupplierFrontend = {
+        ...response,
+        avatar: `https://api.dicebear.com/7.x/miniavs/svg?seed=${suppliers.length + 1}`,
+        cover: coverImages[values.type] || coverImages["Default"],
+        type: values.type,
+      };
+
+      handlefetchSuppliers()
+      setIsModalVisible(false);
+      form.resetFields();
+
+      notification.success({
+        message: "Supplier Created",
+        description: "The supplier was created successfully!",
+      });
+
+    } catch (error) {
+      console.error("Failed to create supplier:", error);
+      notification.error({
+        message: "Error Creating Supplier",
+        description: error.message || "An error occurred while creating the supplier.",
+      });
+    }
   };
 
 
+  const handlefetchSuppliers = async () => {
+    try {
+      console.log("📤 Sending request to fetch size...");
+      const token = localStorage.getItem("token");
 
-  // Handle drag & drop reordering
+      if (!token) {
+        notification.error({
+          message: "Authentication Error",
+          description: "Please log in again.",
+        });
+        return;
+      }
+
+      const result = await fetchSuppliers(token);
+      console.log("✅ Response received:", result);
+
+      if (JSON.stringify(suppliers) !== JSON.stringify(result)) {
+        const newSuppliersFrontend = result.map((supplier, index) => ({
+          ...supplier,
+          avatar: `https://api.dicebear.com/7.x/miniavs/svg?seed=${suppliers.length + index + 1}`,
+          cover: coverImages[supplier.type] || coverImages["Default"],
+          type: supplier.type,
+        }));
+        setSuppliers(newSuppliersFrontend);
+      }
+    } catch (error) {
+      console.error("🚨 Error fetching size:", error);
+      notification.error({
+        message: "Error fetching size",
+        description: error.message || "An error occurred while fetching suppliers.",
+      });
+    }
+  }
+
+  useEffect(() => {
+    handlefetchSuppliers();
+  }, [])
+  console.log(suppliers)
+
   const handleDragEnd = (result) => {
     if (!result.destination) return;
     const items = Array.from(suppliers);
@@ -99,7 +180,6 @@ const Suppliers = () => {
 
   return (
     <div className="container" style={{ padding: "20px" }}>
-      {/* Header Section with Button & Search */}
       <div
         style={{
           display: "flex",
@@ -145,10 +225,13 @@ const Suppliers = () => {
             >
               {suppliers
                 .filter((supplier) =>
-                  supplier.type.toLowerCase().includes(searchText)
+                  supplier.type && typeof supplier.type === "string"
+                    ? supplier.type.toLowerCase().includes(searchText)
+                    : false
                 )
                 .map((supplier, index) => (
-                  <Draggable key={supplier.id} draggableId={supplier.id} index={index}>
+                  <Draggable key={supplier.id} draggableId={String(supplier.id)} index={index}>
+
                     {(provided) => (
                       <Col
                         xs={24}
@@ -160,41 +243,55 @@ const Suppliers = () => {
                         {...provided.dragHandleProps}
                       >
                         <Card
+                          // style={{
+                          //   width: "100%",
+                          //   cursor: "pointer",
+                          //   borderRadius: "12px",
+                          //   boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+                          //   transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                          // }}\
                           style={{
                             width: "100%",
+                            minHeight: "400px", // ✅ Ensures same height for all cards
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "space-between",
                             cursor: "pointer",
                             borderRadius: "12px",
                             boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
                             transition: "transform 0.3s ease, box-shadow 0.3s ease",
                           }}
-                          hoverable // Enables hover effect
+                          hoverable
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = "scale(1.05)"; // Pop-up effect
-                            e.currentTarget.style.boxShadow = "0 8px 16px rgba(0, 0, 0, 0.2)"; // Enhanced shadow
+                            e.currentTarget.style.transform = "scale(1.05)";
+                            e.currentTarget.style.boxShadow = "0 8px 16px rgba(0, 0, 0, 0.2)";
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = "scale(1)"; // Reset size
-                            e.currentTarget.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)"; // Reset shadow
-                          }} // Enables hover effect
+                            e.currentTarget.style.transform = "scale(1)";
+                            e.currentTarget.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+                          }}
                           cover={
                             <div
                               style={{
+                                // position: "relative",
+                                // borderRadius: "12px 12px 0 0",
+                                // overflow: "hidden",
                                 position: "relative",
                                 borderRadius: "12px 12px 0 0",
                                 overflow: "hidden",
+                                height: "150px", 
                               }}
                             >
                               <img
                                 alt="supplier cover"
-                                src={supplier.cover}
+                                src={supplier.cover || "/images/default-cover.png"} // Safe fallback
                                 style={{
                                   width: "100%",
                                   height: "180px",
                                   objectFit: "cover",
-                                  transition: "transform 0.3s ease", // Only scale, no blur
+                                  transition: "transform 0.3s ease",
                                 }}
                               />
-                              {/* Overlay effect with no opacity changes on hover */}
                               <div
                                 style={{
                                   position: "absolute",
@@ -209,7 +306,7 @@ const Suppliers = () => {
                                   letterSpacing: "1px",
                                 }}
                               >
-                                {supplier.type}
+                                {supplier.type || "Unknown Type"}
                               </div>
                             </div>
                           }
@@ -243,43 +340,44 @@ const Suppliers = () => {
                           ]}
                         >
                           <Meta
-                            avatar={<Avatar src={supplier.avatar} size={50} />}
+                            avatar={<Avatar src={supplier.avatar || "/images/default-avatar.png"} size={50} />}
                             title={
                               <Space>
-                                <Text strong style={{ fontSize: "16px" }}>{supplier.type}</Text>
-                                <Tag color="blue">{supplier.country}</Tag>
+                                <Text strong style={{ fontSize: "16px" }}>
+                                  {supplier.type || "Unknown Type"}
+                                </Text>
+                                <Tag color="blue">{supplier.country || "Unknown Country"}</Tag>
                               </Space>
                             }
                             description={
                               <div style={{ fontSize: "14px", lineHeight: "1.5", paddingTop: "8px" }}>
-                                <Text strong>{supplier.contact_name}</Text> <br />
+                                <Text strong>{supplier.contactName || "Unknown Contact"}</Text> <br />
                                 <Text type="secondary">
-                                  <MailOutlined style={{ marginRight: 5 }} /> {supplier.email}
+                                  <MailOutlined style={{ marginRight: 5 }} /> {supplier.email || "No Email"}
                                 </Text>{" "}
                                 <br />
                                 <Text type="secondary">
-                                  <PhoneOutlined style={{ marginRight: 5 }} /> {supplier.phone}
+                                  <PhoneOutlined style={{ marginRight: 5 }} /> {supplier.phone || "No Phone"}
                                 </Text>{" "}
                                 <br />
                                 <Text type="secondary">
-                                  <EnvironmentOutlined style={{ marginRight: 5 }} /> {supplier.address}
+                                  <EnvironmentOutlined style={{ marginRight: 5 }} /> {supplier.address || "No Address"}
                                 </Text>
                               </div>
                             }
                           />
                         </Card>
-
                       </Col>
                     )}
                   </Draggable>
                 ))}
+
               {provided.placeholder}
             </Row>
           )}
         </Droppable>
       </DragDropContext>
 
-      {/* Create Supplier Modal */}
       <Modal
         title="Create New Supplier"
         visible={isModalVisible}
@@ -297,7 +395,7 @@ const Suppliers = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item name="contact_name" label="Contact Name" rules={[{ required: true }]}>
+          <Form.Item name="contactName" label="Contact Name" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
           <Form.Item name="phone" label="Phone" rules={[{ required: true }]}>

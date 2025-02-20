@@ -668,8 +668,6 @@ function CategoryFoodManagement() {
     }
 };
 
-
-
   useEffect(() => {
     fetchCategories();
     handlefetchSubcategory();
