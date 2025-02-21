@@ -29,7 +29,11 @@ import { notification } from "antd";
 
 import {
   createSupplier,
-  fetchSuppliers
+  fetchSuppliers,
+  updateSuppliers,
+  deleteSuppliersById
+
+
 } from "../../../api/suppliers/suppliers";
 
 
@@ -52,6 +56,8 @@ const Suppliers = () => {
   const [searchText, setSearchText] = useState("");
   const [suppliers, setSuppliers] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isUpdateModalVisible, setIsUpdateModalVisible] = useState(false);
+  const [currentSuppliers, setCurrentSuppliers] = useState(null);
   const [form] = Form.useForm();
 
   const handleSearch = (event) => {
@@ -61,6 +67,20 @@ const Suppliers = () => {
   const handleCreateSupplier = () => {
     setIsModalVisible(true);
   };
+
+  const handleEditSupplier = (supplier) => {
+    setCurrentSuppliers(supplier); // Store the supplier data to be edited
+    form.setFieldsValue({
+      contactName: supplier.contactName,
+      phone: supplier.phone,
+      email: supplier.email,
+      address: supplier.address,
+      country: supplier.country,
+      type: supplier.type,
+    });
+    setIsUpdateModalVisible(true); // Open the update modal
+  };
+
 
   const supplierTypes = [
     "Fresh",
@@ -74,6 +94,7 @@ const Suppliers = () => {
 
   const handleCancel = () => {
     setIsModalVisible(false);
+    setIsUpdateModalVisible(false);
     form.resetFields();
   };
 
@@ -130,6 +151,101 @@ const Suppliers = () => {
     }
   };
 
+  const handleUpdateFormSubmit = async (values) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        notification.error({
+          message: "Authentication Error",
+          description: "Please log in again.",
+        });
+        return;
+      }
+
+      const updatedSupplierPayload = {
+        contactName: values.contactName,
+        phone: values.phone,
+        email: values.email,
+        address: values.address,
+        country: values.country,
+        type: values.type,
+      };
+
+      // Create a new cover image based on the updated type
+      const newCoverImage = coverImages[values.type] || coverImages["Default"];
+
+      // Update the supplier
+      const updatedSupplier = await updateSuppliers(
+        currentSuppliers.id,
+        updatedSupplierPayload,
+        token
+      );
+
+      if (updatedSupplier) {
+        notification.success({
+          message: "Supplier Updated",
+          description: "The supplier was updated successfully!",
+        });
+
+        // Update the supplier in the list and update the cover image as well
+        setSuppliers((prevSuppliers) =>
+          prevSuppliers.map((supplier) =>
+            supplier.id === currentSuppliers.id
+              ? { ...supplier, ...updatedSupplierPayload, cover: newCoverImage } // Update cover image
+              : supplier
+          )
+        );
+      } else {
+        notification.error({
+          message: "Error Updating Supplier",
+          description: "Could not update supplier. Please try again.",
+        });
+      }
+
+      setIsUpdateModalVisible(false);
+      form.resetFields();
+    } catch (error) {
+      console.error("Failed to update supplier:", error);
+      notification.error({
+        message: "Error Updating Supplier",
+        description: error.message || "An error occurred while updating the supplier.",
+      });
+    }
+  };
+
+  const handleDeleteCategory = async (supplier) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        notification.error({
+          message: "Authentication Error",
+          description: "Please log in again.",
+        });
+        return;
+      }
+
+      const response = await deleteSuppliersById(supplier.id, token);
+      console.log(response);
+
+      if (response.ok) {
+        // Refresh the suppliers list after deletion
+        handlefetchSuppliers();
+        notification.success({
+          message: "Supplier Deleted",
+          description: "Supplier has been deleted successfully.",
+        });
+      } else {
+        throw new Error(response.message || "Failed to delete the supplier.");
+      }
+    } catch (error) {
+      console.error("Failed to delete supplier:", error);
+      notification.error({
+        message: "Failed to Delete Supplier",
+        description: error.message || "An unknown error occurred.",
+      });
+    }
+  };
+
 
   const handlefetchSuppliers = async () => {
     try {
@@ -164,7 +280,6 @@ const Suppliers = () => {
       });
     }
   }
-
   useEffect(() => {
     handlefetchSuppliers();
   }, [])
@@ -243,16 +358,10 @@ const Suppliers = () => {
                         {...provided.dragHandleProps}
                       >
                         <Card
-                          // style={{
-                          //   width: "100%",
-                          //   cursor: "pointer",
-                          //   borderRadius: "12px",
-                          //   boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
-                          //   transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                          // }}\
+
                           style={{
                             width: "100%",
-                            minHeight: "400px", // ✅ Ensures same height for all cards
+                            minHeight: "400px",
                             display: "flex",
                             flexDirection: "column",
                             justifyContent: "space-between",
@@ -273,13 +382,11 @@ const Suppliers = () => {
                           cover={
                             <div
                               style={{
-                                // position: "relative",
-                                // borderRadius: "12px 12px 0 0",
-                                // overflow: "hidden",
+
                                 position: "relative",
                                 borderRadius: "12px 12px 0 0",
                                 overflow: "hidden",
-                                height: "150px", 
+                                height: "150px",
                               }}
                             >
                               <img
@@ -314,16 +421,18 @@ const Suppliers = () => {
                             <Button
                               type="default"
                               icon={<EditOutlined />}
+                              onClick={() => handleEditSupplier(supplier)}
                               style={{
                                 color: "green",
                                 borderColor: "gray",
                                 backgroundColor: "transparent",
-                                transition: "transform 0.2s ease",
                               }}
                             >
                               Edit
                             </Button>,
-                            <Popconfirm title="Are you sure you want to delete this supplier?" okText="Yes" cancelText="No">
+
+                            <Popconfirm title="Are you sure you want to delete this supplier?" okText="Yes" cancelText="No"
+                              onConfirm={() => handleDeleteCategory(supplier)}>
                               <Button
                                 type="default"
                                 icon={<DeleteOutlined />}
@@ -411,6 +520,41 @@ const Suppliers = () => {
             <Input />
           </Form.Item>
 
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Update Supplier"
+        visible={isUpdateModalVisible}
+        onCancel={handleCancel}
+        onOk={() => form.submit()}
+      >
+        <Form form={form} layout="vertical" onFinish={handleUpdateFormSubmit}>
+          <Form.Item name="type" label="Supplier Type" rules={[{ required: true }]}>
+            <Select placeholder="Select Supplier Type">
+              {supplierTypes.map((type) => (
+                <Select.Option key={type} value={type}>
+                  {type}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item name="contactName" label="Contact Name" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="phone" label="Phone" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="email" label="Email" rules={[{ required: true, type: "email" }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="address" label="Address" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="country" label="Country" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
         </Form>
       </Modal>
     </div>

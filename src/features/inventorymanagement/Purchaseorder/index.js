@@ -146,7 +146,7 @@ const TotalAsset = () => {
   }, [data]);
 
   useEffect(() => {
-    fetchCategories();
+    getCategories();
     fetchMaterail();
   }, []);
 
@@ -176,57 +176,7 @@ const TotalAsset = () => {
     setSearchTerm(value);
   };
 
-  // const handleExport = () => {
-  //   const headers = {
-  //     "Content-Type": "application/json",
-  //     Authorization: `Bearer ${token}`,
-  //   };
-
-  //   fetch("http://localhost:6060/admin/fixed-assets", { headers })
-  //     .then((response) => {
-  //       if (!response.ok) {
-  //         throw new Error("Network response was not ok");
-  //       }
-  //       return response.blob();
-  //     })
-  //     .then((blob) => {
-  //       const url = window.URL.createObjectURL(blob);
-  //       const link = document.createElement("a");
-  //       link.href = url;
-  //       link.setAttribute("download", "fixed_assets.xlsx");
-  //       document.body.appendChild(link);
-  //       link.click();
-
-  //       document.body.removeChild(link);
-  //       window.URL.revokeObjectURL(url);
-  //     })
-  //     .catch((error) => {
-  //       console.error("Export failed:", error);
-  //     });
-  // };
-
-  // const fetchCategorie = async () => {
-  //   try {
-  //     console.log("Sending request to fetch fixed assets...");
-
-  //     const result = await fetchCategories(token);
-
-  //     console.log("Response received:", result);
-  //     // const result = await response.json();
-  //     if (result.statusCode === 200) {
-  //       setCategories(result.categories || []);
-  //     } else {
-  //       notification.error({
-  //         message: "Failed to fetch categories",
-  //         description: result.error,
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching categories:", error);
-  //   }
-  // };
-
-  const fetchCategorie = async () => {
+  const getCategories = async () => {
     try {
       console.log("Fetching categories...");
   
@@ -283,7 +233,7 @@ const TotalAsset = () => {
     }
   };
   useEffect(() => {
-    fetchCategorie();
+    getCategories();
     fetchMaterail();
   }, []);
 

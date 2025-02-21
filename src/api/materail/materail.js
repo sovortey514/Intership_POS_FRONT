@@ -117,7 +117,7 @@ export const fetchCategories = async (token) => {
       throw new Error(errorMessage.message || "Failed to fetch materials.");
     }
 
-    const result = await response.json();
+    const result = response.json();
     return result; 
   } catch (error) {
     console.error("Error fetching materials:", error);
