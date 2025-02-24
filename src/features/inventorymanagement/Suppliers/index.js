@@ -225,8 +225,7 @@ const Suppliers = () => {
       }
 
       const response = await deleteSuppliersById(supplier.id, token);
-      console.log(response);
-
+  
       if (response.ok) {
         // Refresh the suppliers list after deletion
         handlefetchSuppliers();
@@ -249,7 +248,7 @@ const Suppliers = () => {
 
   const handlefetchSuppliers = async () => {
     try {
-      console.log("📤 Sending request to fetch size...");
+    
       const token = localStorage.getItem("token");
 
       if (!token) {
@@ -261,7 +260,6 @@ const Suppliers = () => {
       }
 
       const result = await fetchSuppliers(token);
-      console.log("✅ Response received:", result);
 
       if (JSON.stringify(suppliers) !== JSON.stringify(result)) {
         const newSuppliersFrontend = result.map((supplier, index) => ({

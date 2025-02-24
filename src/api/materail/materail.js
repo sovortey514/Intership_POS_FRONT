@@ -37,7 +37,7 @@ export const updateMaterial = async (id, values, token) => {
 };
 
 export const createMaterail = async (values, token) => {
-  console.log("Creating material with values:", values);
+
   const response = await fetch(`${API_URL}/createMaterial`, {
     method: "POST",
     headers: {
@@ -46,10 +46,6 @@ export const createMaterail = async (values, token) => {
     },
     body: JSON.stringify(values),
   });
-
-  console.log("Response status:", response.status);
-  console.log("Response headers:", response.headers);
-  console.log("Response object:", response);
 
   if (!response.ok) {
     const errorMessage = await response.json();

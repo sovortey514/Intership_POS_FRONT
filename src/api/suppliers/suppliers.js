@@ -11,9 +11,8 @@ export const createSupplier = async (values, token) => {
             body: JSON.stringify(values),
         });
 
-        // Log full response for debugging
         const responseText = await response.text();
-        console.log("🔍 API Raw Response:", responseText);
+        
 
         if (!response.ok) {
             throw new Error(responseText || "Failed to create Supplier");
@@ -84,7 +83,7 @@ export const deleteSuppliersById = async (id, token) => {
         Authorization: `Bearer ${token}`,
       },
     });
-    console.log("Response", response);
+
 
     if (!response.status === 200) {
       const errorMessage = await response.json();

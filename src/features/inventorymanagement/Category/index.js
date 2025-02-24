@@ -372,11 +372,9 @@ function CategoryFoodManagement() {
 
   const fetchCategories = async () => {
     try {
-      console.log("Sending request to fetch categories...");
+
       const token = localStorage.getItem("token");
       const result = await fetchcreateFood_Category(token);
-
-      console.log("Response received:", result);
 
       if (result) {
         setCategories(result);
@@ -497,8 +495,7 @@ function CategoryFoodManagement() {
 
       const response = await deleteFoodsById(food.foodId, token);
 
-      console.log("✅ Food Deleted Successfully:", response);
-
+    
       await handlefetchfoods();
 
       notification.success({
@@ -518,12 +515,11 @@ function CategoryFoodManagement() {
 
   const handlefetchSubcategory = async () => {
     try {
-      console.log("Sending request to fetch subcategories...");
+     
       const token = localStorage.getItem("token");
       const result = await fetchSubcategory(token);
 
-      console.log("Response received:", result);
-
+  
       if (result) {
         setSubcategories(result);
       } else {
@@ -552,7 +548,6 @@ function CategoryFoodManagement() {
       };
 
       const data = await createSize(payload, token);
-      console.log("✅ Size Created Successfully:", data);
 
       message.success("Size successfully added!");
 
@@ -569,7 +564,7 @@ function CategoryFoodManagement() {
 
   const handlefetchSize = async () => {
     try {
-      console.log("📤 Sending request to fetch size...");
+     
       const token = localStorage.getItem("token");
 
       if (!token) {
@@ -581,8 +576,7 @@ function CategoryFoodManagement() {
       }
 
       const result = await fetchSize(token);
-      console.log("✅ Response received:", result);
-
+    
       if (JSON.stringify(size) !== JSON.stringify(result)) {
         setSize(result);
       }

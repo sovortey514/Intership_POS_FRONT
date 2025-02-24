@@ -142,7 +142,6 @@ const TotalAsset = () => {
   ];
 
   useEffect(() => {
-    console.log("Data state updated: ", data);
   }, [data]);
 
   useEffect(() => {
@@ -178,13 +177,9 @@ const TotalAsset = () => {
 
   const getCategories = async () => {
     try {
-      console.log("Fetching categories...");
-  
+   
       const result = await fetchCategories(token);
-  
-      console.log("API Response:", result);
-  
-      // Check if response contains valid JSON
+
       if (!result || Object.keys(result).length === 0) {
         throw new Error("Empty response from API");
       }
@@ -209,25 +204,23 @@ const TotalAsset = () => {
 
   const fetchMaterail = async () => {
     try {
-      console.log("Sending request to fetch fixed assets...");
-
+   
       const result = await fetchMaterials(token);
 
-      console.log("Response received:", result);
 
       if (result && result.statusCode === 200) {
         setData(result.fixedAssets || []);
       } else {
-        console.error("Failed to fetch fixed assets:", result.error);
+        console.error("Failed to fetch Materials:", result.error);
         notification.error({
-          message: "Failed to fetch categories",
+          message: "Failed to fetch cMaterials",
           description: result.error || "Unknown error",
         });
       }
     } catch (error) {
-      console.error("Error fetching fixed assets:", error);
+      console.error("Error fetching Materials:", error);
       notification.error({
-        message: "Error fetching fixed assets",
+        message: "Error fetching Materials",
         description: error.message || "An unknown error occurred.",
       });
     }

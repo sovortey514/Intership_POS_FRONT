@@ -1,18 +1,15 @@
-import React, { useState } from "react";
-import { Button, Space, notification, Select, Modal, Input } from "antd";
+
+import React, { useEffect, useState } from "react";
+import { Button, Space, notification, Select, Modal, Input ,Popconfirm} from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { SearchOutlined } from '@ant-design/icons';
+import { DragDropContext, Droppable, Draggable ,} from "react-beautiful-dnd";
+
+import { createTable, fetchTable, deleteTablesById, updateTables } from "../../../api/table/table";
+
 
 const TableManagement = () => {
-  const [tables, setTables] = useState([
-    { id: 1, name: "T-01", status: "occupied", type: "dine-in", location: "indoor" },
-    { id: 2, name: "T-02", status: "reserved", type: "dine-in", location: "outdoor" },
-    { id: 3, name: "T-03", status: "available", type: "take-away", location: "outdoor" },
-    { id: 4, name: "T-04", status: "occupied", type: "dine-in", location: "indoor" },
-    { id: 5, name: "T-05", status: "available", type: "card-membership", location: "indoor" },
-    { id: 6, name: "T-06", status: "reserved", type: "dine-in", location: "outdoor" },
-    { id: 7, name: "T-07", status: "available", type: "take-away", location: "outdoor" },
-  ]);
+
 
   const [filter, setFilter] = useState("all");
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -20,14 +17,80 @@ const TableManagement = () => {
   const [newTableLocation, setNewTableLocation] = useState("indoor");
   const [searchText, setSearchText] = useState("");
   const [editingTable, setEditingTable] = useState(null);
+  const [selectedTables, setSelectedTables] = useState([]);
+  const [tables, setTables] = useState([]);
+  const token = localStorage.getItem("token");
 
-  // Handle adding a new table
   const handleAddTable = () => {
     setIsModalVisible(true);
     setEditingTable(null);
   };
 
-  const handleCreateTable = () => {
+  const handleMergeTables = () => {
+    if (selectedTables.length !== 2) {
+      notification.error({
+        message: "Merge Error",
+        description: "Select exactly two tables to merge.",
+      });
+      return;
+    }
+
+    const [table1, table2] = selectedTables;
+
+    if (table1.location !== table2.location) {
+      notification.error({
+        message: "Merge Error",
+        description: "Tables must be in the same location.",
+      });
+      return;
+    }
+
+    if (table1.merged || table2.merged) {
+      notification.error({
+        message: "Merge Error",
+        description: "Cannot merge tables that are already merged.",
+      });
+      return;
+    }
+
+    const mergedTable = {
+      id: table1.id,
+      name: `${table1.name}-${table2.name}`,
+      status: table1.status === "available" && table2.status === "available" ? "available" : "occupied",
+      type: table1.type,
+      location: table1.location,
+      merged: [table1, table2],
+    };
+
+    setTables((prevTables) =>
+      prevTables.filter((t) => t.id !== table2.id).map((t) => (t.id === table1.id ? mergedTable : t))
+    );
+
+    setSelectedTables([]);
+    notification.success({
+      message: "Tables Merged",
+      description: `Tables ${table1.name} and ${table2.name} merged successfully.`,
+    });
+  };
+
+  const handleSplitTable = (table) => {
+    if (!table.merged) {
+      notification.error({
+        message: "Split Error",
+        description: "This table is not merged.",
+      });
+      return;
+    }
+
+    setTables((prevTables) => [...prevTables.filter((t) => t.id !== table.id), ...table.merged]);
+
+    notification.success({
+      message: "Table Split",
+      description: `Table ${table.name} split into separate tables.`,
+    });
+  };
+
+  const handleCreateTable = async () => {
     if (!newTableType) {
       notification.error({
         message: "Please select a table type",
@@ -37,38 +100,153 @@ const TableManagement = () => {
     }
 
     const newTable = {
-      id: tables.length + 1,
       name: `T-0${tables.length + 1}`,
       status: "available",
       type: newTableType,
       location: newTableLocation,
     };
-    setTables([...tables, newTable]);
-    notification.success({
-      message: "Table Added",
-      description: `New table "${newTable.name}" for ${newTableType} has been added successfully.`,
-    });
 
-    setIsModalVisible(false);
-    setNewTableType("");
-    setNewTableLocation("indoor");
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        notification.error({
+          message: "Authentication Error",
+          description: "You must be logged in to create a table.",
+        });
+        return;
+      }
+
+      const response = await createTable(newTable, token);
+
+      if (response.error) {
+        notification.error({
+          message: "Error",
+          description: response.error,
+        });
+      } else {
+        setTables([...tables, response]);
+        notification.success({
+          message: "Table Added",
+          description: `New table "${response.name}" for ${response.type} has been added successfully.`,
+        });
+        setIsModalVisible(false);
+      }
+    } catch (error) {
+      console.error("❌ Error creating table:", error);
+      notification.error({
+        message: "Error",
+        description: "An error occurred while creating the table.",
+      });
+    }
   };
 
-  // Handle changing table status
-  const handleChangeStatus = (id) => {
-    setTables(tables.map((table) =>
-      table.id === id ? {
-        ...table,
-        status: table.status === "available" ? "occupied" : table.status === "occupied" ? "reserved" : "available"
-      } : table
-    ));
-    notification.success({
-      message: `Table ${id} Status Changed`,
-      description: `Table ${id} is now ${tables.find(table => table.id === id).status}.`,
-    });
+  const handlefetchTables = async () => {
+    try {
+
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        notification.error({
+          message: "Authentication Error",
+          description: "Please log in again.",
+        });
+        return;
+      }
+
+      const result = await fetchTable(token);
+
+      if (JSON.stringify(tables) !== JSON.stringify(result)) {
+        setTables(result);
+      }
+    } catch (error) {
+      console.error("🚨 Error fetching table:", error);
+      notification.error({
+        message: "Error fetching size",
+        description: error.message || "An error occurred while fetching table.",
+      });
+    }
+  }
+
+  const handledeleteTables = async (id) => {
+    if (!id) {
+      console.error("❌ Invalid Table ID:", id);
+      notification.error({
+        message: "Delete Error",
+        description: "Invalid table ID. Cannot delete.",
+      });
+      return;
+    }
+
+    try {
+      const response = await deleteTablesById(id, token); // Call delete API function
+
+      if (response.success) {
+        await handlefetchTables();
+        notification.success({
+          message: "Table Deleted",
+          description: response.message,
+        });
+      } else {
+        notification.error({
+          message: "Failed to delete Table",
+          description: response.error || "An unknown error occurred.",
+        });
+      }
+    } catch (error) {
+      console.error("❌ Error deleting table:", error);
+      notification.error({
+        message: "Delete Error",
+        description: "An error occurred while deleting the table.",
+      });
+    }
   };
 
-  // Handle editing a table
+  const handleUpdateTable = async () => {
+    if (!editingTable || !newTableType || !newTableLocation) {
+      notification.error({
+        message: "Update Error",
+        description: "Please select both table type and location.",
+      });
+      return;
+    }
+  
+    try {
+      const updatedTable = {
+        name: editingTable.name,
+        status: editingTable.status,
+        type: newTableType,
+        location: newTableLocation,
+      };
+  
+      const response = await updateTables(editingTable.id, updatedTable, token);
+  
+      if (response.error) {
+        notification.error({
+          message: "Update Failed",
+          description: response.error,
+        });
+      } else {
+        setTables((prevTables) =>
+          prevTables.map((t) => (t.id === editingTable.id ? response : t))
+        );
+        notification.success({
+          message: "Table Updated",
+          description: `Table "${response.name}" has been updated successfully.`,
+        });
+        setIsModalVisible(false);
+        setEditingTable(null);
+      }
+    } catch (error) {
+      console.error("❌ Error updating table:", error);
+      notification.error({
+        message: "Update Error",
+        description: "An error occurred while updating the table.",
+      });
+    }
+  };
+  
+
   const handleEditTable = (table) => {
     setEditingTable(table);
     setNewTableType(table.type);
@@ -76,32 +254,65 @@ const TableManagement = () => {
     setIsModalVisible(true);
   };
 
-  // Handle deleting a table
-  const handleDeleteTable = (id) => {
-    setTables(tables.filter(table => table.id !== id));
-    notification.success({
-      message: "Table Deleted",
-      description: `Table ${id} has been deleted successfully.`,
-    });
+
+  const onDragEnd = (result) => {
+    if (!result.destination) return;
+
+    const reorderedTables = [...tables];
+    const [movedTable] = reorderedTables.splice(result.source.index, 1);
+    reorderedTables.splice(result.destination.index, 0, movedTable);
+
+    setTables(reorderedTables);
   };
 
   const tableColors = {
-    available: "border-t-8 border-[#34D399]",   // Teal/Green for available
-    occupied: "border-t-8 border-[#F87171]",    // Red/Orange for occupied
-    reserved: "border-t-8 border-[#FBBF24]",    // Yellow/Gold for reserved
+    available: "border-t-8 border-[#34D399]",
+    occupied: "border-t-8 border-[#F87171]",
+    reserved: "border-t-8 border-[#FBBF24]",
   };
 
-  // Filter tables based on the selected status and search text
-  const filteredTables = tables
-    .filter(table => table.status === filter || filter === "all")
-    .filter(table => table.name.toLowerCase().includes(searchText.toLowerCase()));
+  const handleSelectTable = (table) => {
+    setSelectedTables((prev) => {
+      if (prev.includes(table)) {
+        return prev.filter((t) => t !== table);
+      } else {
+        return prev.length < 2 ? [...prev, table] : prev;
+      }
+    });
+  };
+
+
+  // const filteredTables = tables.filter((table) => {
+
+  //   const matchesStatus = filter === "all" || table.status === filter;
+  //   const matchesType = ["take-away", "card-membership", "dine-in"].includes(filter)
+  //     ? table.type === filter
+  //     : true;
+  //   const matchesSearch = table.name.toLowerCase().includes(searchText.toLowerCase());
+
+  //   return (matchesStatus || matchesType) && matchesSearch;
+  // });
+
+  const filteredTables = tables.filter((table) => {
+    const matchesStatus = filter === "all" || table.status === filter;
+    const matchesType = ["take-away", "card-membership", "dine-in"].includes(filter)
+      ? table.type === filter
+      : true;
+    const matchesSearch = table.name && table.name.toLowerCase().includes(searchText.toLowerCase());
+  
+    return (matchesStatus || matchesType) && matchesSearch;
+  });
+  
+
+  useEffect(() => {
+    handlefetchTables();
+  }, []);
 
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-semibold text-gray-800">Restaurant Table Management</h2>
+        <h2 className="text-3xl font-semibold text-gray-800">Table List</h2>
         <div className="flex items-center space-x-4">
-          {/* Search bar */}
           <Input
             placeholder="Search tables..."
             value={searchText}
@@ -109,8 +320,9 @@ const TableManagement = () => {
             className="w-48 border-2 border-gray-300 rounded-lg focus:outline-none"
             prefix={<SearchOutlined />}
           />
-
-          {/* Filter Dropdown for status */}
+          <Button type="default" onClick={handleMergeTables} className="bg-blue-500 text-white hover:bg-blue-600 transition-all duration-300 rounded-lg">
+            Merge Tables
+          </Button>
           <Select
             defaultValue="all"
             onChange={(value) => setFilter(value)}
@@ -125,8 +337,6 @@ const TableManagement = () => {
             <Select.Option value="card-membership">Card Membership</Select.Option>
             <Select.Option value="dine-in">Dine-In</Select.Option>
           </Select>
-
-          {/* Button to add new table */}
           <Button
             type="default"
             icon={<PlusOutlined />}
@@ -138,61 +348,97 @@ const TableManagement = () => {
         </div>
       </div>
 
-      {/* Table grid layout */}
-      <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-4">
-        {filteredTables.map((table) => (
-          <div
-            key={table.id}
-            className={`relative bg-white ${tableColors[table.status]} text-white flex flex-col justify-center items-center rounded-lg p-6 cursor-pointer hover:scale-105 hover:bg-gray-100 hover:shadow-lg transition-all`}
-            onClick={() => handleChangeStatus(table.id)}
-          >
-            <div className="flex flex-col items-center">
-              <div className="bg-white text-gray-700 rounded-full w-16 h-16 flex justify-center items-center mb-2 border-2 border-gray-300">
-                <span className="font-semibold text-xl tracking-wider">{table.name}</span>
-              </div>
-              <span className="text-sm mt-2 uppercase font-semibold text-gray-700">{table.type.replace("-", " ")}</span>
-              <span className="text-xs mt-1 text-gray-600 uppercase">{table.location}</span> {/* Show location */}
+      <DragDropContext onDragEnd={onDragEnd}>
+        <Droppable droppableId="tables">
+          {(provided) => (
+            <div
+              {...provided.droppableProps}
+              ref={provided.innerRef}
+              className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-4"
+            >
+              {filteredTables.map((table, index) => (
+                <Draggable key={table.id} draggableId={String(table.id)} index={index}>
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      className={`relative bg-white ${tableColors[table.status]} text-white flex flex-col justify-center items-center rounded-lg p-6 cursor-pointer hover:scale-105 hover:bg-gray-100 hover:shadow-lg transition-all`}
+                      onClick={() => handleSelectTable(table)}
+                    >
+                      <div className="flex flex-col items-center">
+                        <div className="bg-white text-gray-700 rounded-full w-16 h-16 flex justify-center items-center mb-2 border-2 border-gray-300">
+                          <span className="font-semibold text-xl tracking-wider">{table.name}</span>
+                        </div>
+                        <span className="text-sm mt-2 uppercase font-semibold text-gray-700">{table.type.replace("-", " ")}</span>
+                        <span className="text-xs mt-1 text-gray-600 uppercase">{table.location}</span>
+                      </div>
+
+                      {selectedTables.includes(table) && (
+                        <div className="absolute top-2 left-2 bg-blue-500 text-white px-3 py-1 rounded-full text-xs shadow-md">
+                          Selected
+                        </div>
+                      )}
+
+                      {table.merged && (
+                        <Button
+                          className="absolute bottom-2 text-xs text-white bg-red-500 px-2 py-1 rounded-lg shadow-md hover:bg-red-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSplitTable(table);
+                          }}
+                        >
+                          Split Table
+                        </Button>
+                      )}
+
+                      {/* Table Icons (Edit and Delete) */}
+                      <div className="absolute top-2 right-2 flex space-x-1">
+                        {/* Edit Icon */}
+                        <div className="p-1 rounded-full bg-white border border-gray-300 hover:bg-gray-200 transition-colors">
+                          <EditOutlined
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditTable(table);
+                            }}
+                            className="text-green-500 cursor-pointer text-lg hover:text-green-600 transition-colors"
+                          />
+                        </div>
+                    
+                        <Popconfirm title="Are you sure you want to delete this supplier?" okText="Yes" cancelText="No"
+                          onConfirm={() => handledeleteTables(table.id)}>
+                          <div className="p-1 rounded-full bg-white border border-gray-300 hover:bg-gray-200 transition-colors">
+                          <DeleteOutlined
+                            onClick={(e) => {
+                              e.stopPropagation();
+                        
+                            }}
+                            className="text-red-500 cursor-pointer text-lg hover:text-red-600 transition-colors"
+                          />
+                        </div>
+                        </Popconfirm>,
+                      </div>
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
             </div>
+          )}
+        </Droppable>
+      </DragDropContext>
 
-            {/* Table Icons (Edit and Delete) */}
-            <div className="absolute top-2 right-2 flex space-x-1">
-              {/* Edit Icon */}
-              <div className="p-1 rounded-full bg-white border border-gray-300 hover:bg-gray-200 transition-colors">
-                <EditOutlined
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEditTable(table);
-                  }}
-                  className="text-green-500 cursor-pointer text-lg hover:text-green-600 transition-colors"
-                />
-              </div>
-
-              {/* Delete Icon */}
-              <div className="p-1 rounded-full bg-white border border-gray-300 hover:bg-gray-200 transition-colors">
-                <DeleteOutlined
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteTable(table.id);
-                  }}
-                  className="text-red-500 cursor-pointer text-lg hover:text-red-600 transition-colors"
-                />
-              </div>
-            </div>
-
-
-          </div>
-        ))}
-      </div>
-
-      {/* Modal for selecting the table type and location */}
       <Modal
-        title={editingTable ? "Edit Table Type" : "Select Table Type"}
-        visible={isModalVisible}
-        onOk={handleCreateTable}
-        onCancel={() => setIsModalVisible(false)}
-        okText="Create"
-        cancelText="Cancel"
-      >
+  title={editingTable ? "Edit Table" : "Create New Table"}
+  visible={isModalVisible}
+  onOk={editingTable ? handleUpdateTable : handleCreateTable}
+  onCancel={() => {
+    setIsModalVisible(false);
+    setEditingTable(null);
+  }}
+  okText={editingTable ? "Update" : "Create"}
+  cancelText="Cancel"
+>
         <Select
           placeholder="Select table type"
           value={newTableType}
@@ -203,8 +449,6 @@ const TableManagement = () => {
           <Select.Option value="card-membership">Card Membership</Select.Option>
           <Select.Option value="dine-in">Dine-In</Select.Option>
         </Select>
-
-        {/* New Select dropdown for location (indoor or outdoor) */}
         <Select
           placeholder="Select table location"
           value={newTableLocation}
