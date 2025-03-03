@@ -150,7 +150,6 @@ function CategoryFoodManagement() {
     setIsModalVisible(true);
   };
 
-
   const showViewModal = (record) => {
     console.log("📄 Viewing Record:", record);
     setSelectedCategory(record);

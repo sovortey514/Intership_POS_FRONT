@@ -75,28 +75,6 @@ export const deleteTablesById = async (id, token) => {
     }
 };
 
-// export const updateTables = async (id, values, token) => {
-//     try {
-//       const response = await fetch(`${API_URL}/updateTable/${id}`, {
-//         method: "PUT",
-//         headers: {
-//           "Content-Type": "application/json",
-//           Authorization: `Bearer ${token}`,
-//         },
-//         body: JSON.stringify(values),
-//       });
-  
-//       if (!response.ok) {
-//         throw new Error(`Failed to update table: ${response.statusText}`);
-//       }
-  
-//       return response;
-//     } catch (error) {
-//       console.error("❌ Error updating table:", error);
-//       return { error: error.message };
-//     }
-//   };
-  
 
   export const updateTables = async (id, values, token) => {
     const response = await fetch(`${API_URL}/updateTable/${id}`, {
@@ -109,6 +87,7 @@ export const deleteTablesById = async (id, token) => {
       });
     return response;
   };
+  
   
 
 

@@ -28,6 +28,7 @@ const OrderReceipt = ({ orderItems, subtotal, tax, totalAmount, onClose }) => {
         <div className="text-xs mb-2">
           <p><strong>Order ID:</strong> #345672</p>
           <p><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
+          <p><strong>Order By:</strong> Admin</p>
         </div>
 
         {/* 🛒 Order Items */}
