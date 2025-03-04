@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Table, Button, Space, Card, Input, Popconfirm, Tag, Modal, Form, notification } from "antd";
 import { EditOutlined, EyeOutlined, DeleteOutlined, SearchOutlined, PlusOutlined, DollarCircleOutlined } from "@ant-design/icons";
-import { Select } from "antd";
+import { Select ,message } from "antd";
 
 import {
   createmembership,
   fetchMembership,
-  updateMembership
+  updateMembership,
+  deleteMembershipById
 
 
 } from "../../../api/membership/memberships";
@@ -99,6 +100,22 @@ function MembershipList() {
     setIsCreateModalVisible(true);
   };
 
+  const handleDeleteMembership = async (record, token) => {
+    try {
+      const token = localStorage.getItem("token");
+      await deleteMembershipById(record.id, token);
+      message.success("Membership deleted successfully.");
+      
+      // Remove deleted membership from state
+      setMembershipData((prevData) =>
+        prevData.filter((m) => m.id !== record.id)
+      );
+    } catch (error) {
+      message.error("Failed to delete membership. Please try again.");
+      console.error("Delete error:", error);
+    }
+  };
+
   const handleCreateMember = async () => {
 
     if (!newMember.membershipId || !newMember.name || !newMember.gender || !newMember.membershipType) {
@@ -144,7 +161,7 @@ function MembershipList() {
 
       const token = localStorage.getItem("token");
       const result = await fetchMembership(token);
-
+    
       if (result) {
         setMembershipData(result);
       } else {
@@ -200,7 +217,7 @@ function MembershipList() {
           {/* <Button icon={<DollarCircleOutlined />} onClick={() => showAddMoneyModal(record)} style={{ color: "orange" }}>Add Money</Button> */}
           <Popconfirm
             title="Are you sure you want to delete this membership?"
-            onConfirm={() => setMembershipData(membershipData.filter((m) => m.membershipId !== record.membershipId))}
+            onConfirm={() => handleDeleteMembership(record, token)}
             okText="Yes"
             cancelText="No"
           >

@@ -1,11 +1,12 @@
-import React, { useState, useRef } from "react";
-import { Button, Dropdown, Menu, Input } from "antd";
+import React, { useState, useRef, useEffect } from "react";
+import { Button, Dropdown, Menu, Input, notification } from "antd";
 import { FaHamburger, FaPizzaSlice, FaGlassMartiniAlt, FaCookie, FaPepperHot } from "react-icons/fa";
 import { IoFastFoodOutline } from "react-icons/io5"; // ✅ Correct import
 import { MinusOutlined, PlusOutlined, DeleteOutlined, EditOutlined, MenuOutlined, SearchOutlined } from "@ant-design/icons";
 import { EllipsisOutlined } from "@ant-design/icons";
 import OrderReceipt from "./PrintReceipt";
 import Payment from "./Payment";
+import { fetchFoods } from "../../../api/Food_Category/food_category";
 const categories = [
   { label: "All", value: "all", icon: <IoFastFoodOutline /> },
   { label: "Burger", value: "burger", icon: <FaHamburger /> },
@@ -68,6 +69,7 @@ const Order = () => {
   const [isDineIn, setIsDineIn] = useState(true);
   const [showReceipt, setShowReceipt] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [foods, setFoods] = useState([]);
   const printRef = useRef(null);
   const increaseQuantity = (id) => {
     setOrderItems(
@@ -89,6 +91,27 @@ const Order = () => {
           : item
       )
     );
+  };
+
+  const handlefetchfoods = async () => {
+    try {
+      console.log("📡 Sending request to fetch foods...");
+      const token = localStorage.getItem("token");
+
+
+      const result = await fetchFoods(token);
+      console.log("🔄 Updated Food List:", result);
+
+      setFoods(result);
+
+      return result;
+    } catch (error) {
+      console.error("🚨 Error fetching foods:", error);
+      notification.error({
+        message: "Error fetching foods",
+        description: error.message || "An error occurred while fetching foods.",
+      });
+    }
   };
 
   const menu = (
@@ -113,6 +136,10 @@ const Order = () => {
 
   const tax = subtotal * 0.05;
   const totalAmount = subtotal + tax;
+
+  useEffect(() => {
+    handlefetchfoods();
+  }, [])
 
 
   return (
@@ -155,7 +182,7 @@ const Order = () => {
           </div>
 
           {/* Product Grid */}
-          <div className="grid grid-cols-3 gap-x-20 gap-y-4 mt-4">
+          {/* <div className="grid grid-cols-3 gap-x-20 gap-y-4 mt-4">
             {filteredProducts.map((product) => (
               <div
                 key={product.id}
@@ -179,7 +206,51 @@ const Order = () => {
                 </Button>
               </div>
             ))}
+          </div> */}
+          <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 gap-6 mt-4 justify-center">
+            {foods.map((food) => (
+              <div
+                key={food.foodId}
+                className="bg-white p-5 rounded-xl shadow-lg hover:shadow-xl transition transform hover:scale-110 cursor-pointer max-w-[400px] w-full mx-auto"
+              >
+                {/* Image Container */}
+                <div className="w-full h-32 flex items-center justify-center bg-gray-100 rounded-lg overflow-hidden">
+                  <img
+                    src={food.files?.[0]?.fileUrl || "/default-image.png"}
+                    alt={food.foodName}
+                    className="w-32 h-32 object-contain rounded-lg"
+                  />
+                </div>
+
+                {/* Food Name */}
+                <h3 className="text-sm font-semibold mt-3 text-gray-900">{food.foodName}</h3>
+
+                {/* Category & Subcategory */}
+                <p className="text-gray-600 text-xs">
+                  {food.categoryName} - {food.subCategoryName}
+                </p>
+
+                {/* Price */}
+                <p className="text-lg font-bold mt-2 text-gray-800">${food.price.toFixed(2)}</p>
+
+                {/* Size */}
+                <p className="text-sm font-medium text-gray-700 mt-1">
+                  Size: {food.sizeName}
+                </p>
+
+                {/* Add to Order Button */}
+                <Button
+                  type="default"
+                  className="w-full mt-4 border border-pink-500 text-white bg-gradient-to-r from-pink-500 to-red-400 hover:from-red-500 hover:to-pink-500 py-2 text-sm rounded-full shadow-md transition"
+                >
+                  Add to Order
+                </Button>
+              </div>
+            ))}
           </div>
+
+
+
         </div>
 
 
@@ -240,8 +311,8 @@ const Order = () => {
             </h3>
 
 
-              {!showPayment && !showReceipt &&(
-                <div className="space-y-2 w-full h-60">
+            {!showPayment && !showReceipt && (
+              <div className="space-y-2 w-full h-60">
                 {orderItems.map((item) => (
                   <div
                     key={item.id}
@@ -267,17 +338,17 @@ const Order = () => {
                           className="w-6 h-6 flex items-center justify-center"
                         />
                       </div>
-  
-  
+
+
                     </div>
-  
+
                     {/* Item Details */}
                     <div className="flex-1 ml-3 mb-6">
                       <h4 className="font-medium">{item.name}</h4>
                       <p className="text-gray-500 text-xs">Extra: {item.extra}</p>
                       <p className="text-gray-500 text-xs">Note: {item.note}</p>
                     </div>
-  
+
                     {/* Delete & Edit Icons - Positioned at Top Right */}
                     <div className="absolute top-4 right-2 space-x-1">
                       <Button
@@ -299,9 +370,9 @@ const Order = () => {
                   </div>
                 ))}
               </div>
-              )}
+            )}
 
-            
+
           </div>
 
           {/* Fixed Footer - Order Summary */}
@@ -319,7 +390,7 @@ const Order = () => {
               <span>{totalAmount.toFixed(2)} $</span>
             </div>
           </div>
-          {!showPayment && !showReceipt &&(
+          {!showPayment && !showReceipt && (
             <Button
               type="primary"
               block

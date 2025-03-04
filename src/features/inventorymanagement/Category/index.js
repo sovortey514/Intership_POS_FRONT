@@ -897,12 +897,12 @@ function CategoryFoodManagement() {
                       dataIndex: "foodName",
                       key: "foodName",
                     },
-                    {
-                      title: "Category",
-                      dataIndex: "categoryName",
-                      key: "categoryName",
-                      render: (categoryName) => categoryName || "N/A",
-                    },
+                    // {
+                    //   title: "Category",
+                    //   dataIndex: "categoryName",
+                    //   key: "categoryName",
+                    //   render: (categoryName) => categoryName || "N/A",
+                    // },
                     {
                       title: "Subcategory",
                       dataIndex: "subCategoryName",
