@@ -1,19 +1,23 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Button, Dropdown, Menu, Input, notification } from "antd";
+import { Button, Dropdown, Menu, Input, notification, Select } from "antd";
 import { FaHamburger, FaPizzaSlice, FaGlassMartiniAlt, FaCookie, FaPepperHot } from "react-icons/fa";
-import { IoFastFoodOutline } from "react-icons/io5"; // ✅ Correct import
+import { IoFastFoodOutline } from "react-icons/io5";
+import { ArrowRightOutlined } from "@ant-design/icons";
+
 import { MinusOutlined, PlusOutlined, DeleteOutlined, EditOutlined, MenuOutlined, SearchOutlined } from "@ant-design/icons";
 import { EllipsisOutlined } from "@ant-design/icons";
 import OrderReceipt from "./PrintReceipt";
 import Payment from "./Payment";
 import { fetchFoods } from "../../../api/Food_Category/food_category";
+import { fetchTable } from "../../../api/table/table";
+
 const categories = [
   { label: "All", value: "all", icon: <IoFastFoodOutline /> },
   { label: "Burger", value: "burger", icon: <FaHamburger /> },
   { label: "Pizza", value: "pizza", icon: <FaPizzaSlice /> },
   { label: "Drink", value: "drink", icon: <FaGlassMartiniAlt /> },
   { label: "Desert", value: "desert", icon: <FaCookie /> },
-  { label: "Appetizer", value: "appetizer", icon: <FaPepperHot /> },
+  { label: "Rice", value: "Rice", icon: <FaPepperHot /> },
 ];
 
 const initialOrderItems = [
@@ -47,17 +51,13 @@ const initialOrderItems = [
   },
 ];
 
-const products = [
-  { id: 1, name: "Pepperoni Pizza", price: "120 $", category: "pizza", image: "pepperoni.png" },
-  { id: 2, name: "Cheese Burger", price: "120 $", category: "burger", image: "cheeseburger.png" },
-  { id: 3, name: "Chicken BBQ", price: "120 $", category: "pizza", image: "chickenbbq.png" },
-  { id: 4, name: "Veggie Burger", price: "120 $", category: "burger", image: "veggieburger.png" },
-  { id: 5, name: "Coca Cola", price: "30 $", category: "drink", image: "cocacola.png" },
-  { id: 6, name: "Orange Juice", price: "35 $", category: "drink", image: "orangejuice.png" },
-  { id: 7, name: "Chocolate Cake", price: "80 $", category: "dessert", image: "chocolatecake.png" },
-  { id: 8, name: "Ice Cream Sundae", price: "60 $", category: "dessert", image: "icecream.png" },
-
+const tables = [
+  { id: 1, name: "T-01" },
+  { id: 2, name: "T-02" },
+  { id: 3, name: "T-03" },
+  { id: 4, name: "T-04" },
 ];
+
 
 const handlePrint = () => {
   window.print();
@@ -65,12 +65,27 @@ const handlePrint = () => {
 
 const Order = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [visibleCount, setVisibleCount] = useState(8);
   const [orderItems, setOrderItems] = useState(initialOrderItems);
   const [isDineIn, setIsDineIn] = useState(true);
   const [showReceipt, setShowReceipt] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [foods, setFoods] = useState([]);
+  const [tables,setTables] = useState([]);
   const printRef = useRef(null);
+  const [selectedTable, setSelectedTable] = useState(null);
+
+  const showMoreProducts = () => {
+    setVisibleCount((prev) => prev + 8);
+  };
+  const handleTableSelection = (value) => {
+    setSelectedTable(value);
+  };
+
+  const filteredFoods = selectedCategory === "all"
+    ? foods
+    : foods.filter(food => food.categoryName.toLowerCase() === selectedCategory.toLowerCase());
+
   const increaseQuantity = (id) => {
     setOrderItems(
       orderItems.map((item) =>
@@ -79,9 +94,41 @@ const Order = () => {
     );
   };
 
-  const filteredProducts = selectedCategory === "all"
-    ? products
-    : products.filter(product => product.category === selectedCategory);
+  const handlefetchTables = async () => {
+      try {
+  
+        const token = localStorage.getItem("token");
+  
+        if (!token) {
+          notification.error({
+            message: "Authentication Error",
+            description: "Please log in again.",
+          });
+          return;
+        }
+  
+        const result = await fetchTable(token);
+  
+        if (JSON.stringify(tables) !== JSON.stringify(result)) {
+          setTables(result);
+        }
+      } catch (error) {
+        console.error("🚨 Error fetching table:", error);
+        notification.error({
+          message: "Error fetching size",
+          description: error.message || "An error occurred while fetching table.",
+        });
+      }
+    }
+
+    useEffect(() => {
+        handlefetchTables();
+      }, []);
+    
+
+  // const filteredProducts = selectedCategory === "all"
+  //   ? products
+  //   : products.filter(product => product.category === selectedCategory);
 
   const decreaseQuantity = (id) => {
     setOrderItems(
@@ -181,81 +228,67 @@ const Order = () => {
             ))}
           </div>
 
-          {/* Product Grid */}
-          {/* <div className="grid grid-cols-3 gap-x-20 gap-y-4 mt-4">
-            {filteredProducts.map((product) => (
-              <div
-                key={product.id}
-                className="bg-white p-3 rounded-lg shadow-md hover:shadow-lg transition transform hover:scale-105 cursor-pointer w-full md:w-48"
-              >
-                <div className="w-full h-32 flex items-center justify-center bg-gray-100 rounded-md">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-24 h-24 object-cover rounded-md"
-                  />
-                </div>
-                <h3 className="text-sm font-semibold mt-3 text-gray-800">{product.name}</h3>
-                <p className="text-gray-600 text-xs">{product.price}</p>
-
-                <Button
-                  type="default"
-                  className="w-full mt-3 border border-pink-500 text-pink-500 hover:bg-pink-500 hover:text-white py-1 text-xs rounded-md transition"
-                >
-                  Add to Order
-                </Button>
-              </div>
-            ))}
-          </div> */}
-          <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 gap-6 mt-4 justify-center">
-            {foods.map((food) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-24 py-6 gap-y-3 justify-items-center">
+            {filteredFoods.slice(0, visibleCount).map((food) => (
               <div
                 key={food.foodId}
-                className="bg-white p-5 rounded-xl shadow-lg hover:shadow-xl transition transform hover:scale-110 cursor-pointer max-w-[400px] w-full mx-auto"
+                className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition transform hover:scale-105 cursor-pointer w-36 min-h-[220px] mx-auto"
               >
                 {/* Image Container */}
-                <div className="w-full h-32 flex items-center justify-center bg-gray-100 rounded-lg overflow-hidden">
+                <div className="w-full h-28 flex items-center justify-center bg-gray-100 rounded-md overflow-hidden">
                   <img
                     src={food.files?.[0]?.fileUrl || "/default-image.png"}
                     alt={food.foodName}
-                    className="w-32 h-32 object-contain rounded-lg"
+                    className="w-28 h-28 object-contain rounded-md"
                   />
                 </div>
 
                 {/* Food Name */}
-                <h3 className="text-sm font-semibold mt-3 text-gray-900">{food.foodName}</h3>
+                <h3 className="text-xs font-semibold mt-2 text-gray-900 text-center">
+                  {food.foodName}
+                </h3>
 
                 {/* Category & Subcategory */}
-                <p className="text-gray-600 text-xs">
+                <p className="text-gray-600 text-[10px] text-center">
                   {food.categoryName} - {food.subCategoryName}
                 </p>
 
                 {/* Price */}
-                <p className="text-lg font-bold mt-2 text-gray-800">${food.price.toFixed(2)}</p>
+                <p className="text-base font-bold mt-1 text-gray-800 text-center">
+                  ${food.price.toFixed(2)}
+                </p>
 
                 {/* Size */}
-                <p className="text-sm font-medium text-gray-700 mt-1">
+                <p className="text-xs font-medium text-gray-700 mt-1 text-center">
                   Size: {food.sizeName}
                 </p>
 
                 {/* Add to Order Button */}
                 <Button
                   type="default"
-                  className="w-full mt-4 border border-pink-500 text-white bg-gradient-to-r from-pink-500 to-red-400 hover:from-red-500 hover:to-pink-500 py-2 text-sm rounded-full shadow-md transition"
+                  className="w-full mt-3 border border-pink-500 text-white bg-gradient-to-r from-pink-500 to-red-400 hover:from-red-500 hover:to-pink-500 py-1 text-xs rounded-full shadow-sm transition"
                 >
                   Add to Order
                 </Button>
               </div>
             ))}
           </div>
-
-
+          {visibleCount < foods.length && (
+            <div className="flex justify-center mt-4">
+              <Button
+                type="primary"
+                onClick={showMoreProducts}
+                className="px-8 py-3 rounded-lg bg-gradient-to-r from-pink-500 to-pink-700 text-white font-semibold shadow-lg hover:from-blue-600 hover:to-blue-800 transform transition-all duration-300 hover:scale-105 flex items-center gap-2 border-pink-500"
+              >
+                See More
+                <ArrowRightOutlined className="text-lg" />
+              </Button>
+            </div>
+          )}
 
         </div>
-
-
       )}
-      <div className="w-4/5 bg-white p-4 rounded-lg shadow-md border mr-[-20px] mt-[-25px]">
+      <div className="w-4/5 bg-white p-4 rounded-lg shadow-md border mr-[-20px] mt-[-25px] ml-6">
         <div >
           {/* Order Header & Toggle - Flex Row */}
           <div className="flex justify-between items-center mb-3">
@@ -282,6 +315,23 @@ const Order = () => {
 
           {/* Divider Line */}
           <hr className="border-t border-gray-300 my-3 w-full pb-4" />
+
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold mb-2">Select Table</h3>
+            <Select
+              value={selectedTable}
+              onChange={handleTableSelection}
+              placeholder="Select a Table"
+              className="w-full"
+            >
+              {tables.map((table) => (
+                <Select.Option key={table.id} value={table.name}>
+                  {table.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </div>
+
 
 
           {/* Scrollable Content */}
@@ -401,7 +451,6 @@ const Order = () => {
             </Button>
           )}
         </div>
-
 
       </div>
     </div>

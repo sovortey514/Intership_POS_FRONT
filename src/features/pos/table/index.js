@@ -1,9 +1,9 @@
 
 import React, { useEffect, useState } from "react";
-import { Button, Space, notification, Select, Modal, Input ,Popconfirm} from "antd";
+import { Button, Space, notification, Select, Modal, Input, Popconfirm } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { SearchOutlined } from '@ant-design/icons';
-import { DragDropContext, Droppable, Draggable ,} from "react-beautiful-dnd";
+import { DragDropContext, Droppable, Draggable, } from "react-beautiful-dnd";
 
 import { createTable, fetchTable, deleteTablesById, updateTables } from "../../../api/table/table";
 
@@ -20,6 +20,8 @@ const TableManagement = () => {
   const [selectedTables, setSelectedTables] = useState([]);
   const [tables, setTables] = useState([]);
   const token = localStorage.getItem("token");
+
+  
 
   const handleAddTable = () => {
     setIsModalVisible(true);
@@ -90,11 +92,62 @@ const TableManagement = () => {
     });
   };
 
+  // const handleCreateTable = async () => {
+  //   if (!newTableType) {
+  //     notification.error({
+  //       message: "Please select a table type",
+  //       description: "You must select either Take Away, Card Membership, or Dine-In.",
+  //     });
+  //     return;
+  //   }
+
+  //   const newTable = {
+  //     name: `T-0${tables.length + 1}`,
+  //     status: "available",
+  //     type: newTableType,
+  //     location: newTableLocation,
+  //   };
+
+  //   try {
+  //     const token = localStorage.getItem("token");
+
+  //     if (!token) {
+  //       notification.error({
+  //         message: "Authentication Error",
+  //         description: "You must be logged in to create a table.",
+  //       });
+  //       return;
+  //     }
+
+  //     const response = await createTable(newTable, token);
+
+  //     if (response.error) {
+  //       notification.error({
+  //         message: "Error",
+  //         description: response.error,
+  //       });
+  //     } else {
+  //       setTables([...tables, response]);
+  //       notification.success({
+  //         message: "Table Added",
+  //         description: `New table "${response.name}" for ${response.type} has been added successfully.`,
+  //       });
+  //       setIsModalVisible(false);
+  //     }
+  //   } catch (error) {
+  //     console.error("❌ Error creating table:", error);
+  //     notification.error({
+  //       message: "Error",
+  //       description: "An error occurred while creating the table.",
+  //     });
+  //   }
+  // };
   const handleCreateTable = async () => {
-    if (!newTableType) {
+    // Validate table type and location
+    if (!newTableType || !newTableLocation) {
       notification.error({
-        message: "Please select a table type",
-        description: "You must select either Take Away, Card Membership, or Dine-In.",
+        message: "Missing Information",
+        description: "You must select both table type and location.",
       });
       return;
     }
@@ -140,6 +193,7 @@ const TableManagement = () => {
       });
     }
   };
+
 
   const handlefetchTables = async () => {
     try {
@@ -210,7 +264,7 @@ const TableManagement = () => {
       });
       return;
     }
-  
+
     try {
       const updatedTable = {
         name: editingTable.name,
@@ -218,9 +272,9 @@ const TableManagement = () => {
         type: newTableType,
         location: newTableLocation,
       };
-  
+
       const response = await updateTables(editingTable.id, updatedTable, token);
-  
+
       if (response.error) {
         notification.error({
           message: "Update Failed",
@@ -245,7 +299,7 @@ const TableManagement = () => {
       });
     }
   };
-  
+
 
   const handleEditTable = (table) => {
     setEditingTable(table);
@@ -282,27 +336,16 @@ const TableManagement = () => {
   };
 
 
-  // const filteredTables = tables.filter((table) => {
-
-  //   const matchesStatus = filter === "all" || table.status === filter;
-  //   const matchesType = ["take-away", "card-membership", "dine-in"].includes(filter)
-  //     ? table.type === filter
-  //     : true;
-  //   const matchesSearch = table.name.toLowerCase().includes(searchText.toLowerCase());
-
-  //   return (matchesStatus || matchesType) && matchesSearch;
-  // });
-
   const filteredTables = tables.filter((table) => {
     const matchesStatus = filter === "all" || table.status === filter;
     const matchesType = ["take-away", "card-membership", "dine-in"].includes(filter)
       ? table.type === filter
       : true;
     const matchesSearch = table.name && table.name.toLowerCase().includes(searchText.toLowerCase());
-  
+
     return (matchesStatus || matchesType) && matchesSearch;
   });
-  
+
 
   useEffect(() => {
     handlefetchTables();
@@ -404,18 +447,18 @@ const TableManagement = () => {
                             className="text-green-500 cursor-pointer text-lg hover:text-green-600 transition-colors"
                           />
                         </div>
-                    
+
                         <Popconfirm title="Are you sure you want to delete this supplier?" okText="Yes" cancelText="No"
                           onConfirm={() => handledeleteTables(table.id)}>
                           <div className="p-1 rounded-full bg-white border border-gray-300 hover:bg-gray-200 transition-colors">
-                          <DeleteOutlined
-                            onClick={(e) => {
-                              e.stopPropagation();
-                        
-                            }}
-                            className="text-red-500 cursor-pointer text-lg hover:text-red-600 transition-colors"
-                          />
-                        </div>
+                            <DeleteOutlined
+                              onClick={(e) => {
+                                e.stopPropagation();
+
+                              }}
+                              className="text-red-500 cursor-pointer text-lg hover:text-red-600 transition-colors"
+                            />
+                          </div>
                         </Popconfirm>,
                       </div>
                     </div>
@@ -428,17 +471,17 @@ const TableManagement = () => {
         </Droppable>
       </DragDropContext>
 
-      <Modal
-  title={editingTable ? "Edit Table" : "Create New Table"}
-  visible={isModalVisible}
-  onOk={editingTable ? handleUpdateTable : handleCreateTable}
-  onCancel={() => {
-    setIsModalVisible(false);
-    setEditingTable(null);
-  }}
-  okText={editingTable ? "Update" : "Create"}
-  cancelText="Cancel"
->
+      {/* <Modal
+        title={editingTable ? "Edit Table" : "Create New Table"}
+        visible={isModalVisible}
+        onOk={editingTable ? handleUpdateTable : handleCreateTable}
+        onCancel={() => {
+          setIsModalVisible(false);
+          setEditingTable(null);
+        }}
+        okText={editingTable ? "Update" : "Create"}
+        cancelText="Cancel"
+      >
         <Select
           placeholder="Select table type"
           value={newTableType}
@@ -458,7 +501,41 @@ const TableManagement = () => {
           <Select.Option value="indoor">Indoor</Select.Option>
           <Select.Option value="outdoor">Outdoor</Select.Option>
         </Select>
+      </Modal> */}
+
+      <Modal
+        title={editingTable ? "Edit Table" : "Create New Table"}
+        visible={isModalVisible}
+        onOk={editingTable ? handleUpdateTable : handleCreateTable}
+        onCancel={() => {
+          setIsModalVisible(false);
+          setEditingTable(null);
+        }}
+        okText={editingTable ? "Update" : "Create"}
+        cancelText="Cancel"
+      >
+        <Select
+          placeholder="Select table type"
+          value={newTableType}
+          onChange={setNewTableType}
+          className="w-full"
+        >
+          <Select.Option value="take-away">Take Away</Select.Option>
+          <Select.Option value="card-membership">Card Membership</Select.Option>
+          <Select.Option value="dine-in">Dine-In</Select.Option>
+        </Select>
+
+        <Select
+          placeholder="Select table location"
+          value={newTableLocation}
+          onChange={setNewTableLocation}
+          className="w-full mt-4"
+        >
+          <Select.Option value="indoor">Indoor</Select.Option>
+          <Select.Option value="outdoor">Outdoor</Select.Option>
+        </Select>
       </Modal>
+
     </div>
   );
 };

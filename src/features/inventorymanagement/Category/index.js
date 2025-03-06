@@ -1022,6 +1022,7 @@ function CategoryFoodManagement() {
                     : foods
               }
               bordered
+              pagination={{ pageSize: 10 }}
             />
           </Card>
         </Col>
