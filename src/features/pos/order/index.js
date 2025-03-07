@@ -51,14 +51,6 @@ const initialOrderItems = [
   },
 ];
 
-const tables = [
-  { id: 1, name: "T-01" },
-  { id: 2, name: "T-02" },
-  { id: 3, name: "T-03" },
-  { id: 4, name: "T-04" },
-];
-
-
 const handlePrint = () => {
   window.print();
 };
@@ -71,7 +63,7 @@ const Order = () => {
   const [showReceipt, setShowReceipt] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [foods, setFoods] = useState([]);
-  const [tables,setTables] = useState([]);
+  const [tables, setTables] = useState([]);
   const printRef = useRef(null);
   const [selectedTable, setSelectedTable] = useState(null);
 
@@ -95,36 +87,36 @@ const Order = () => {
   };
 
   const handlefetchTables = async () => {
-      try {
-  
-        const token = localStorage.getItem("token");
-  
-        if (!token) {
-          notification.error({
-            message: "Authentication Error",
-            description: "Please log in again.",
-          });
-          return;
-        }
-  
-        const result = await fetchTable(token);
-  
-        if (JSON.stringify(tables) !== JSON.stringify(result)) {
-          setTables(result);
-        }
-      } catch (error) {
-        console.error("🚨 Error fetching table:", error);
-        notification.error({
-          message: "Error fetching size",
-          description: error.message || "An error occurred while fetching table.",
-        });
-      }
-    }
+    try {
 
-    useEffect(() => {
-        handlefetchTables();
-      }, []);
-    
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        notification.error({
+          message: "Authentication Error",
+          description: "Please log in again.",
+        });
+        return;
+      }
+
+      const result = await fetchTable(token);
+
+      if (JSON.stringify(tables) !== JSON.stringify(result)) {
+        setTables(result);
+      }
+    } catch (error) {
+      console.error("🚨 Error fetching table:", error);
+      notification.error({
+        message: "Error fetching size",
+        description: error.message || "An error occurred while fetching table.",
+      });
+    }
+  }
+
+  useEffect(() => {
+    handlefetchTables();
+  }, []);
+
 
   // const filteredProducts = selectedCategory === "all"
   //   ? products
@@ -288,7 +280,7 @@ const Order = () => {
 
         </div>
       )}
-      <div className="w-4/5 bg-white p-4 rounded-lg shadow-md border mr-[-20px] mt-[-25px] ml-6">
+      <div className="w-4/5 bg-white p-4 rounded-lg shadow-md border mr-[-20px] mt-[-30px] ml-6">
         <div >
           {/* Order Header & Toggle - Flex Row */}
           <div className="flex justify-between items-center mb-3">
@@ -316,7 +308,7 @@ const Order = () => {
           {/* Divider Line */}
           <hr className="border-t border-gray-300 my-3 w-full pb-4" />
 
-          <div className="mb-4">
+          <div className="mb-4   mt-[-15px]">
             <h3 className="text-sm font-semibold mb-2">Select Table</h3>
             <Select
               value={selectedTable}
@@ -326,7 +318,7 @@ const Order = () => {
             >
               {tables.map((table) => (
                 <Select.Option key={table.id} value={table.name}>
-                  {table.name}
+                  {`${table.name} - ${table.type}, ${table.location}`}
                 </Select.Option>
               ))}
             </Select>
@@ -359,6 +351,25 @@ const Order = () => {
                 {orderItems.length}
               </span>
             </h3>
+            {
+              !showPayment && !showReceipt &&(
+                <div className="mb-4   mt-[-15px]">
+            <h3 className="text-sm font-semibold mb-2">Select Table</h3>
+            <Select
+              value={selectedTable}
+              onChange={handleTableSelection}
+              placeholder="Select a Table"
+              className="w-full"
+            >
+              {tables.map((table) => (
+                <Select.Option key={table.id} value={table.name}>
+                  {`${table.name} - ${table.type}, ${table.location}`}
+                </Select.Option>
+              ))}
+            </Select>
+          </div>
+              )
+            }
 
 
             {!showPayment && !showReceipt && (
@@ -418,6 +429,7 @@ const Order = () => {
                     </div>
                     <span className="font-semibold text-xs text-gray-700 mt-10">{item.price * item.quantity} $</span>
                   </div>
+                  
                 ))}
               </div>
             )}

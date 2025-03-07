@@ -17,7 +17,7 @@ const OrderReceipt = ({ orderItems, subtotal, tax, totalAmount, onClose }) => {
         
         {/* 🏢 Business Information */}
         <div className="text-center mb-4">
-          <img src="/logo.png" alt="Company Logo" className="mx-auto w-16 h-16 mb-2" /> {/* Replace with actual logo path */}
+          <img src="/favicon.ico" alt="Company Logo" className="mx-auto w-16 h-16 mb-2" /> {/* Replace with actual logo path */}
           <h2 className="font-bold text-lg">FastFood POS</h2>
           <p className="text-xs text-gray-500">123 Main Street, City, Country</p>
           <p className="text-xs text-gray-500">Phone: +123 456 7890</p>

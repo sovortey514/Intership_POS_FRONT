@@ -58,9 +58,9 @@ const SidebarRoutes = () => {
                 name: "Table",
               },
               {
-                path: "/app/pos-menu",
+                path: "/app/pos-shift",
                 icon: <DocumentDuplicateIcon className={submenuIconClasses} />,
-                name: "Menu",
+                name: "Shift Summery",
               },
             ],
             

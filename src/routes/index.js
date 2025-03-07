@@ -4,7 +4,7 @@ import { User } from '@nextui-org/react'
 import { lazy } from 'react'
 const Order = lazy(() => import ('../pages/protected/Order'))
 const Table = lazy(() => import ('../pages/protected/Table'))
-const Menu = lazy(() => import ('../pages/protected/Menu'))
+const Shift = lazy(() => import ('../pages/protected/Shift'))
 const Dashboard = lazy(() => import('../pages/protected/Dashboard'))
 const Welcome = lazy(() => import('../pages/protected/Welcome'))
 const Page404 = lazy(() => import('../pages/protected/404'))
@@ -98,13 +98,13 @@ const routes = [
   },
 
   {
-    path: '/pos-menu',
-    component: Menu,
+    path: '/pos-shift',
+    component: Shift,
   },
 
   {
-    path: '/pos-menu',
-    component: Menu,
+    path: '/pos-shift',
+    component: Shift,
   },
 
   {

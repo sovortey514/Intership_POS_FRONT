@@ -521,7 +521,7 @@ const TableManagement = () => {
           className="w-full"
         >
           <Select.Option value="take-away">Take Away</Select.Option>
-          <Select.Option value="card-membership">Card Membership</Select.Option>
+          {/* <Select.Option value="card-membership">Card Membership</Select.Option> */}
           <Select.Option value="dine-in">Dine-In</Select.Option>
         </Select>
 

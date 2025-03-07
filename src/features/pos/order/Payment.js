@@ -1,14 +1,15 @@
 
 import React, { useState } from "react";
 import { Button, Input, Radio, Select, Alert } from "antd";
-import { CreditCardOutlined, DollarOutlined } from "@ant-design/icons";
+import { CreditCardOutlined, DollarOutlined, IdcardOutlined } from "@ant-design/icons";
 import OrderReceipt from "./PrintReceipt";
 
-const Payment = ({ onBack, onPaymentComplete  }) => {
+const Payment = ({ onBack, onPaymentComplete }) => {
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [currency, setCurrency] = useState("USD");
   const [amountDue, setAmountDue] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
+  const [membershipCard, setMembershipCard] = useState("");
   const [cashBack, setCashBack] = useState(null);
   const [exchangeRate, setExchangeRate] = useState(4000);
   const [showReceipt, setShowReceipt] = useState(false);
@@ -57,7 +58,10 @@ const Payment = ({ onBack, onPaymentComplete  }) => {
     <div className="flex items-center justify-center w-full">
       <div className="bg-white p-6 rounded-lg shadow-lg w-[600px] h-[550px] flex flex-col justify-between mt-[-22px]">
         <div className="mb-2">
-          <h2 className="text-xl font-semibold text-center mb-4 ">Choose Payment Method</h2>
+          <h2 className="text-xl font-semibold text-center mb-4 flex items-center justify-center gap-3">
+            <img src="/payment.png" alt="Payment" className="w-6 h-6" />
+            Choose Payment Method
+          </h2>
           <hr className="border-t border-gray-300  w-full " />
 
 
@@ -70,6 +74,9 @@ const Payment = ({ onBack, onPaymentComplete  }) => {
               </Radio>
               <Radio value="card">
                 <CreditCardOutlined className="text-blue-500 mr-2" /> Credit Card
+              </Radio>
+              <Radio value="membership">
+                <IdcardOutlined className="text-purple-500 mr-2" /> Membership Card
               </Radio>
             </Radio.Group>
           </div>
@@ -124,10 +131,24 @@ const Payment = ({ onBack, onPaymentComplete  }) => {
                 className="w-full mt-2 p-2 border rounded-md"
               />
             </div>
+            
+          )}
+
+          {paymentMethod === "membership" && (
+            <div className="mt-3">
+              <label className="block text-sm font-medium">Membership Card Number</label>
+              <Input
+                type="text"
+                placeholder="Enter Membership Card Number..."
+                value={membershipCard}
+                onChange={(e) => setMembershipCard(e.target.value)}
+                className="w-full mt-2 p-2 border rounded-md"
+              />
+            </div>
           )}
 
           {/* Confirm & Cancel Buttons */}
-          <div className="flex justify-between">
+          <div className="flex justify-between mt-5">
             <Button onClick={onBack} className="bg-gray-500 text-white px-4 py-2 rounded-md">
               Cancel
             </Button>
