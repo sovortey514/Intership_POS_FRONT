@@ -92,56 +92,7 @@ const TableManagement = () => {
     });
   };
 
-  // const handleCreateTable = async () => {
-  //   if (!newTableType) {
-  //     notification.error({
-  //       message: "Please select a table type",
-  //       description: "You must select either Take Away, Card Membership, or Dine-In.",
-  //     });
-  //     return;
-  //   }
-
-  //   const newTable = {
-  //     name: `T-0${tables.length + 1}`,
-  //     status: "available",
-  //     type: newTableType,
-  //     location: newTableLocation,
-  //   };
-
-  //   try {
-  //     const token = localStorage.getItem("token");
-
-  //     if (!token) {
-  //       notification.error({
-  //         message: "Authentication Error",
-  //         description: "You must be logged in to create a table.",
-  //       });
-  //       return;
-  //     }
-
-  //     const response = await createTable(newTable, token);
-
-  //     if (response.error) {
-  //       notification.error({
-  //         message: "Error",
-  //         description: response.error,
-  //       });
-  //     } else {
-  //       setTables([...tables, response]);
-  //       notification.success({
-  //         message: "Table Added",
-  //         description: `New table "${response.name}" for ${response.type} has been added successfully.`,
-  //       });
-  //       setIsModalVisible(false);
-  //     }
-  //   } catch (error) {
-  //     console.error("❌ Error creating table:", error);
-  //     notification.error({
-  //       message: "Error",
-  //       description: "An error occurred while creating the table.",
-  //     });
-  //   }
-  // };
+  
   const handleCreateTable = async () => {
     // Validate table type and location
     if (!newTableType || !newTableLocation) {
@@ -470,38 +421,6 @@ const TableManagement = () => {
           )}
         </Droppable>
       </DragDropContext>
-
-      {/* <Modal
-        title={editingTable ? "Edit Table" : "Create New Table"}
-        visible={isModalVisible}
-        onOk={editingTable ? handleUpdateTable : handleCreateTable}
-        onCancel={() => {
-          setIsModalVisible(false);
-          setEditingTable(null);
-        }}
-        okText={editingTable ? "Update" : "Create"}
-        cancelText="Cancel"
-      >
-        <Select
-          placeholder="Select table type"
-          value={newTableType}
-          onChange={setNewTableType}
-          className="w-full"
-        >
-          <Select.Option value="take-away">Take Away</Select.Option>
-          <Select.Option value="card-membership">Card Membership</Select.Option>
-          <Select.Option value="dine-in">Dine-In</Select.Option>
-        </Select>
-        <Select
-          placeholder="Select table location"
-          value={newTableLocation}
-          onChange={setNewTableLocation}
-          className="w-full mt-4"
-        >
-          <Select.Option value="indoor">Indoor</Select.Option>
-          <Select.Option value="outdoor">Outdoor</Select.Option>
-        </Select>
-      </Modal> */}
 
       <Modal
         title={editingTable ? "Edit Table" : "Create New Table"}

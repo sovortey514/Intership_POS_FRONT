@@ -4,6 +4,9 @@ import { FaHamburger, FaPizzaSlice, FaGlassMartiniAlt, FaCookie, FaPepperHot } f
 import { IoFastFoodOutline } from "react-icons/io5";
 import { ArrowRightOutlined } from "@ant-design/icons";
 
+import { placetoOrder } from "../../../api/order/order";
+
+
 import { MinusOutlined, PlusOutlined, DeleteOutlined, EditOutlined, MenuOutlined, SearchOutlined } from "@ant-design/icons";
 import { EllipsisOutlined } from "@ant-design/icons";
 import OrderReceipt from "./PrintReceipt";
@@ -20,37 +23,6 @@ const categories = [
   { label: "Rice", value: "Rice", icon: <FaPepperHot /> },
 ];
 
-const initialOrderItems = [
-  {
-    id: 1,
-    name: "Beef Burger",
-    price: 250,
-    quantity: 2,
-    extra: "Mustard",
-    note: "No cheese",
-    image: "https://via.placeholder.com/50", // Replace with actual burger image
-  },
-  {
-    id: 2,
-    name: "Cheese Burger",
-    price: 200,
-    quantity: 1,
-    extra: "Lettuce",
-    note: "Extra sauce",
-    image: "https://via.placeholder.com/50", // Replace with actual cheese burger image
-  },
-
-  {
-    id: 2,
-    name: "Cheese Burger",
-    price: 200,
-    quantity: 1,
-    extra: "Lettuce",
-    note: "Extra sauce",
-    image: "https://via.placeholder.com/50", // Replace with actual cheese burger image
-  },
-];
-
 const handlePrint = () => {
   window.print();
 };
@@ -58,7 +30,7 @@ const handlePrint = () => {
 const Order = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [visibleCount, setVisibleCount] = useState(8);
-  const [orderItems, setOrderItems] = useState(initialOrderItems);
+  const [orderItems, setOrderItems] = useState([]);
   const [isDineIn, setIsDineIn] = useState(true);
   const [showReceipt, setShowReceipt] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
@@ -66,6 +38,11 @@ const Order = () => {
   const [tables, setTables] = useState([]);
   const printRef = useRef(null);
   const [selectedTable, setSelectedTable] = useState(null);
+  const [showOrderInfo, setShowOrderInfo] = useState(false);
+
+const [currentOrderId, setCurrentOrderId] = useState(null);
+const [currentOrder, setCurrentOrder] = useState(null);
+
 
   const showMoreProducts = () => {
     setVisibleCount((prev) => prev + 8);
@@ -117,11 +94,6 @@ const Order = () => {
     handlefetchTables();
   }, []);
 
-
-  // const filteredProducts = selectedCategory === "all"
-  //   ? products
-  //   : products.filter(product => product.category === selectedCategory);
-
   const decreaseQuantity = (id) => {
     setOrderItems(
       orderItems.map((item) =>
@@ -134,12 +106,9 @@ const Order = () => {
 
   const handlefetchfoods = async () => {
     try {
-      console.log("📡 Sending request to fetch foods...");
+
       const token = localStorage.getItem("token");
-
-
       const result = await fetchFoods(token);
-      console.log("🔄 Updated Food List:", result);
 
       setFoods(result);
 
@@ -172,6 +141,121 @@ const Order = () => {
     (acc, item) => acc + item.price * item.quantity,
     0
   );
+
+  const addFoodToOrder = (food) => {
+    const existingItem = orderItems.find(item => item.id === food.foodId);
+    if (existingItem) {
+      setOrderItems(
+        orderItems.map((item) =>
+          item.id === food.foodId
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        )
+      );
+    } else {
+
+      setOrderItems([
+        ...orderItems,
+        {
+          id: food.foodId,
+          name: food.foodName,
+          price: food.price,
+          quantity: 1,
+          extra: "",
+          note: "",
+          image: food.files?.[0]?.fileUrl || "/default-image.png",
+        },
+      ]);
+    }
+  };
+  const handlePlaceOrder = async () => {
+    if (!selectedTable) {
+      notification.error({
+        message: "Please select a table.",
+      });
+      return;
+    }
+
+    let userId = localStorage.getItem("userId");
+
+    if (!userId) {
+      console.error("⚠️ User ID is missing in localStorage. Fetching again...");
+
+      const storedUsername = localStorage.getItem("username");
+      const token = localStorage.getItem("token");
+
+      if (storedUsername && token) {
+        try {
+          const userResponse = await fetch(`http://localhost:6060/auth/user/${storedUsername}`, {
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json"
+            }
+          });
+
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            localStorage.setItem("userId", userData.id); // ✅ Re-store userId
+            userId = userData.id; // Use fetched userId
+            console.log("✅ Fetched and stored userId:", userId);
+          } else {
+            console.error("❌ Failed to fetch user ID");
+          }
+        } catch (error) {
+          console.error("❌ Error fetching user ID:", error);
+        }
+      }
+    }
+
+    if (!userId) {
+      notification.error({
+        message: "Authentication Error",
+        description: "User ID not found. Please log in again.",
+      });
+      return;
+    }
+
+    console.log("📌 Using User ID:", userId);
+
+    const values = {
+      userId: Number(userId),
+      tableId: selectedTable,
+      items: orderItems.map(item => ({
+        foodId: item.id,
+        quantity: item.quantity,
+      })),
+    };
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      notification.error({
+        message: "Authentication Error",
+        description: "Please log in again.",
+      });
+      return;
+    }
+
+    console.log("📌 Sending request payload:", values);
+
+    const response = await placetoOrder(values, token);
+
+    if (response.error) {
+      notification.error({
+        message: "Order Failed",
+        description: response.error,
+      });
+    } else {
+      notification.success({
+        message: "Order Placed",
+        description: "Your order has been placed successfully.",
+      });
+
+      setShowPayment(true);
+    }
+  };
+
+
 
   const tax = subtotal * 0.05;
   const totalAmount = subtotal + tax;
@@ -259,6 +343,7 @@ const Order = () => {
                 <Button
                   type="default"
                   className="w-full mt-3 border border-pink-500 text-white bg-gradient-to-r from-pink-500 to-red-400 hover:from-red-500 hover:to-pink-500 py-1 text-xs rounded-full shadow-sm transition"
+                  onClick={() => addFoodToOrder(food)}
                 >
                   Add to Order
                 </Button>
@@ -308,7 +393,7 @@ const Order = () => {
           {/* Divider Line */}
           <hr className="border-t border-gray-300 my-3 w-full pb-4" />
 
-          <div className="mb-4   mt-[-15px]">
+          {/* <div className="mb-4   mt-[-15px]">
             <h3 className="text-sm font-semibold mb-2">Select Table</h3>
             <Select
               value={selectedTable}
@@ -317,32 +402,57 @@ const Order = () => {
               className="w-full"
             >
               {tables.map((table) => (
-                <Select.Option key={table.id} value={table.name}>
+                <Select.Option key={table.id} value={table.id}>
+                  {`${table.name} - ${table.type}, ${table.location}`}
+                </Select.Option>
+              ))}
+            </Select>
+          </div> */}
+
+          {!showPayment &&(
+            <div className="mb-4   mt-[-15px]">
+            <h3 className="text-sm font-semibold mb-2">Select Table</h3>
+            <Select
+              value={selectedTable}
+              onChange={handleTableSelection}
+              placeholder="Select a Table"
+              className="w-full"
+            >
+              {tables.map((table) => (
+                <Select.Option key={table.id} value={table.id}>
                   {`${table.name} - ${table.type}, ${table.location}`}
                 </Select.Option>
               ))}
             </Select>
           </div>
+          )}
 
 
 
           {/* Scrollable Content */}
           <div className="h-[340px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 p-2">
             {/* Order Info */}
-            <div className="border p-2 rounded-md mb-3 text-sm">
-              <div className="flex justify-between text-gray-500">
-                <span className="text-xs">Order ID</span>
-                <span className="font-semibold text-xs">#345672</span>
+
+            {showPayment && (
+              <div className="border p-2 rounded-md mb-3 text-sm">
+                <div className="flex justify-between text-gray-500">
+                  <span className="text-xs">Order ID</span>
+                  <span className="font-semibold text-xs">#345672</span>
+                </div>
+                <div className="flex justify-between text-gray-500 mt-1">
+                  <span className="text-xs">Date</span>
+                  <span className="font-semibold text-xs">sdfgh</span>
+                </div>
+                <div className="flex justify-between text-gray-500 mt-1">
+                  <span className="text-xs">Table</span>
+                  <span className="font-semibold text-xs">April 28, 2024</span>
+                </div>
+                <div className="flex justify-between text-gray-500 mt-1">
+                  <span className="text-xs">Order By</span>
+                  <span className="font-semibold text-xs">Admin</span>
+                </div>
               </div>
-              <div className="flex justify-between text-gray-500 mt-1">
-                <span className="text-xs">Date</span>
-                <span className="font-semibold text-xs">April 28, 2024</span>
-              </div>
-              <div className="flex justify-between text-gray-500 mt-1">
-                <span className="text-xs">Order By</span>
-                <span className="font-semibold text-xs">Admin</span>
-              </div>
-            </div>
+            )}
 
             {/* Items List */}
             <h3 className="text-sm font-semibold mb-1 flex items-center">
@@ -351,26 +461,6 @@ const Order = () => {
                 {orderItems.length}
               </span>
             </h3>
-            {
-              !showPayment && !showReceipt &&(
-                <div className="mb-4   mt-[-15px]">
-            <h3 className="text-sm font-semibold mb-2">Select Table</h3>
-            <Select
-              value={selectedTable}
-              onChange={handleTableSelection}
-              placeholder="Select a Table"
-              className="w-full"
-            >
-              {tables.map((table) => (
-                <Select.Option key={table.id} value={table.name}>
-                  {`${table.name} - ${table.type}, ${table.location}`}
-                </Select.Option>
-              ))}
-            </Select>
-          </div>
-              )
-            }
-
 
             {!showPayment && !showReceipt && (
               <div className="space-y-2 w-full h-60">
@@ -429,7 +519,7 @@ const Order = () => {
                     </div>
                     <span className="font-semibold text-xs text-gray-700 mt-10">{item.price * item.quantity} $</span>
                   </div>
-                  
+
                 ))}
               </div>
             )}
@@ -452,12 +542,17 @@ const Order = () => {
               <span>{totalAmount.toFixed(2)} $</span>
             </div>
           </div>
+
+
           {!showPayment && !showReceipt && (
             <Button
               type="primary"
               block
               className="mt-1 text-sm py-2 bg-pink-500"
-              onClick={() => setShowPayment(true)} // Hide everything and show Payment
+              onClick={() => {
+                handlePlaceOrder();
+                setShowPayment(true);
+              }}
             >
               Continue
             </Button>

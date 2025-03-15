@@ -50,9 +50,6 @@ import {
   createFood,
   deleteFoodsById,
   updateFood
-
-
-
 } from "../../../api/Food_Category/food_category";
 
 function CategoryFoodManagement() {

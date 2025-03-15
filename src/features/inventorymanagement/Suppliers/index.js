@@ -171,10 +171,8 @@ const Suppliers = () => {
         type: values.type,
       };
 
-      // Create a new cover image based on the updated type
       const newCoverImage = coverImages[values.type] || coverImages["Default"];
 
-      // Update the supplier
       const updatedSupplier = await updateSuppliers(
         currentSuppliers.id,
         updatedSupplierPayload,
@@ -187,11 +185,10 @@ const Suppliers = () => {
           description: "The supplier was updated successfully!",
         });
 
-        // Update the supplier in the list and update the cover image as well
         setSuppliers((prevSuppliers) =>
           prevSuppliers.map((supplier) =>
             supplier.id === currentSuppliers.id
-              ? { ...supplier, ...updatedSupplierPayload, cover: newCoverImage } // Update cover image
+              ? { ...supplier, ...updatedSupplierPayload, cover: newCoverImage } 
               : supplier
           )
         );
