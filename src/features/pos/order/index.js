@@ -7,7 +7,7 @@ import { ArrowRightOutlined } from "@ant-design/icons";
 import { placetoOrder, FetchOrderById, fetchOrder } from "../../../api/order/order";
 
 
-import { MinusOutlined, PlusOutlined, DeleteOutlined, EditOutlined, MenuOutlined, SearchOutlined } from "@ant-design/icons";
+import { MinusOutlined, PlusOutlined, DeleteOutlined, EditOutlined, MenuOutlined, SearchOutlined, SaveOutlined } from "@ant-design/icons";
 import { EllipsisOutlined } from "@ant-design/icons";
 import OrderReceipt from "./PrintReceipt";
 import Payment from "./Payment";
@@ -36,21 +36,37 @@ const Order = () => {
   const [showPayment, setShowPayment] = useState(false);
   const [foods, setFoods] = useState([]);
   const [tables, setTables] = useState([]);
-
   const [order, setorder] = useState([]);
   const printRef = useRef(null);
   const [selectedTable, setSelectedTable] = useState(null);
-  const [showOrderInfo, setShowOrderInfo] = useState(false);
-
-  const [currentOrderId, setCurrentOrderId] = useState(null);
-  const [currentOrder, setCurrentOrder] = useState(null);
   const [orderDetails, setOrderDetails] = useState(null);
+  const [showEditOrder, setShowEditOrder] = useState(false);
+  const [showAllFoods, setShowAllFoods] = useState(false);
+  const [isEditingOrder, setIsEditingOrder] = useState(false);
+  const [showorderdetail, setShowOrderDetail] = useState(false);
+  const [editingOrder, setEditingOrder] = useState(false);
+  const [currentOrderDetails, setCurrentOrderDetails] = useState(orderDetails);
+  // const [isButtonClicked, setIsButtonClicked] = useState(false);
+
   const showMoreProducts = () => {
     setVisibleCount((prev) => prev + 8);
   };
   const handleTableSelection = (value) => {
     setSelectedTable(value);
   };
+
+  const handleEditOrder = () => {
+    setShowEditOrder(true);
+    setShowPayment(false);
+    setEditingOrder(true);
+    setIsEditingOrder(true);
+  };
+
+  const handleCancelEdit = () => {
+    setShowEditOrder(false);
+  };
+
+
 
   const filteredFoods = selectedCategory === "all"
     ? foods
@@ -105,8 +121,8 @@ const Order = () => {
 
       const orderDetails = await FetchOrderById(orderId, token);
 
-      if (orderDetails && Array.isArray(orderDetails) && orderDetails.length > 0)  {
-        const order = orderDetails[0]; 
+      if (orderDetails && Array.isArray(orderDetails) && orderDetails.length > 0) {
+        const order = orderDetails[0];
         setOrderDetails(order);
       } else {
         notification.error({
@@ -173,32 +189,59 @@ const Order = () => {
     0
   );
 
+  // const addFoodToOrder = (food) => {
+  //   const existingItem = orderItems.find(item => item.id === food.foodId);
+  //   if (existingItem) {
+  //     setOrderItems(
+  //       orderItems.map((item) =>
+  //         item.id === food.foodId
+  //           ? { ...item, quantity: item.quantity + 1 }
+  //           : item
+  //       )
+  //     );
+  //   } else {
+
+  //     setOrderItems([
+  //       ...orderItems,
+  //       {
+  //         id: food.foodId,
+  //         name: food.foodName,
+  //         price: food.price,
+  //         quantity: 1,
+  //         extra: "",
+  //         note: "",
+  //         image: food.files?.[0]?.fileUrl || "/default-image.png",
+  //       },
+  //     ]);
+  //   }
+  // };
+
   const addFoodToOrder = (food) => {
-    const existingItem = orderItems.find(item => item.id === food.foodId);
-    if (existingItem) {
-      setOrderItems(
-        orderItems.map((item) =>
+    setOrderItems((prevItems) => {
+      const existingItem = prevItems.find((item) => item.id === food.foodId);
+      if (existingItem) {
+        return prevItems.map((item) =>
           item.id === food.foodId
             ? { ...item, quantity: item.quantity + 1 }
             : item
-        )
-      );
-    } else {
-
-      setOrderItems([
-        ...orderItems,
-        {
-          id: food.foodId,
-          name: food.foodName,
-          price: food.price,
-          quantity: 1,
-          extra: "",
-          note: "",
-          image: food.files?.[0]?.fileUrl || "/default-image.png",
-        },
-      ]);
-    }
+        );
+      } else {
+        return [
+          ...prevItems,
+          {
+            id: food.foodId,
+            name: food.foodName,
+            price: food.price,
+            quantity: 1,
+            extra: "",
+            note: "",
+            image: food.files?.[0]?.fileUrl || "/default-image.png",
+          },
+        ];
+      }
+    });
   };
+  
 
   const handlePlaceOrder = async () => {
     if (!selectedTable) {
@@ -288,6 +331,7 @@ const Order = () => {
         console.error("⚠️ Order ID is missing from the response!");
       }
       setShowPayment(true);
+
     }
   };
 
@@ -335,14 +379,94 @@ const Order = () => {
   return (
     <div className="flex p-6 gap-12">
 
-      {showReceipt ? (
-        <Payment onBack={() => setShowPayment(false)} className=" pl-10 " />
-      ) : showPayment ? (
-        <Payment onBack={() => setShowPayment(false)} onPaymentComplete={() => { setShowReceipt(true); setShowPayment(false); }} />
-      ) : (
-        <div className="w-3/5 pr-10 ml-[-25px] mt-[-25px]">
-          {/* Categories and Search Bar */}
+      {!showEditOrder && (
+        <>
+          {showReceipt ? (
+            <Payment onBack={() => setShowPayment(false)} className="pl-10" />
+          ) : showPayment ? (
+            <Payment
+              onBack={() => setShowPayment(false)}
+              onPaymentComplete={() => {
+                setShowReceipt(true);
+                setShowPayment(false);
+              }}
+            />
+          ) : (
 
+            <div className="w-3/5 pr-10 ml-[-25px] mt-[-25px]">
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="text-lg font-semibold">Categories</h2>
+                <Input
+                  placeholder="Search products..."
+                  prefix={<SearchOutlined className="text-gray-400" />}
+                  className="w-full max-w-xs border-gray-300 rounded-md"
+                />
+              </div>
+
+              <hr className="border-t border-gray-300 my-3 w-full" />
+
+              <div className="flex gap-3">
+                {categories.map((category) => (
+                  <Button
+                    key={category.value}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all 
+                ${selectedCategory === category.value
+                        ? "bg-pink-500 text-white shadow-md"
+                        : "bg-gray-200 text-gray-600"
+                      } 
+                hover:bg-pink-500 hover:text-white`}
+                    onClick={() => setSelectedCategory(category.value)}
+                  >
+                    {category.icon}
+                    {category.label}
+                  </Button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-24 py-6 gap-y-3 justify-items-center">
+                {filteredFoods.slice(0, visibleCount).map((food) => (
+                  <div
+                    key={food.foodId}
+                    className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition transform hover:scale-105 cursor-pointer w-36 min-h-[220px] mx-auto"
+                  >
+                    <div className="w-full h-28 flex items-center justify-center bg-gray-100 rounded-md overflow-hidden">
+                      <img
+                        src={food.files?.[0]?.fileUrl || "/default-image.png"}
+                        alt={food.foodName}
+                        className="w-28 h-28 object-contain rounded-md"
+                      />
+                    </div>
+
+                    <h3 className="text-xs font-semibold mt-2 text-gray-900 text-center">
+                      {food.foodName}
+                    </h3>
+                    <p className="text-gray-600 text-[10px] text-center">
+                      {food.categoryName} - {food.subCategoryName}
+                    </p>
+                    <p className="text-base font-bold mt-1 text-gray-800 text-center">
+                      ${food.price.toFixed(2)}
+                    </p>
+                    <p className="text-xs font-medium text-gray-700 mt-1 text-center">
+                      Size: {food.sizeName}
+                    </p>
+
+                    <Button
+                      type="default"
+                      className="w-full mt-3 border border-pink-500 text-white bg-gradient-to-r from-pink-500 to-red-400 hover:from-red-500 hover:to-pink-500 py-1 text-xs rounded-full shadow-sm transition"
+                      onClick={() => addFoodToOrder(food)}
+                    >
+                      Add to Order
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {showEditOrder && (
+        <div className="w-3/5 pr-10 ml-[-25px] mt-[-25px]">
           <div className="flex justify-between items-center mb-3">
             <h2 className="text-lg font-semibold">Categories</h2>
             <Input
@@ -353,16 +477,17 @@ const Order = () => {
           </div>
 
           <hr className="border-t border-gray-300 my-3 w-full" />
+
           <div className="flex gap-3">
             {categories.map((category) => (
               <Button
                 key={category.value}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all 
-                  ${selectedCategory === category.value
+          ${selectedCategory === category.value
                     ? "bg-pink-500 text-white shadow-md"
                     : "bg-gray-200 text-gray-600"
                   } 
-                  hover:bg-pink-500 hover:text-white`}
+          hover:bg-pink-500 hover:text-white`}
                 onClick={() => setSelectedCategory(category.value)}
               >
                 {category.icon}
@@ -377,7 +502,6 @@ const Order = () => {
                 key={food.foodId}
                 className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition transform hover:scale-105 cursor-pointer w-36 min-h-[220px] mx-auto"
               >
-                {/* Image Container */}
                 <div className="w-full h-28 flex items-center justify-center bg-gray-100 rounded-md overflow-hidden">
                   <img
                     src={food.files?.[0]?.fileUrl || "/default-image.png"}
@@ -386,27 +510,19 @@ const Order = () => {
                   />
                 </div>
 
-                {/* Food Name */}
                 <h3 className="text-xs font-semibold mt-2 text-gray-900 text-center">
                   {food.foodName}
                 </h3>
-
-                {/* Category & Subcategory */}
                 <p className="text-gray-600 text-[10px] text-center">
                   {food.categoryName} - {food.subCategoryName}
                 </p>
-
-                {/* Price */}
                 <p className="text-base font-bold mt-1 text-gray-800 text-center">
                   ${food.price.toFixed(2)}
                 </p>
-
-                {/* Size */}
                 <p className="text-xs font-medium text-gray-700 mt-1 text-center">
                   Size: {food.sizeName}
                 </p>
 
-                {/* Add to Order Button */}
                 <Button
                   type="default"
                   className="w-full mt-3 border border-pink-500 text-white bg-gradient-to-r from-pink-500 to-red-400 hover:from-red-500 hover:to-pink-500 py-1 text-xs rounded-full shadow-sm transition"
@@ -417,35 +533,28 @@ const Order = () => {
               </div>
             ))}
           </div>
-
-          {visibleCount < foods.length && (
-            <div className="flex justify-center mt-4">
-              <Button
-                type="primary"
-                onClick={showMoreProducts}
-                className="px-8 py-3 rounded-lg bg-gradient-to-r from-pink-500 to-pink-700 text-white font-semibold shadow-lg hover:from-blue-600 hover:to-blue-800 transform transition-all duration-300 hover:scale-105 flex items-center gap-2 border-pink-500"
-              >
-                See More
-                <ArrowRightOutlined className="text-lg" />
-              </Button>
-            </div>
-          )}
-
         </div>
       )}
+
+      {
+
+      }
+
+
+
       <div className="w-4/5 bg-white p-4 rounded-lg shadow-md border mr-[-20px] mt-[-30px] ml-6">
         <div >
-          {/* Order Header & Toggle - Flex Row */}
+
           <div className="flex justify-between items-center mb-3">
             <h2 className="text-lg font-bold">Order details</h2>
 
             <div>
-              {/* Dropdown for Print & Order Actions */}
+
               <Dropdown overlay={menu} trigger={["click"]}>
                 <Button type="text" shape="circle" icon={<MenuOutlined style={{ fontSize: "18px" }} />} className="text-gray-500 hover:bg-gray-200 mt-2" />
               </Dropdown>
 
-              {/* Show Receipt Page When Clicked */}
+
               {showReceipt && (
                 <OrderReceipt
                   orderItems={orderItems}
@@ -478,11 +587,12 @@ const Order = () => {
             </div>
           )}
 
+
           {/* Scrollable Content */}
           <div className="h-[340px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 p-2">
             {/* Order Info */}
 
-            {showPayment && orderDetails && (
+            {(showPayment || showEditOrder) && orderDetails && (
               <div className="border p-2 rounded-md mb-3 text-sm">
                 <div className="flex justify-between text-gray-500">
                   <span className="text-xs">Order ID</span>
@@ -503,6 +613,7 @@ const Order = () => {
               </div>
             )}
 
+
             {/* Items List */}
             <h3 className="text-sm font-semibold mb-1 flex items-center">
               Items
@@ -511,7 +622,8 @@ const Order = () => {
               </span>
             </h3>
 
-            {!showPayment && !showReceipt && orderItems.length > 0 && (
+
+          {!showPayment && !showReceipt && !showEditOrder && orderItems.length > 0 && (
               <div className="space-y-2 w-full h-60">
                 {orderItems.map((item) => (
                   <div
@@ -549,6 +661,7 @@ const Order = () => {
                       <p className="text-gray-500 text-xs">Note: {item.note}</p>
                     </div>
 
+
                     {/* Delete & Edit Icons - Positioned at Top Right */}
                     <div className="absolute top-4 right-2 space-x-1">
                       <Button
@@ -570,32 +683,80 @@ const Order = () => {
                   </div>
 
                 ))}
+
               </div>
             )}
+
             {/* ✅ AFTER ORDER: Show fetched order details */}
-            {showPayment && orderDetails?.orderItems?.length > 0 && (
-              <div className="space-y-2 w-full h-60">
+            {(showPayment || showEditOrder) && orderDetails?.orderItems?.length > 0 && (
+              <div className="space-y-3 w-full h-auto">
                 {orderDetails.orderItems.map((item) => (
                   <div
                     key={item.foodId}
-                    className="relative flex items-center justify-between p-3 rounded-md shadow-sm border text-sm bg-white"
+                    className="relative flex items-center justify-between p-4 rounded-md shadow-md border border-gray-200 bg-white"
                   >
+                    <div className="flex flex-col items-center space-y-2 w-20">
+                      <img
+                        src={item.files?.[0]?.filePath || "/placeholder.jpg"}
+                        alt={item.foodName}
+                        className="w-20 h-20 rounded-md shadow-sm object-cover border border-gray-300"
+                      />
 
-                    {/* Item Details */}
-                    <div className="flex-1 ml-3 mb-6">
-                      <h4 className="font-medium">{item.foodName}</h4>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          size="small"
+                          shape="circle"
+                          icon={<MinusOutlined style={{ fontSize: "12px" }} />}
+                          onClick={() => decreaseQuantity(item.foodId)}
+                          className="w-7 h-7 flex items-center justify-center border border-gray-300"
+                        />
+                        <span className="font-semibold text-xs px-2">{item.quantity}</span>
+                        <Button
+                          size="small"
+                          shape="circle"
+                          icon={<PlusOutlined style={{ fontSize: "12px" }} />}
+                          onClick={() => increaseQuantity(item.foodId)}
+                          className="w-7 h-7 flex items-center justify-center border border-gray-300"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex-1 ml-4">
+                      <h4 className="font-medium text-base text-gray-800">{item.foodName}</h4>
                       <p className="text-gray-500 text-xs">{item.foodDescription}</p>
                     </div>
 
-                    {/* Price */}
-                    <span className="font-semibold text-xs text-gray-700 mt-10">
+                    <span className="font-semibold text-sm text-gray-700 mt-2">
                       {item.totalPrice} $
                     </span>
                   </div>
                 ))}
+
+                <div className="flex justify-end mt-4 space-x-3">
+                  {!isEditingOrder && (
+                    <Button
+                      type="primary"
+                      shape="round"
+                      icon={<EditOutlined />}
+                      className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-2 text-sm w-auto min-w-[140px] flex items-center justify-center"
+                      onClick={handleEditOrder}
+                    >
+                      Edit Order
+                    </Button>
+                  )}
+
+                  <Button
+                    type="primary"
+                    shape="round"
+                    icon={<SaveOutlined />}
+                    className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 text-sm w-auto min-w-[140px] flex items-center justify-center"
+                  >
+                    Update Order
+                  </Button>
+                </div>
               </div>
             )}
-            {/* No Items */}
+
             {orderItems.length === 0 && !orderDetails?.orderItems?.length && (
               <p className="text-gray-500 text-center">No items in order.</p>
             )}
@@ -603,7 +764,6 @@ const Order = () => {
 
           </div>
 
-          {/* Fixed Footer - Order Summary */}
           <div className="mt-2 bg-gray-50 p-3 rounded-md border shadow-sm text-sm">
             <div className="flex justify-between">
               <span>Subtotal</span>
@@ -619,8 +779,7 @@ const Order = () => {
             </div>
           </div>
 
-
-          {!showPayment && !showReceipt && (
+          {!showPayment && !showReceipt && !showEditOrder && (
             <Button
               type="primary"
               block
