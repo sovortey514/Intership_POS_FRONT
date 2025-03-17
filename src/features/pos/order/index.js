@@ -4,7 +4,7 @@ import { FaHamburger, FaPizzaSlice, FaGlassMartiniAlt, FaCookie, FaPepperHot } f
 import { IoFastFoodOutline } from "react-icons/io5";
 import { ArrowRightOutlined } from "@ant-design/icons";
 
-import { placetoOrder } from "../../../api/order/order";
+import { placetoOrder, FetchOrderById, fetchOrder } from "../../../api/order/order";
 
 
 import { MinusOutlined, PlusOutlined, DeleteOutlined, EditOutlined, MenuOutlined, SearchOutlined } from "@ant-design/icons";
@@ -36,14 +36,15 @@ const Order = () => {
   const [showPayment, setShowPayment] = useState(false);
   const [foods, setFoods] = useState([]);
   const [tables, setTables] = useState([]);
+
+  const [order, setorder] = useState([]);
   const printRef = useRef(null);
   const [selectedTable, setSelectedTable] = useState(null);
   const [showOrderInfo, setShowOrderInfo] = useState(false);
 
-const [currentOrderId, setCurrentOrderId] = useState(null);
-const [currentOrder, setCurrentOrder] = useState(null);
-
-
+  const [currentOrderId, setCurrentOrderId] = useState(null);
+  const [currentOrder, setCurrentOrder] = useState(null);
+  const [orderDetails, setOrderDetails] = useState(null);
   const showMoreProducts = () => {
     setVisibleCount((prev) => prev + 8);
   };
@@ -90,9 +91,39 @@ const [currentOrder, setCurrentOrder] = useState(null);
     }
   }
 
-  useEffect(() => {
-    handlefetchTables();
-  }, []);
+  const handleFetchOrderById = async (orderId) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        notification.error({
+          message: "Authorization Error",
+          description: "No token found. Please log in.",
+        });
+        return;
+      }
+
+      const orderDetails = await FetchOrderById(orderId, token);
+
+      if (orderDetails && Array.isArray(orderDetails) && orderDetails.length > 0)  {
+        const order = orderDetails[0]; 
+        setOrderDetails(order);
+      } else {
+        notification.error({
+          message: "Failed to fetch Order",
+          description: "There was an issue fetching the order details.",
+        });
+      }
+      // console.log("📌 Custom Order:", orderDetails);
+    } catch (error) {
+      console.error("Error fetching Order:", error);
+      notification.error({
+        message: "Error fetching Order",
+        description: error.message || "An error occurred while fetching the order.",
+      });
+    }
+  };
+
 
   const decreaseQuantity = (id) => {
     setOrderItems(
@@ -168,6 +199,7 @@ const [currentOrder, setCurrentOrder] = useState(null);
       ]);
     }
   };
+
   const handlePlaceOrder = async () => {
     if (!selectedTable) {
       notification.error({
@@ -195,8 +227,8 @@ const [currentOrder, setCurrentOrder] = useState(null);
 
           if (userResponse.ok) {
             const userData = await userResponse.json();
-            localStorage.setItem("userId", userData.id); // ✅ Re-store userId
-            userId = userData.id; // Use fetched userId
+            localStorage.setItem("userId", userData.id);
+            userId = userData.id;
             console.log("✅ Fetched and stored userId:", userId);
           } else {
             console.error("❌ Failed to fetch user ID");
@@ -236,8 +268,6 @@ const [currentOrder, setCurrentOrder] = useState(null);
       return;
     }
 
-    console.log("📌 Sending request payload:", values);
-
     const response = await placetoOrder(values, token);
 
     if (response.error) {
@@ -250,19 +280,56 @@ const [currentOrder, setCurrentOrder] = useState(null);
         message: "Order Placed",
         description: "Your order has been placed successfully.",
       });
+      // handleFetchAllOrder();
 
+      if (response.id) {
+        handleFetchOrderById(response.id);
+      } else {
+        console.error("⚠️ Order ID is missing from the response!");
+      }
       setShowPayment(true);
     }
   };
 
+  const handleFetchAllOrder = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        notification.error({
+          message: "Authorization Error",
+          description: "No token found. Please log in.",
+        });
+        return;
+      }
 
+      const result = await fetchOrder(token);
+
+      if (result) {
+        setorder(result);
+      } else {
+        notification.error({
+          message: "Failed to fetch Order",
+          description: "There was an issue fetching Order.",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching Order:", error);
+      notification.error({
+        message: "Error fetching Order",
+        description:
+          error.message || "An error occurred while fetching Order.",
+      });
+    }
+  };
 
   const tax = subtotal * 0.05;
   const totalAmount = subtotal + tax;
 
   useEffect(() => {
+    handlefetchTables();
+    handleFetchAllOrder();
     handlefetchfoods();
-  }, [])
+  }, []);
 
 
   return (
@@ -350,6 +417,7 @@ const [currentOrder, setCurrentOrder] = useState(null);
               </div>
             ))}
           </div>
+
           {visibleCount < foods.length && (
             <div className="flex justify-center mt-4">
               <Button
@@ -392,64 +460,45 @@ const [currentOrder, setCurrentOrder] = useState(null);
 
           {/* Divider Line */}
           <hr className="border-t border-gray-300 my-3 w-full pb-4" />
-
-          {/* <div className="mb-4   mt-[-15px]">
-            <h3 className="text-sm font-semibold mb-2">Select Table</h3>
-            <Select
-              value={selectedTable}
-              onChange={handleTableSelection}
-              placeholder="Select a Table"
-              className="w-full"
-            >
-              {tables.map((table) => (
-                <Select.Option key={table.id} value={table.id}>
-                  {`${table.name} - ${table.type}, ${table.location}`}
-                </Select.Option>
-              ))}
-            </Select>
-          </div> */}
-
-          {!showPayment &&(
+          {!showPayment && (
             <div className="mb-4   mt-[-15px]">
-            <h3 className="text-sm font-semibold mb-2">Select Table</h3>
-            <Select
-              value={selectedTable}
-              onChange={handleTableSelection}
-              placeholder="Select a Table"
-              className="w-full"
-            >
-              {tables.map((table) => (
-                <Select.Option key={table.id} value={table.id}>
-                  {`${table.name} - ${table.type}, ${table.location}`}
-                </Select.Option>
-              ))}
-            </Select>
-          </div>
+              <h3 className="text-sm font-semibold mb-2">Select Table</h3>
+              <Select
+                value={selectedTable}
+                onChange={handleTableSelection}
+                placeholder="Select a Table"
+                className="w-full"
+              >
+                {tables.map((table) => (
+                  <Select.Option key={table.id} value={table.id}>
+                    {`${table.name} - ${table.type}, ${table.location}`}
+                  </Select.Option>
+                ))}
+              </Select>
+            </div>
           )}
-
-
 
           {/* Scrollable Content */}
           <div className="h-[340px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 p-2">
             {/* Order Info */}
 
-            {showPayment && (
+            {showPayment && orderDetails && (
               <div className="border p-2 rounded-md mb-3 text-sm">
                 <div className="flex justify-between text-gray-500">
                   <span className="text-xs">Order ID</span>
-                  <span className="font-semibold text-xs">#345672</span>
+                  <span className="font-semibold text-xs">{orderDetails?.customOrderId || "N/A"}</span>
                 </div>
-                <div className="flex justify-between text-gray-500 mt-1">
+                <div className="flex justify-between text-gray-500">
                   <span className="text-xs">Date</span>
-                  <span className="font-semibold text-xs">sdfgh</span>
+                  <span className="font-semibold text-xs">{orderDetails?.createdAt || "N/A"}</span>
                 </div>
                 <div className="flex justify-between text-gray-500 mt-1">
                   <span className="text-xs">Table</span>
-                  <span className="font-semibold text-xs">April 28, 2024</span>
+                  <span className="font-semibold text-xs">{orderDetails.tableName}</span>
                 </div>
                 <div className="flex justify-between text-gray-500 mt-1">
                   <span className="text-xs">Order By</span>
-                  <span className="font-semibold text-xs">Admin</span>
+                  <span className="font-semibold text-xs">{orderDetails.userName}</span>
                 </div>
               </div>
             )}
@@ -458,11 +507,11 @@ const [currentOrder, setCurrentOrder] = useState(null);
             <h3 className="text-sm font-semibold mb-1 flex items-center">
               Items
               <span className="bg-gray-300 text-xs px-2 py-1 rounded-full ml-2">
-                {orderItems.length}
+                {(orderDetails?.orderItems?.length || orderItems.length)}
               </span>
             </h3>
 
-            {!showPayment && !showReceipt && (
+            {!showPayment && !showReceipt && orderItems.length > 0 && (
               <div className="space-y-2 w-full h-60">
                 {orderItems.map((item) => (
                   <div
@@ -522,6 +571,33 @@ const [currentOrder, setCurrentOrder] = useState(null);
 
                 ))}
               </div>
+            )}
+            {/* ✅ AFTER ORDER: Show fetched order details */}
+            {showPayment && orderDetails?.orderItems?.length > 0 && (
+              <div className="space-y-2 w-full h-60">
+                {orderDetails.orderItems.map((item) => (
+                  <div
+                    key={item.foodId}
+                    className="relative flex items-center justify-between p-3 rounded-md shadow-sm border text-sm bg-white"
+                  >
+
+                    {/* Item Details */}
+                    <div className="flex-1 ml-3 mb-6">
+                      <h4 className="font-medium">{item.foodName}</h4>
+                      <p className="text-gray-500 text-xs">{item.foodDescription}</p>
+                    </div>
+
+                    {/* Price */}
+                    <span className="font-semibold text-xs text-gray-700 mt-10">
+                      {item.totalPrice} $
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {/* No Items */}
+            {orderItems.length === 0 && !orderDetails?.orderItems?.length && (
+              <p className="text-gray-500 text-center">No items in order.</p>
             )}
 
 

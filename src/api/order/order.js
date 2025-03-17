@@ -31,7 +31,7 @@ export const fetchOrder = async (token) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
+                // Authorization: `Bearer ${token}`,
             },
         });
 
@@ -51,6 +51,10 @@ export const fetchOrder = async (token) => {
 
 export const FetchOrderById = async (id, token) => {
   try {
+    if (!id) {
+      throw new Error("Invalid order ID");
+    }
+
     const response = await fetch(`${API_URL}/getordersummary/${id}`, {
       method: "GET",
       headers: {
@@ -59,15 +63,15 @@ export const FetchOrderById = async (id, token) => {
       },
     });
 
-    if (!response.status === 200) {
+    if (!response.ok) { 
       const errorMessage = await response.json();
-      console.error("Error Order by ID:", errorMessage);
-      throw new Error(errorMessage.message || "Failed to Order by ID.");
+      console.error("Error fetching Order by ID:", errorMessage);
+      throw new Error(errorMessage.message || "Failed to fetch Order by ID.");
     }
 
-    return response;
+    return await response.json(); 
   } catch (error) {
-    console.error("Error Order by ID:", error);
+    console.error("Error fetching Order by ID:", error);
     throw new Error(error.message || "An unknown error occurred.");
   }
 };

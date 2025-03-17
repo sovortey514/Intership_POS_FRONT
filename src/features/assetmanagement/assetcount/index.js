@@ -91,7 +91,6 @@ const TotalAsset = () => {
       if (response.ok) {
         const userData = await response.json();
         localStorage.setItem("userId", userData.id);
-        console.log("✅ User ID stored:", userData.id);
         setRole(userData.role);
       } else {
         console.error("Failed to fetch user:", response.statusText);
