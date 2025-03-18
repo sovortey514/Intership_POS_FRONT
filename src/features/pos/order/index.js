@@ -30,7 +30,10 @@ const handlePrint = () => {
 const Order = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [visibleCount, setVisibleCount] = useState(8);
-  const [orderItems, setOrderItems] = useState([]);
+
+  const [orderItems, setOrderItems] = useState([]); // static data of order items
+  const [orderDetails, setOrderDetails] = useState(null); // fetch from endpoint data of order items
+
   const [isDineIn, setIsDineIn] = useState(true);
   const [showReceipt, setShowReceipt] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
@@ -39,7 +42,6 @@ const Order = () => {
   const [order, setorder] = useState([]);
   const printRef = useRef(null);
   const [selectedTable, setSelectedTable] = useState(null);
-  const [orderDetails, setOrderDetails] = useState(null);
   const [showEditOrder, setShowEditOrder] = useState(false);
   const [showAllFoods, setShowAllFoods] = useState(false);
   const [isEditingOrder, setIsEditingOrder] = useState(false);
@@ -189,59 +191,52 @@ const Order = () => {
     0
   );
 
-  // const addFoodToOrder = (food) => {
-  //   const existingItem = orderItems.find(item => item.id === food.foodId);
-  //   if (existingItem) {
-  //     setOrderItems(
-  //       orderItems.map((item) =>
-  //         item.id === food.foodId
-  //           ? { ...item, quantity: item.quantity + 1 }
-  //           : item
-  //       )
-  //     );
-  //   } else {
+ // Method to add food to the order
+const addFoodToOrder = (food) => {
+  const existingItem = orderItems.find(item => item.id === food.foodId);
 
-  //     setOrderItems([
-  //       ...orderItems,
-  //       {
-  //         id: food.foodId,
-  //         name: food.foodName,
-  //         price: food.price,
-  //         quantity: 1,
-  //         extra: "",
-  //         note: "",
-  //         image: food.files?.[0]?.fileUrl || "/default-image.png",
-  //       },
-  //     ]);
-  //   }
-  // };
+  if (existingItem) {
+    const updatedItems = orderItems.map((item) =>
+      item.id === food.foodId
+        ? { ...item, quantity: item.quantity + 1 }
+        : item
+    );
 
-  const addFoodToOrder = (food) => {
-    setOrderItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === food.foodId);
-      if (existingItem) {
-        return prevItems.map((item) =>
-          item.id === food.foodId
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      } else {
-        return [
-          ...prevItems,
-          {
-            id: food.foodId,
-            name: food.foodName,
-            price: food.price,
-            quantity: 1,
-            extra: "",
-            note: "",
-            image: food.files?.[0]?.fileUrl || "/default-image.png",
-          },
-        ];
-      }
-    });
-  };
-  
+    setOrderItems(updatedItems);
+    if (showEditOrder) {
+      setOrderDetails(prevDetails => ({
+        ...prevDetails,
+        orderItems: updatedItems, // Update the dynamic order details
+      }));
+      console.log("Combine1111111", orderDetails);
+    }
+    // console.log("✅ Updated Order Items (Existing Item):", updatedItems);
+  } else {
+    const newItem = {
+      id: food.foodId,
+      name: food.foodName,
+      price: food.price,
+      quantity: 1,
+      extra: "",
+      note: "",
+      image: food.files?.[0]?.fileUrl || "/default-image.png",
+    };
+
+    const updatedItems = [...orderItems, newItem];
+    
+    setOrderItems(updatedItems);
+    if (showEditOrder) {
+      setOrderDetails(prevDetails => ({
+        ...prevDetails,
+        orderItems: updatedItems, // Update the dynamic order details
+      }));
+      console.log("Combine1111111", orderDetails);
+      
+    }
+    // console.log("✅ Updated Order Items (New Item Added):", updatedItems);
+  }
+};
+
 
   const handlePlaceOrder = async () => {
     if (!selectedTable) {
@@ -375,6 +370,13 @@ const Order = () => {
     handlefetchfoods();
   }, []);
 
+  // useEffect(() => {
+  //   handlefetchTables();
+  //   handleFetchAllOrder();
+  //   handlefetchfoods();
+  // }, [orderItems]);
+
+
 
   return (
     <div className="flex p-6 gap-12">
@@ -460,6 +462,18 @@ const Order = () => {
                   </div>
                 ))}
               </div>
+              {visibleCount < foods.length && (
+                <div className="flex justify-center mt-4">
+                  <Button
+                    type="primary"
+                    onClick={showMoreProducts}
+                    className="px-8 py-3 rounded-lg bg-gradient-to-r from-pink-500 to-pink-700 text-white font-semibold shadow-lg hover:from-blue-600 hover:to-blue-800 transform transition-all duration-300 hover:scale-105 flex items-center gap-2 border-pink-500"
+                  >
+                    See More
+                    <ArrowRightOutlined className="text-lg" />
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </>
@@ -535,12 +549,6 @@ const Order = () => {
           </div>
         </div>
       )}
-
-      {
-
-      }
-
-
 
       <div className="w-4/5 bg-white p-4 rounded-lg shadow-md border mr-[-20px] mt-[-30px] ml-6">
         <div >
@@ -623,7 +631,7 @@ const Order = () => {
             </h3>
 
 
-          {!showPayment && !showReceipt && !showEditOrder && orderItems.length > 0 && (
+            {!showPayment && !showReceipt && !showEditOrder && orderItems.length > 0 && (
               <div className="space-y-2 w-full h-60">
                 {orderItems.map((item) => (
                   <div
@@ -690,15 +698,15 @@ const Order = () => {
             {/* ✅ AFTER ORDER: Show fetched order details */}
             {(showPayment || showEditOrder) && orderDetails?.orderItems?.length > 0 && (
               <div className="space-y-3 w-full h-auto">
-                {orderDetails.orderItems.map((item) => (
+                {orderDetails?.orderItems.map((item) => (
                   <div
                     key={item.foodId}
                     className="relative flex items-center justify-between p-4 rounded-md shadow-md border border-gray-200 bg-white"
                   >
                     <div className="flex flex-col items-center space-y-2 w-20">
                       <img
-                        src={item.files?.[0]?.filePath || "/placeholder.jpg"}
-                        alt={item.foodName}
+                        src={item.files?.[0]?.filePath || item.image }
+                        alt={item.foodName || item.name}
                         className="w-20 h-20 rounded-md shadow-sm object-cover border border-gray-300"
                       />
 
@@ -722,16 +730,36 @@ const Order = () => {
                     </div>
 
                     <div className="flex-1 ml-4">
-                      <h4 className="font-medium text-base text-gray-800">{item.foodName}</h4>
+                      <h4 className="font-medium text-base text-gray-800">{item.foodName || item.name}</h4>
                       <p className="text-gray-500 text-xs">{item.foodDescription}</p>
                     </div>
 
                     <span className="font-semibold text-sm text-gray-700 mt-2">
-                      {item.totalPrice} $
+                      {item.totalPrice || item.price} $
                     </span>
                   </div>
                 ))}
-
+                {/* {orderItems.length > 0 && (
+                  <div className="order-items">
+                    {orderItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className="order-item"
+                      >
+                        <div className="order-item-image">
+                          <img src={item.image} alt={item.name} className="item-image" />
+                        </div>
+                        <div className="order-item-details">
+                          <h4>{item.name}</h4>
+                          <p>{item.note}</p>
+                          <p>Price: ${item.price}</p>
+                          <p>Quantity: {item.quantity}</p>
+                        </div>
+                      </div>
+                      
+                    ))}
+                  </div>
+                )} */}
                 <div className="flex justify-end mt-4 space-x-3">
                   {!isEditingOrder && (
                     <Button
@@ -754,14 +782,14 @@ const Order = () => {
                     Update Order
                   </Button>
                 </div>
+
               </div>
+
             )}
 
             {orderItems.length === 0 && !orderDetails?.orderItems?.length && (
               <p className="text-gray-500 text-center">No items in order.</p>
             )}
-
-
           </div>
 
           <div className="mt-2 bg-gray-50 p-3 rounded-md border shadow-sm text-sm">
