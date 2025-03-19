@@ -66,8 +66,8 @@ const Order = () => {
     setShowOrderDetail(true); // Show order details
     setEditingOrder(false); // Reset editing order flag
   };
-  
-  
+
+
 
   const showMoreProducts = () => {
     setVisibleCount((prev) => prev + 8);
@@ -92,8 +92,8 @@ const Order = () => {
       clearItem();
       handleFetchAllOrder();
       handleFetchAllOrder();
-    setEditingOrder(false);
-    setShowPayment(false);
+      setEditingOrder(false);
+      setShowPayment(false);
     } catch (error) {
       console.error('Error cancelling order:', error);
     }
@@ -159,6 +159,9 @@ const Order = () => {
       if (orderDetails && Array.isArray(orderDetails) && orderDetails.length > 0) {
         const order = orderDetails[0];
         setOrderDetails(order);
+        localStorage.setItem("orderDetails", JSON.stringify(order));
+        setShowPayment(true);
+        
       } else {
         notification.error({
           message: "Failed to fetch Order",
@@ -205,9 +208,6 @@ const Order = () => {
       <Menu.Item key="print" onClick={() => setShowReceipt(true)}>Print order check</Menu.Item>
       <Menu.Item key="hold">Hold order</Menu.Item>
       <Menu.Item key="split">Split order</Menu.Item>
-      <Menu.Item key="cancel" style={{ color: "red" }}>
-        Cancel order
-      </Menu.Item>
     </Menu>
   );
 
@@ -420,7 +420,8 @@ const Order = () => {
           {showReceipt ? (
             <Payment onBack={() => setShowPayment(false)} className="pl-10" />
           ) : showPayment ? (
-            <Payment
+            <Payment 
+              orderDetails={orderDetails}
               onBack={() => setShowPayment(false)}
               onPaymentComplete={() => {
                 setShowReceipt(true);
@@ -613,7 +614,7 @@ const Order = () => {
           {/* Divider Line */}
           <hr className="border-t border-gray-300 my-3 w-full pb-4" />
           {!showPayment && (
-            <div className="mb-4   mt-[-15px]">
+            <div className="mb-4 mt-[-15px]">
               <h3 className="text-sm font-semibold mb-2">Select Table</h3>
               <Select
                 value={selectedTable}
@@ -621,14 +622,18 @@ const Order = () => {
                 placeholder="Select a Table"
                 className="w-full"
               >
-                {tables.map((table) => (
-                  <Select.Option key={table.id} value={table.id}>
-                    {`${table.name} - ${table.type}, ${table.location}`}
-                  </Select.Option>
-                ))}
+                {/* Filter tables with status 'available' */}
+                {tables
+                  .filter((table) => table.status === "available") // Filter tables with available status
+                  .map((table) => (
+                    <Select.Option key={table.id} value={table.id}>
+                      {`${table.name} - ${table.type}, ${table.location}`}
+                    </Select.Option>
+                  ))}
               </Select>
             </div>
           )}
+
 
 
           {/* Scrollable Content */}

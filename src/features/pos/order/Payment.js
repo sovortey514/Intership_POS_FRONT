@@ -1,10 +1,10 @@
 
-import React, { useState } from "react";
+import React, { useState ,useEffect} from "react";
 import { Button, Input, Radio, Select, Alert } from "antd";
 import { CreditCardOutlined, DollarOutlined, IdcardOutlined } from "@ant-design/icons";
 import OrderReceipt from "./PrintReceipt";
-
-const Payment = ({ onBack, onPaymentComplete }) => {
+import { processPaymentcash } from "../../../api/order/order"
+const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [currency, setCurrency] = useState("USD");
   const [amountDue, setAmountDue] = useState("");
@@ -13,20 +13,54 @@ const Payment = ({ onBack, onPaymentComplete }) => {
   const [cashBack, setCashBack] = useState(null);
   const [exchangeRate, setExchangeRate] = useState(4000);
   const [showReceipt, setShowReceipt] = useState(false);
-  const [orderDetails, setOrderDetails] = useState(null);
+  const [orderDetail, setOrderDetail] = useState(null);
   const [discount, setDiscount] = useState(0); // New Discount State
 
-  const handleConfirmPayment = () => {
-    const due = parseFloat(amountDue);
-    const paid = parseFloat(amountPaid);
+  useEffect(() => {
+    if (orderDetails) {
+      // Log each individual piece of data from orderDetails
+      console.log("Order ID:", orderDetails.id);
+      console.log("Custom Order ID:", orderDetails.customOrderId);
+      console.log("Total Amount:", orderDetails.total);
+      console.log("Status:", orderDetails.status);
+      console.log("Payment Status:", orderDetails.paymentStatus);
+      console.log("Table ID:", orderDetails.tableId);
+      console.log("Table Name:", orderDetails.tableName);
+      console.log("Table Type:", orderDetails.tableType);
+      console.log("Table Location:", orderDetails.tableLocation);
+      console.log("Created At:", orderDetails.createdAt);
+      console.log("User Name:", orderDetails.userName);
+      
+      // Log the order items individually
+      if (orderDetails.orderItems && Array.isArray(orderDetails.orderItems)) {
+        orderDetails.orderItems.forEach((item, index) => {
+          console.log(`Order Item ${index + 1}:`);
+          console.log("Food ID:", item.foodId);
+          console.log("Food Name:", item.foodName);
+          console.log("Food Description:", item.foodDescription);
+          console.log("Quantity:", item.quantity);
+          console.log("Price:", item.price);
+          console.log("Total Price:", item.totalPrice);
+        });
+      }
+
+      setAmountDue(orderDetails.total.toString());
+    }
+  }, [orderDetails]);
+
+
+  const handleConfirmPayment = async () => {
+    const due = parseFloat(amountDue); 
+    const paid = parseFloat(amountPaid); 
     const discountAmount = (due * discount) / 100;
     const finalTotal = due - discountAmount;
-
+  
+    // Validate if the entered data is valid
     if (!due || isNaN(due) || due <= 0) {
       alert("Please enter a valid amount due.");
       return;
     }
-
+  
     if (paymentMethod === "cash") {
       if (!paid || isNaN(paid) || paid < finalTotal) {
         alert("Insufficient cash provided. Please enter a valid amount.");
@@ -36,21 +70,50 @@ const Payment = ({ onBack, onPaymentComplete }) => {
       setCashBack(change);
     }
 
-    setOrderDetails({
-      orderItems: [
-        { id: 1, name: "Burger", quantity: 2, price: 5.99 },
-        { id: 2, name: "Fries", quantity: 1, price: 2.49 },
-      ],
-      subtotal: due,
-      discountAmount: discountAmount,
-      totalAfterDiscount: finalTotal,
-      tax: finalTotal * 0.05, // Example 5% tax
-      totalAmount: finalTotal * 1.05, // Including tax
-    });
+    const paymentData = {
+      orderId: orderDetails.id,         
+      amountPaid: paid,                
+      paymentMethod: paymentMethod,  
+    };
+  
 
-    setShowReceipt(true);
-    if (onPaymentComplete) {
-      onPaymentComplete();
+    console.log("Payment Request Data:", paymentData);
+  
+    try {
+      const token = localStorage.getItem("token");
+      
+      const response = await processPaymentcash(paymentData, token);
+  
+
+      if (response && !response.error) {
+        console.log("Payment Successful:", response);
+  
+        setOrderDetail({
+          orderItems: [
+            { id: 1, name: "Burger", quantity: 2, price: 5.99 },
+            { id: 2, name: "Fries", quantity: 1, price: 2.49 },
+          ],
+          subtotal: due,
+          discountAmount: discountAmount,
+          totalAfterDiscount: finalTotal,
+          tax: finalTotal * 0.05, 
+          totalAmount: finalTotal * 1.05, 
+        });
+  
+
+        setShowReceipt(true);
+
+        if (onPaymentComplete) {
+          onPaymentComplete();
+        }
+      } else {
+
+        alert("Payment failed. Please try again.");
+      }
+    } catch (error) {
+   
+      console.error("Payment Error:", error);
+      alert("An error occurred during payment. Please try again.");
     }
   };
 
@@ -158,14 +221,14 @@ const Payment = ({ onBack, onPaymentComplete }) => {
           </div>
 
           {/* Show Receipt Modal When Payment is Confirmed */}
-          {showReceipt && orderDetails && (
+          {showReceipt && orderDetail && (
             <OrderReceipt
-              orderItems={orderDetails.orderItems}
-              subtotal={orderDetails.subtotal}
-              discountAmount={orderDetails.discountAmount}
-              totalAfterDiscount={orderDetails.totalAfterDiscount}
-              tax={orderDetails.tax}
-              totalAmount={orderDetails.totalAmount}
+              orderItems={orderDetail.orderItems}
+              subtotal={orderDetail.subtotal}
+              discountAmount={orderDetail.discountAmount}
+              totalAfterDiscount={orderDetail.totalAfterDiscount}
+              tax={orderDetail.tax}
+              totalAmount={orderDetail.totalAmount}
               onClose={() => {
                 setShowReceipt(false);
                 onBack();
