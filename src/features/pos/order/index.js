@@ -2,9 +2,12 @@ import React, { useState, useRef, useEffect } from "react";
 import { Button, Dropdown, Menu, Input, notification, Select } from "antd";
 import { FaHamburger, FaPizzaSlice, FaGlassMartiniAlt, FaCookie, FaPepperHot } from "react-icons/fa";
 import { IoFastFoodOutline } from "react-icons/io5";
-import { ArrowRightOutlined } from "@ant-design/icons";
+import { ArrowRightOutlined, ArrowLeftOutlined, CloseOutlined } from "@ant-design/icons";
 
-import { placetoOrder, FetchOrderById, fetchOrder } from "../../../api/order/order";
+
+
+
+import { placetoOrder, FetchOrderById, fetchOrder, CancelOrder } from "../../../api/order/order";
 
 
 import { MinusOutlined, PlusOutlined, DeleteOutlined, EditOutlined, MenuOutlined, SearchOutlined, SaveOutlined } from "@ant-design/icons";
@@ -30,10 +33,8 @@ const handlePrint = () => {
 const Order = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [visibleCount, setVisibleCount] = useState(8);
-
   const [orderItems, setOrderItems] = useState([]); // static data of order items
   const [orderDetails, setOrderDetails] = useState(null); // fetch from endpoint data of order items
-
   const [isDineIn, setIsDineIn] = useState(true);
   const [showReceipt, setShowReceipt] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
@@ -45,10 +46,28 @@ const Order = () => {
   const [showEditOrder, setShowEditOrder] = useState(false);
   const [showAllFoods, setShowAllFoods] = useState(false);
   const [isEditingOrder, setIsEditingOrder] = useState(false);
-  const [showorderdetail, setShowOrderDetail] = useState(false);
+  const [showorderdetail, setShowOrderDetail] = useState(true);
   const [editingOrder, setEditingOrder] = useState(false);
-  const [currentOrderDetails, setCurrentOrderDetails] = useState(orderDetails);
-  // const [isButtonClicked, setIsButtonClicked] = useState(false);
+
+  const clearItem = () => {
+    setorder([]); // Reset order to an empty array
+    setOrderItems([]); // Reset order items to an empty array
+    setOrderDetails(null); // Reset order details to null
+    setSelectedCategory("all"); // Reset selected category to "all"
+    setVisibleCount(8); // Reset visible count to 8
+    setIsDineIn(true); // Reset dine-in flag to true
+    setShowReceipt(false); // Hide receipt
+    setShowPayment(false); // Hide payment
+    setTables([]); // Reset tables to an empty array
+    setSelectedTable(null); // Reset selected table to null
+    setShowEditOrder(false); // Hide edit order
+    setShowAllFoods(true); // Hide all foods view
+    setIsEditingOrder(false); // Reset editing state
+    setShowOrderDetail(true); // Show order details
+    setEditingOrder(false); // Reset editing order flag
+  };
+  
+  
 
   const showMoreProducts = () => {
     setVisibleCount((prev) => prev + 8);
@@ -63,12 +82,27 @@ const Order = () => {
     setEditingOrder(true);
     setIsEditingOrder(true);
   };
+  const handleCancelOrder = async (id) => {
+    try {
 
-  const handleCancelEdit = () => {
-    setShowEditOrder(false);
+      const token = localStorage.getItem("token");
+      const result = await CancelOrder(id, token);
+      console.log('Order cancelled successfully', result);
+
+      clearItem();
+      handleFetchAllOrder();
+      handleFetchAllOrder();
+    setEditingOrder(false);
+    setShowPayment(false);
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+    }
   };
-
-
+  const handleBack = () => {
+    setShowEditOrder(false);
+    setShowPayment(true);
+    setIsEditingOrder(true);
+  };
 
   const filteredFoods = selectedCategory === "all"
     ? foods
@@ -108,7 +142,6 @@ const Order = () => {
       });
     }
   }
-
   const handleFetchOrderById = async (orderId) => {
     try {
       const token = localStorage.getItem("token");
@@ -132,7 +165,6 @@ const Order = () => {
           description: "There was an issue fetching the order details.",
         });
       }
-      // console.log("📌 Custom Order:", orderDetails);
     } catch (error) {
       console.error("Error fetching Order:", error);
       notification.error({
@@ -141,8 +173,6 @@ const Order = () => {
       });
     }
   };
-
-
   const decreaseQuantity = (id) => {
     setOrderItems(
       orderItems.map((item) =>
@@ -152,7 +182,6 @@ const Order = () => {
       )
     );
   };
-
   const handlefetchfoods = async () => {
     try {
 
@@ -183,7 +212,23 @@ const Order = () => {
   );
 
   const removeItem = (id) => {
-    setOrderItems(orderItems.filter((item) => item.id !== id));
+
+    const updatedItems = orderItems.filter((item) => item.id !== id);
+    setOrderItems(updatedItems);
+
+    if (showEditOrder) {
+      setOrderDetails(prevDetails => ({
+        ...prevDetails,
+        orderItems: updatedItems,
+      }));
+    }
+
+    if (showPayment || showEditOrder) {
+      setOrderDetails(prevDetails => ({
+        ...prevDetails,
+        orderItems: updatedItems,
+      }));
+    }
   };
 
   const subtotal = orderItems.reduce(
@@ -191,51 +236,48 @@ const Order = () => {
     0
   );
 
- // Method to add food to the order
-const addFoodToOrder = (food) => {
-  const existingItem = orderItems.find(item => item.id === food.foodId);
+  const addFoodToOrder = (food) => {
+    const existingItem = orderItems.find(item => item.id === food.foodId);
 
-  if (existingItem) {
-    const updatedItems = orderItems.map((item) =>
-      item.id === food.foodId
-        ? { ...item, quantity: item.quantity + 1 }
-        : item
-    );
+    if (existingItem) {
+      const updatedItems = orderItems.map((item) =>
+        item.id === food.foodId
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      );
 
-    setOrderItems(updatedItems);
-    if (showEditOrder) {
-      setOrderDetails(prevDetails => ({
-        ...prevDetails,
-        orderItems: updatedItems, // Update the dynamic order details
-      }));
-      console.log("Combine1111111", orderDetails);
+      setOrderItems(updatedItems);
+      if (showEditOrder) {
+        setOrderDetails(prevDetails => ({
+          ...prevDetails,
+          orderItems: updatedItems,
+        }));
+      }
+
+    } else {
+      const newItem = {
+        id: food.foodId,
+        name: food.foodName,
+        price: food.price,
+        quantity: 1,
+        extra: "",
+        note: "",
+        image: food.files?.[0]?.fileUrl || "/default-image.png",
+      };
+
+      const updatedItems = [...orderItems, newItem];
+
+      setOrderItems(updatedItems);
+      if (showEditOrder) {
+        setOrderDetails(prevDetails => ({
+          ...prevDetails,
+          orderItems: updatedItems,
+        }));
+
+      }
+
     }
-    // console.log("✅ Updated Order Items (Existing Item):", updatedItems);
-  } else {
-    const newItem = {
-      id: food.foodId,
-      name: food.foodName,
-      price: food.price,
-      quantity: 1,
-      extra: "",
-      note: "",
-      image: food.files?.[0]?.fileUrl || "/default-image.png",
-    };
-
-    const updatedItems = [...orderItems, newItem];
-    
-    setOrderItems(updatedItems);
-    if (showEditOrder) {
-      setOrderDetails(prevDetails => ({
-        ...prevDetails,
-        orderItems: updatedItems, // Update the dynamic order details
-      }));
-      console.log("Combine1111111", orderDetails);
-      
-    }
-    // console.log("✅ Updated Order Items (New Item Added):", updatedItems);
-  }
-};
+  };
 
 
   const handlePlaceOrder = async () => {
@@ -370,14 +412,6 @@ const addFoodToOrder = (food) => {
     handlefetchfoods();
   }, []);
 
-  // useEffect(() => {
-  //   handlefetchTables();
-  //   handleFetchAllOrder();
-  //   handlefetchfoods();
-  // }, [orderItems]);
-
-
-
   return (
     <div className="flex p-6 gap-12">
 
@@ -479,6 +513,7 @@ const addFoodToOrder = (food) => {
         </>
       )}
 
+      {/* Show food when edit */}
       {showEditOrder && (
         <div className="w-3/5 pr-10 ml-[-25px] mt-[-25px]">
           <div className="flex justify-between items-center mb-3">
@@ -569,7 +604,7 @@ const addFoodToOrder = (food) => {
                   subtotal={subtotal}
                   tax={tax}
                   totalAmount={totalAmount}
-                  onClose={() => setShowReceipt(false)} // Close the receipt
+                  onClose={() => setShowReceipt(false)}
                 />
               )}
             </div>
@@ -695,7 +730,7 @@ const addFoodToOrder = (food) => {
               </div>
             )}
 
-            {/* ✅ AFTER ORDER: Show fetched order details */}
+            {/* AFTER ORDER: Show fetched order details */}
             {(showPayment || showEditOrder) && orderDetails?.orderItems?.length > 0 && (
               <div className="space-y-3 w-full h-auto">
                 {orderDetails?.orderItems.map((item) => (
@@ -705,7 +740,7 @@ const addFoodToOrder = (food) => {
                   >
                     <div className="flex flex-col items-center space-y-2 w-20">
                       <img
-                        src={item.files?.[0]?.filePath || item.image }
+                        src={item.files?.[0]?.filePath || item.image}
                         alt={item.foodName || item.name}
                         className="w-20 h-20 rounded-md shadow-sm object-cover border border-gray-300"
                       />
@@ -729,6 +764,7 @@ const addFoodToOrder = (food) => {
                       </div>
                     </div>
 
+
                     <div className="flex-1 ml-4">
                       <h4 className="font-medium text-base text-gray-800">{item.foodName || item.name}</h4>
                       <p className="text-gray-500 text-xs">{item.foodDescription}</p>
@@ -737,50 +773,82 @@ const addFoodToOrder = (food) => {
                     <span className="font-semibold text-sm text-gray-700 mt-2">
                       {item.totalPrice || item.price} $
                     </span>
+                    <div className="absolute top-4 right-2 space-x-1">
+                      <Button
+                        size="small"
+                        shape="circle"
+                        icon={<EditOutlined style={{ fontSize: "12px" }} />}
+                        className="text-blue-500 bg-gray-100 shadow-sm"
+                      // onClick={() => handleEditItem(item.foodId)}
+                      />
+                      <Button
+                        size="small"
+                        shape="circle"
+                        icon={<DeleteOutlined style={{ fontSize: "12px" }} />}
+                        danger
+                        onClick={() => removeItem(item.foodId)}
+                        className="shadow-sm"
+                      />
+                    </div>
                   </div>
                 ))}
-                {/* {orderItems.length > 0 && (
-                  <div className="order-items">
-                    {orderItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="order-item"
-                      >
-                        <div className="order-item-image">
-                          <img src={item.image} alt={item.name} className="item-image" />
-                        </div>
-                        <div className="order-item-details">
-                          <h4>{item.name}</h4>
-                          <p>{item.note}</p>
-                          <p>Price: ${item.price}</p>
-                          <p>Quantity: {item.quantity}</p>
-                        </div>
-                      </div>
-                      
-                    ))}
-                  </div>
-                )} */}
+
                 <div className="flex justify-end mt-4 space-x-3">
                   {!isEditingOrder && (
-                    <Button
-                      type="primary"
-                      shape="round"
-                      icon={<EditOutlined />}
-                      className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-2 text-sm w-auto min-w-[140px] flex items-center justify-center"
-                      onClick={handleEditOrder}
-                    >
-                      Edit Order
-                    </Button>
+                    <>
+                      <Button
+                        type="primary"
+                        shape="round"
+                        icon={<EditOutlined />}
+                        className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-2 text-sm w-auto min-w-[140px] flex items-center justify-center"
+                        onClick={handleEditOrder}
+                      >
+                        Edit Order
+                      </Button>
+                      <Button
+                        type="default"
+                        shape="round"
+                        icon={<CloseOutlined />}
+                        className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 text-sm w-auto min-w-[140px] flex items-center justify-center ml-4"
+                        onClick={() => handleCancelOrder(orderDetails.id)}
+
+                      >
+                        Cancel
+                      </Button>
+                    </>
                   )}
 
-                  <Button
-                    type="primary"
-                    shape="round"
-                    icon={<SaveOutlined />}
-                    className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 text-sm w-auto min-w-[140px] flex items-center justify-center"
-                  >
-                    Update Order
-                  </Button>
+
+                  <div className="flex justify-end mt-4 space-x-3">
+                  </div>
+                  {isEditingOrder && (
+                    <div className="flex justify-end mt-4 space-x-3">
+                      {/* Back Button */}
+                      <Button
+                        type="primary"
+                        shape="round"
+                        icon={<ArrowLeftOutlined />}
+                        className="bg-gray-500 hover:bg-green-600 text-white px-6 py-2 text-sm w-auto min-w-[140px] flex items-center justify-center"
+                        onClick={handleBack}
+                      >
+                        Back
+                      </Button>
+                    </div>
+
+                  )}
+                  {showEditOrder && (
+                    <div className="flex justify-end mt-4 space-x-3">
+                      <Button
+                        type="primary"
+                        shape="round"
+                        icon={<SaveOutlined />}
+                        className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 text-sm w-auto min-w-[140px] flex items-center justify-center"
+                      >
+                        Update Order
+                      </Button>
+                    </div>
+                  )}
+
                 </div>
 
               </div>

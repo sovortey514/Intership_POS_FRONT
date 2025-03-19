@@ -75,3 +75,30 @@ export const FetchOrderById = async (id, token) => {
     throw new Error(error.message || "An unknown error occurred.");
   }
 };
+
+export const CancelOrder = async (id, token) => {
+  try {
+    if (!id) {
+      throw new Error("Invalid order ID");
+    }
+
+    const response = await fetch(`${API_URL}/cancel/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) { 
+      const errorMessage = await response.json();
+      console.error("Error cancel Order by ID:", errorMessage);
+      throw new Error(errorMessage.message || "Failed to cancel Order by ID.");
+    }
+
+    return await response.json(); 
+  } catch (error) {
+    console.error("Error cancel Order by ID:", error);
+    throw new Error(error.message || "An unknown error occurred.");
+  }
+};
