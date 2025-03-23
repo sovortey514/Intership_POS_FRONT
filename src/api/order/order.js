@@ -128,6 +128,60 @@ export const processPaymentcash = async (values, token) => {
   }
 };
 
+export const PaymentcashByMembershipCard = async (values, token) => {
+  try {
+    const response = await fetch(`${API_URL}/processWithMembership`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        // Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(values),
+    });
+
+    const responseText = await response.text();
+
+    if (!response.ok) {
+      throw new Error(responseText || "Failed to Payment");
+    }
+
+    return responseText ? JSON.parse(responseText) : {};
+
+  } catch (error) {
+    console.error("❌ Error Payment:", error.message);
+    return { error: error.message || "An error occurred" };
+  }
+};
+
+export const completeOrder = async (id, token) => {
+  try {
+    if (!id) {
+      throw new Error("Invalid order ID");
+    }
+
+    const response = await fetch(`${API_URL}/complete/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorMessage = await response.json();
+      console.error("Error complete Order by ID:", errorMessage);
+      throw new Error(errorMessage.message || "Failed to complete Order by ID.");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error complete Order by ID:", error);
+    throw new Error(error.message || "An unknown error occurred.");
+  }
+};
+
+
+
 
 
 

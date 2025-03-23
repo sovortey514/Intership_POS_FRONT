@@ -1,9 +1,13 @@
 
-import React, { useState ,useEffect} from "react";
-import { Button, Input, Radio, Select, Alert } from "antd";
+import React, { useState, useEffect } from "react";
+import { Button, Input, Radio, Select, Alert, notification } from "antd";
 import { CreditCardOutlined, DollarOutlined, IdcardOutlined } from "@ant-design/icons";
 import OrderReceipt from "./PrintReceipt";
-import { processPaymentcash } from "../../../api/order/order"
+import { processPaymentcash, PaymentcashByMembershipCard, completeOrder } from "../../../api/order/order"
+
+import { fetchMembershipById, fetchMembership } from "../../../api/membership/memberships"
+
+const { Option } = Select;
 const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [currency, setCurrency] = useState("USD");
@@ -15,32 +19,15 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
   const [showReceipt, setShowReceipt] = useState(false);
   const [orderDetail, setOrderDetail] = useState(null);
   const [discount, setDiscount] = useState(0); // New Discount State
+  const [membershipData, setMembershipData] = useState([]);
+  const [completepayment, setPaymentData] = useState([]);
+  const [membershipDataById, setMembershipDataById] = useState([]);
 
   useEffect(() => {
     if (orderDetails) {
-      // Log each individual piece of data from orderDetails
-      console.log("Order ID:", orderDetails.id);
-      console.log("Custom Order ID:", orderDetails.customOrderId);
-      console.log("Total Amount:", orderDetails.total);
-      console.log("Status:", orderDetails.status);
-      console.log("Payment Status:", orderDetails.paymentStatus);
-      console.log("Table ID:", orderDetails.tableId);
-      console.log("Table Name:", orderDetails.tableName);
-      console.log("Table Type:", orderDetails.tableType);
-      console.log("Table Location:", orderDetails.tableLocation);
-      console.log("Created At:", orderDetails.createdAt);
-      console.log("User Name:", orderDetails.userName);
-      
-      // Log the order items individually
+
       if (orderDetails.orderItems && Array.isArray(orderDetails.orderItems)) {
         orderDetails.orderItems.forEach((item, index) => {
-          console.log(`Order Item ${index + 1}:`);
-          console.log("Food ID:", item.foodId);
-          console.log("Food Name:", item.foodName);
-          console.log("Food Description:", item.foodDescription);
-          console.log("Quantity:", item.quantity);
-          console.log("Price:", item.price);
-          console.log("Total Price:", item.totalPrice);
         });
       }
 
@@ -49,18 +36,19 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
   }, [orderDetails]);
 
 
-  const handleConfirmPayment = async () => {
-    const due = parseFloat(amountDue); 
-    const paid = parseFloat(amountPaid); 
+
+  const handleConfirmPaymentCahe = async () => {
+    const due = parseFloat(amountDue);
+    const paid = parseFloat(amountPaid);
     const discountAmount = (due * discount) / 100;
     const finalTotal = due - discountAmount;
-  
+
     // Validate if the entered data is valid
     if (!due || isNaN(due) || due <= 0) {
       alert("Please enter a valid amount due.");
       return;
     }
-  
+
     if (paymentMethod === "cash") {
       if (!paid || isNaN(paid) || paid < finalTotal) {
         alert("Insufficient cash provided. Please enter a valid amount.");
@@ -71,35 +59,23 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
     }
 
     const paymentData = {
-      orderId: orderDetails.id,         
-      amountPaid: paid,                
-      paymentMethod: paymentMethod,  
+      orderId: orderDetails.id,
+      amountPaid: paid,
+      paymentMethod: paymentMethod,
     };
-  
+
 
     console.log("Payment Request Data:", paymentData);
-  
+
     try {
       const token = localStorage.getItem("token");
-      
+
       const response = await processPaymentcash(paymentData, token);
-  
+
 
       if (response && !response.error) {
         console.log("Payment Successful:", response);
-  
-        setOrderDetail({
-          orderItems: [
-            { id: 1, name: "Burger", quantity: 2, price: 5.99 },
-            { id: 2, name: "Fries", quantity: 1, price: 2.49 },
-          ],
-          subtotal: due,
-          discountAmount: discountAmount,
-          totalAfterDiscount: finalTotal,
-          tax: finalTotal * 0.05, 
-          totalAmount: finalTotal * 1.05, 
-        });
-  
+
 
         setShowReceipt(true);
 
@@ -111,11 +87,238 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
         alert("Payment failed. Please try again.");
       }
     } catch (error) {
-   
+
       console.error("Payment Error:", error);
       alert("An error occurred during payment. Please try again.");
     }
   };
+
+  const handleConfirmPaymentWithMemberCard = async () => {
+    const due = parseFloat(amountDue);
+    const paid = parseFloat(amountPaid);
+    const discountAmount = (due * discount) / 100;
+    const finalTotal = due - discountAmount;
+
+    // Validate if the entered data is valid
+    if (!due || isNaN(due) || due <= 0) {
+      alert("Please enter a valid amount due.");
+      return;
+    }
+
+    if (paymentMethod === "cash") {
+      if (!paid || isNaN(paid) || paid < finalTotal) {
+        alert("Insufficient cash provided. Please enter a valid amount.");
+        return;
+      }
+      const change = paid - finalTotal;
+      setCashBack(change);
+    }
+
+    const paymentData = {
+      orderId: orderDetails.id,
+      amountPaid: membershipDataById.balance,
+      paymentMethod: paymentMethod,
+      membershipId: membershipDataById ? membershipDataById.membershipId : null,
+      totalAmount: finalTotal,
+      discountAmount: discountAmount,
+      tax: finalTotal * 0.05,
+    };
+
+    console.log("Payment Request Data:", paymentData);
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await PaymentcashByMembershipCard(paymentData, token);
+
+      if (response && !response.error) {
+        console.log("Payment Successful:", response);
+
+        setShowReceipt(true);
+
+        if (onPaymentComplete) {
+          onPaymentComplete();
+        }
+      } else {
+        alert("Payment failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Payment Error:", error);
+      alert("An error occurred during payment. Please try again.");
+    }
+  };
+
+ 
+  const handleConfirmPayment = async () => {
+    const due = parseFloat(amountDue);
+    const paid = parseFloat(amountPaid);
+    const discountAmount = (due * discount) / 100;
+    const finalTotal = due - discountAmount;
+
+    if (!due || isNaN(due) || due <= 0) {
+      alert("Please enter a valid amount due.");
+      return;
+    }
+
+    if (paymentMethod === "cash") {
+      if (!paid || isNaN(paid) || paid < finalTotal) {
+        alert("Insufficient cash provided. Please enter a valid amount.");
+        return;
+      }
+      const change = paid - finalTotal;
+      setCashBack(change);
+    }
+
+    const paymentData = {
+      orderId: orderDetails.id,
+      amountPaid: paid,
+      paymentMethod: paymentMethod,
+      membershipId: paymentMethod === "membership" ? membershipDataById.membershipId : null,
+      totalAmount: finalTotal,
+      discountAmount: discountAmount,
+      tax: finalTotal * 0.05,
+    };
+
+    console.log("Payment Request Data:", paymentData);
+
+    try {
+      const token = localStorage.getItem("token");
+      let response;
+
+      if (paymentMethod === "membership") {
+        // Handle payment via membership
+        response = await handleConfirmPaymentWithMemberCard(paymentData, token);
+        await handleCompletePayment(orderDetails.id);
+      } else {
+        // Handle payment via cash
+        response = await handleConfirmPaymentCahe(paymentData, token);
+        await handleCompletePayment(orderDetails.id);
+      }
+
+      if (response && !response.error) {
+        console.log("Payment Successful:", response);
+        setShowReceipt(true);
+
+        if (onPaymentComplete) {
+          onPaymentComplete();
+        }
+      }
+
+    } catch (error) {
+      console.error("Payment Error:", error);
+      alert("An error occurred during payment. Please try again.");
+    }
+  };
+
+
+  const handleMembershipById = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        notification.error({
+          message: "Authorization Error",
+          description: "No token found. Please log in.",
+          duration: 1,
+        });
+        return;
+      }
+
+      const membership = await fetchMembershipById(id, token);
+      console.log("Fetched Membership Data:", membership);
+
+      if (membership) {
+        setMembershipDataById(membership);
+
+      } else {
+        notification.error({
+          message: "Failed to fetch Membership",
+          description: "HIIIIIIIIIIIIIIIIIIIIIIIII",
+          duration: 15,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching Membership:", error);
+      notification.error({
+        message: "Error fetching Membership",
+        description: error.message || "An error occurred while fetching the Membership.",
+        duration: 1,
+      });
+    }
+  };
+
+  const handleCompletePayment = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        notification.error({
+          message: "Authorization Error",
+          description: "No token found. Please log in.",
+          duration: 1,
+        });
+        return;
+      }
+      // Safely access the first element of the array
+      const paymentData = {
+        status: "COMPLETED",
+        table: {
+          id: orderDetails.tableId,  // Access the tableId from the first element
+          status: "available",
+        },
+      };
+
+      const response = await completeOrder(id, token, paymentData);
+      console.log("Payment completed successfully:", response);
+
+      if (response) {
+        setPaymentData(response);
+      } else {
+        notification.error({
+          message: "Failed to Complete Payment",
+          description: "There was an error completing the payment.",
+          duration: 15,
+        });
+      }
+    } catch (error) {
+      console.error("Error completing payment:", error);
+      notification.error({
+        message: "Error completing Payment",
+        description: error.message || "An error occurred while completing the payment.",
+        duration: 15,
+      });
+    }
+  };
+
+
+  const handlefetchMemberships = async () => {
+    try {
+
+      const token = localStorage.getItem("token");
+      const result = await fetchMembership(token);
+
+      if (result) {
+        setMembershipData(result);
+      } else {
+        notification.error({
+          message: "Failed to fetch Memberships",
+          description: "There was an issue fetching Memberships.",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching Memberships:", error);
+      notification.error({
+        message: "Error fetching Memberships",
+        description:
+          error.message || "An error occurred while fetching Memberships.",
+      });
+    }
+  };
+
+  useEffect(() => {
+    handlefetchMemberships();
+  }, [])
+
 
   return (
     <div className="flex items-center justify-center w-full">
@@ -126,12 +329,19 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
             Choose Payment Method
           </h2>
           <hr className="border-t border-gray-300  w-full " />
-
-
           {/* Payment Methods */}
           <div className="mt-3 ">
             <h3 className="text-md font-semibold">Select Payment Method</h3>
-            <Radio.Group onChange={(e) => setPaymentMethod(e.target.value)} value={paymentMethod}>
+            <Radio.Group
+              onChange={(e) => {
+                setPaymentMethod(e.target.value);
+                // If the membership radio is selected, fetch the membership details
+                if (e.target.value === "membership") {
+                  // Pass the appropriate `membershipId`
+                }
+              }}
+              value={paymentMethod}
+            >
               <Radio value="cash">
                 <DollarOutlined className="text-green-500 mr-2" /> Cash
               </Radio>
@@ -142,6 +352,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
                 <IdcardOutlined className="text-purple-500 mr-2" /> Membership Card
               </Radio>
             </Radio.Group>
+
           </div>
 
           {/* Currency Selection */}
@@ -152,18 +363,48 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
               <Select.Option value="KHR">Khmer Riel (៛)</Select.Option>
             </Select>
           </div>
+          {paymentMethod === "membership" && (
+            <div className="mt-3">
+              <label className="block text-sm font-medium">Total Amount Due ({currency})</label>
+              <Input
+                type="number"
+                placeholder={`Enter total amount due in ${currency}...`}
+                value={amountDue}
+                onChange={(e) => setAmountDue(e.target.value)}
+                className="w-full mt-2 p-2 border rounded-md"
+              />
+            </div>
 
-          {/* Amount Due Input */}
-          <div className="mt-3">
-            <label className="block text-sm font-medium">Total Amount Due ({currency})</label>
-            <Input
-              type="number"
-              placeholder={`Enter total amount due in ${currency}...`}
-              value={amountDue}
-              onChange={(e) => setAmountDue(e.target.value)}
-              className="w-full mt-2 p-2 border rounded-md"
-            />
-          </div>
+          )}
+          {paymentMethod === "membership" && membershipDataById && membershipDataById.balance !== undefined && (
+            <div className="mt-3">
+              <label className="block text-sm font-medium">Total Amount Due ({currency})</label>
+              <Input
+                type="number"
+                placeholder={`Amount due in ${currency}`}
+                value={membershipDataById.balance} // Display the balance from membershipDataById
+                onChange={(e) => setAmountDue(e.target.value)} // Set amount due on change
+                className="w-full mt-2 p-2 border rounded-md"
+                disabled
+              />
+            </div>
+          )}
+
+          {paymentMethod === "cash" && (
+            <div className="mt-3">
+              <label className="block text-sm font-medium">Total Amount Due ({currency})</label>
+              <Input
+                type="number"
+                placeholder={`Enter total amount due in ${currency}...`}
+                value={amountDue}
+                onChange={(e) => setAmountDue(e.target.value)}
+                className="w-full mt-2 p-2 border rounded-md"
+              />
+            </div>
+
+          )}
+
+
 
           {/* Discount Input */}
           <div className="mb-4">
@@ -194,21 +435,40 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
                 className="w-full mt-2 p-2 border rounded-md"
               />
             </div>
-            
+
           )}
 
           {paymentMethod === "membership" && (
-            <div className="mt-3">
-              <label className="block text-sm font-medium">Membership Card Number</label>
-              <Input
-                type="text"
-                placeholder="Enter Membership Card Number..."
+            <div className="mt-4 bg-white p-4 rounded-lg shadow-md">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Membership Card Number
+              </label>
+
+              <Select
+                showSearch
+                placeholder="Select Membership Card Number"
                 value={membershipCard}
-                onChange={(e) => setMembershipCard(e.target.value)}
-                className="w-full mt-2 p-2 border rounded-md"
-              />
+                onChange={(membershipData) => {
+                  setMembershipCard(membershipData);
+                  handleMembershipById(membershipData);
+                  // handlefetchMemberships();
+
+                }}
+                className="w-full mt-2 p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                bordered={false}
+              >
+                {/* Map through the membershipList to populate the dropdown options */}
+                {membershipData.map((membership) => (
+                  <Option key={membership.id} value={membership.id}>
+                    {membership.membershipId} - {membership.name}
+                  </Option>
+                ))}
+              </Select>
+              {/*  */}
             </div>
+
           )}
+
 
           {/* Confirm & Cancel Buttons */}
           <div className="flex justify-between mt-5">

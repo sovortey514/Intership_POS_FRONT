@@ -4,13 +4,15 @@ import { Button, Space, notification, Select, Modal, Input, Popconfirm } from "a
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { SearchOutlined } from '@ant-design/icons';
 import { DragDropContext, Droppable, Draggable, } from "react-beautiful-dnd";
+import { useNavigate } from 'react-router-dom';
+
 
 import { createTable, fetchTable, deleteTablesById, updateTables } from "../../../api/table/table";
 
 
 const TableManagement = () => {
 
-
+  const navigate = useNavigate();
   const [filter, setFilter] = useState("all");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [newTableType, setNewTableType] = useState("");
@@ -20,8 +22,12 @@ const TableManagement = () => {
   const [selectedTables, setSelectedTables] = useState([]);
   const [tables, setTables] = useState([]);
   const token = localStorage.getItem("token");
+  const [showPayment, setShowPayment] = useState(false);
 
-  
+  const onClickTable = (table) => {
+
+    navigate('/app/pos-order');
+  };
 
   const handleAddTable = () => {
     setIsModalVisible(true);
@@ -92,7 +98,7 @@ const TableManagement = () => {
     });
   };
 
-  
+
   const handleCreateTable = async () => {
     // Validate table type and location
     if (!newTableType || !newTableLocation) {
@@ -133,6 +139,7 @@ const TableManagement = () => {
         notification.success({
           message: "Table Added",
           description: `New table "${response.name}" for ${response.type} has been added successfully.`,
+          duration: 0.5,
         });
         setIsModalVisible(false);
       }
@@ -191,6 +198,7 @@ const TableManagement = () => {
         notification.success({
           message: "Table Deleted",
           description: response.message,
+          duration: 0.5,
         });
       } else {
         notification.error({
@@ -358,7 +366,7 @@ const TableManagement = () => {
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
                       className={`relative bg-white ${tableColors[table.status]} text-white flex flex-col justify-center items-center rounded-lg p-6 cursor-pointer hover:scale-105 hover:bg-gray-100 hover:shadow-lg transition-all`}
-                      onClick={() => handleSelectTable(table)}
+                    // onClick={() => handleSelectTable(table)}
                     >
                       <div className="flex flex-col items-center">
                         <div className="bg-white text-gray-700 rounded-full w-16 h-16 flex justify-center items-center mb-2 border-2 border-gray-300">
@@ -411,6 +419,19 @@ const TableManagement = () => {
                             />
                           </div>
                         </Popconfirm>,
+
+                        {/* <span className="mt-2">
+                          <button onClick={onClickTable}
+                            className={`text-xs px-2 py-1 rounded-full font-semibold ${table.orders.some(order => order.paymentStatus === 'UNPAID')
+                                ? 'bg-red-500 text-white' 
+                                : 'bg-green-500 text-white' 
+                              }`}
+                          >
+                            {table.orders.some(order => order.paymentStatus === 'UNPAID')
+                              ? 'Unpaid'
+                              : 'Order'}
+                          </button>
+                        </span> */}
                       </div>
                     </div>
                   )}

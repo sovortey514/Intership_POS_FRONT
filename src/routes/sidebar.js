@@ -71,7 +71,7 @@ const SidebarRoutes = () => {
             name: "Inventor Management",
             submenu: [
               {
-                path: "/app/inventory-foodlist",
+                path: "/app/inventory-membership",
                 icon: <WalletIcon className={submenuIconClasses} />,
                 name: "MemberShip List",
               },

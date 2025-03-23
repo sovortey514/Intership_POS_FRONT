@@ -49,25 +49,25 @@ const Order = () => {
   const [showorderdetail, setShowOrderDetail] = useState(true);
   const [editingOrder, setEditingOrder] = useState(false);
 
+  const [paymentbyselectTable, setPaymentBySelectTable] = useState(null)
+
   const clearItem = () => {
-    setorder([]); // Reset order to an empty array
-    setOrderItems([]); // Reset order items to an empty array
-    setOrderDetails(null); // Reset order details to null
-    setSelectedCategory("all"); // Reset selected category to "all"
-    setVisibleCount(8); // Reset visible count to 8
-    setIsDineIn(true); // Reset dine-in flag to true
-    setShowReceipt(false); // Hide receipt
-    setShowPayment(false); // Hide payment
-    setTables([]); // Reset tables to an empty array
-    setSelectedTable(null); // Reset selected table to null
-    setShowEditOrder(false); // Hide edit order
-    setShowAllFoods(true); // Hide all foods view
-    setIsEditingOrder(false); // Reset editing state
-    setShowOrderDetail(true); // Show order details
-    setEditingOrder(false); // Reset editing order flag
+    setorder([]);
+    setOrderItems([]);
+    setOrderDetails(null);
+    setSelectedCategory("all");
+    setVisibleCount(8);
+    setIsDineIn(true);
+    setShowReceipt(false);
+    setShowPayment(false);
+    // setTables([]);
+    setSelectedTable(null);
+    setShowEditOrder(false);
+    setShowAllFoods(true);
+    setIsEditingOrder(false);
+    setShowOrderDetail(true);
+    setEditingOrder(false);
   };
-
-
 
   const showMoreProducts = () => {
     setVisibleCount((prev) => prev + 8);
@@ -161,7 +161,7 @@ const Order = () => {
         setOrderDetails(order);
         localStorage.setItem("orderDetails", JSON.stringify(order));
         setShowPayment(true);
-        
+
       } else {
         notification.error({
           message: "Failed to fetch Order",
@@ -211,20 +211,19 @@ const Order = () => {
     </Menu>
   );
 
-  const removeItem = (id) => {
+  const removeItem = (data) => {
+    console.log("User item:", data);
 
-    const updatedItems = orderItems.filter((item) => item.id !== id);
-    setOrderItems(updatedItems);
+    const updatedItems = orderItems.filter((item) => item.id !== data.id || data.foodId);
 
-    if (showEditOrder) {
-      setOrderDetails(prevDetails => ({
-        ...prevDetails,
-        orderItems: updatedItems,
-      }));
+    if (updatedItems.length === orderItems.length) {
+      console.warn("Item not found in the list.");
     }
 
-    if (showPayment || showEditOrder) {
-      setOrderDetails(prevDetails => ({
+    setOrderItems(updatedItems);
+
+    if (showEditOrder || showPayment) {
+      setOrderDetails((prevDetails) => ({
         ...prevDetails,
         orderItems: updatedItems,
       }));
@@ -420,7 +419,7 @@ const Order = () => {
           {showReceipt ? (
             <Payment onBack={() => setShowPayment(false)} className="pl-10" />
           ) : showPayment ? (
-            <Payment 
+            <Payment
               orderDetails={orderDetails}
               onBack={() => setShowPayment(false)}
               onPaymentComplete={() => {
@@ -634,8 +633,6 @@ const Order = () => {
             </div>
           )}
 
-
-
           {/* Scrollable Content */}
           <div className="h-[340px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 p-2">
             {/* Order Info */}
@@ -723,7 +720,7 @@ const Order = () => {
                         shape="circle"
                         icon={<DeleteOutlined style={{ fontSize: "12px" }} />}
                         danger
-                        onClick={() => removeItem(item.id)}
+                        onClick={() => removeItem(item)}
                         className="shadow-sm"
                       />
                     </div>
@@ -791,7 +788,7 @@ const Order = () => {
                         shape="circle"
                         icon={<DeleteOutlined style={{ fontSize: "12px" }} />}
                         danger
-                        onClick={() => removeItem(item.foodId)}
+                        onClick={() => removeItem(item)}
                         className="shadow-sm"
                       />
                     </div>

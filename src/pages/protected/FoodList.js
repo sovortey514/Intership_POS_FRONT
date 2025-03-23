@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { setPageTitle } from '../../features/common/headerSlice'
 
-import FoodList from '../../features/inventorymanagement/foodlist'
+import MembershipList from '../../features/inventorymanagement/membership'
 
 function InternalPage(){
     const dispatch = useDispatch()
@@ -13,7 +13,7 @@ function InternalPage(){
 
 
     return(
-        < FoodList/>
+        <MembershipList />
     )
 }
 

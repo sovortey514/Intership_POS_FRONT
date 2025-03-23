@@ -108,7 +108,7 @@ const routes = [
   },
 
   {
-    path: '/inventory-foodlist',
+    path: '/inventory-membership',
     component: FoodList,
   },
 

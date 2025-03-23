@@ -1,11 +1,12 @@
-import { Button, Card, Table, Statistic, Avatar } from "antd";
-import { PrinterOutlined, LogoutOutlined, ClockCircleOutlined } from "@ant-design/icons";
-import React from "react";
-import MembershipList from "../../inventorymanagement/foodlist";
+
+import React, { useEffect, useState } from "react";
+import { Table, Card, Statistic, Button, Avatar, notification } from "antd";
+import { PrinterOutlined, LogoutOutlined } from "@ant-design/icons";
+import { fetchOrder } from "../../../api/order/order";
 
 const Shift = () => {
-  // Dummy shift and order data
-  const shiftData = {
+  const [orderData, setOrderData] = useState([]);
+  const [shiftData, setShiftData] = useState({
     name: "Vortey168$",
     avatar: "/Myprofile.png",
     date: "Mon, 8 May",
@@ -16,57 +17,7 @@ const Shift = () => {
     MembershipList: "667$",
     totalOrders: 89,
     currentTime: "03:34:12",
-  };
-
-  // Table order data
-  const orderData = [
-    {
-      key: "1",
-      orderId: "3456872",
-      details: "x1 Vegetables pizza...",
-      date: "8/5/2024",
-      time: "03:37",
-      type: "Dine in",
-      price: "1.00 USD",
-    },
-    {
-      key: "2",
-      orderId: "3456872",
-      details: "x2 Chicken BBQ pizza...",
-      date: "8/5/2024",
-      time: "03:36",
-      type: "Takeaway",
-      price: "64.19 USD",
-    },
-    {
-      key: "3",
-      orderId: "3456872",
-      details: "x3 Cheese burger",
-      date: "8/5/2024",
-      time: "03:30",
-      type: "Takeaway",
-      price: "11.42 USD",
-    },
-    {
-      key: "4",
-      orderId: "3456872",
-      details: "x1 Vegetables pizza...",
-      date: "8/5/2024",
-      time: "03:20",
-      type: "Dine in",
-      price: "11.06 USD",
-    },
-    {
-      key: "5",
-      orderId: "3456872",
-      details: "x1 Vegetables pizza...",
-      date: "8/5/2024",
-      time: "03:19",
-      type: "Takeaway",
-      price: "11.42 USD",
-    },
-  ];
-
+  });
 
   // Table Columns
   const columns = [
@@ -77,6 +28,51 @@ const Shift = () => {
     { title: "Order Type", dataIndex: "type", key: "type" },
     { title: "Price", dataIndex: "price", key: "price" },
   ];
+
+  const handleFetchAllOrder = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        notification.error({
+          message: "Authorization Error",
+          description: "No token found. Please log in.",
+        });
+        return;
+      }
+
+      const result = await fetchOrder(token);
+
+      if (result && result.length > 0) {
+        const formattedOrders = result.map((order, index) => ({
+          key: index.toString(),
+          orderId: order.customOrderId,
+          details: `${order.orderItems[0]?.quantity} ${order.orderItems[0]?.foodName}`,
+          date: order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "N/A",
+          time: order.createdAt ? new Date(order.createdAt).toLocaleTimeString() : "N/A",
+          type: order.tableType || "Unknown",
+          price: `${order.total} USD`,
+        }));
+
+        setOrderData(formattedOrders);
+      } else {
+        notification.error({
+          message: "Failed to fetch Order",
+          description: "There was an issue fetching Order.",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching Order:", error);
+      notification.error({
+        message: "Error fetching Order",
+        description:
+          error.message || "An error occurred while fetching Order.",
+      });
+    }
+  };
+
+  useEffect(() => {
+    handleFetchAllOrder();
+  }, []);
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
@@ -104,7 +100,7 @@ const Shift = () => {
           <Avatar src={shiftData.avatar} size={50} />
           <div>
             <h3 className="text-lg font-medium">{shiftData.name}</h3>
-            <p className="text-gray-500">{shiftData.date} | {shiftData.time}</p>
+            <p className="text-gray-500">{shiftData.createdAt} | {shiftData.time}</p>
           </div>
           <span className="ml-auto text-blue-500 text-lg font-semibold">
             {shiftData.currentTime}

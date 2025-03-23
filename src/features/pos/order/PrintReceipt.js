@@ -1,3 +1,4 @@
+
 import React, { useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Button } from "antd";
@@ -5,11 +6,13 @@ import { Button } from "antd";
 const OrderReceipt = ({ orderItems, subtotal, tax, totalAmount, onClose }) => {
   const receiptRef = useRef();
 
+  // Ensure contentRef is passed correctly to the useReactToPrint hook
   const handlePrint = useReactToPrint({
-    content: () => receiptRef.current,
+    content: () => receiptRef.current ? receiptRef.current : null,  // Return null if the ref is invalid
     documentTitle: "Order Receipt",
     onAfterPrint: () => console.log("Receipt printed successfully!"),
   });
+  
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75">
@@ -17,7 +20,7 @@ const OrderReceipt = ({ orderItems, subtotal, tax, totalAmount, onClose }) => {
         
         {/* 🏢 Business Information */}
         <div className="text-center mb-4">
-          <img src="/favicon.ico" alt="Company Logo" className="mx-auto w-16 h-16 mb-2" /> {/* Replace with actual logo path */}
+          <img src="/favicon.ico" alt="Company Logo" className="mx-auto w-16 h-16 mb-2" /> 
           <h2 className="font-bold text-lg">FastFood POS</h2>
           <p className="text-xs text-gray-500">123 Main Street, City, Country</p>
           <p className="text-xs text-gray-500">Phone: +123 456 7890</p>
@@ -34,12 +37,16 @@ const OrderReceipt = ({ orderItems, subtotal, tax, totalAmount, onClose }) => {
         {/* 🛒 Order Items */}
         <div className="text-sm">
           <hr className="my-2" />
-          {orderItems.map((item) => (
-            <div key={item.id} className="flex justify-between border-b pb-1 mb-1">
-              <span>{item.name} x {item.quantity}</span>
-              <span>{(item.price * item.quantity).toFixed(2)} $</span>
-            </div>
-          ))}
+          {orderItems && orderItems.length > 0 ? (
+            orderItems.map((item) => (
+              <div key={item.id} className="flex justify-between border-b pb-1 mb-1">
+                <span>{item.name} x {item.quantity}</span>
+                <span>{(item.price * item.quantity).toFixed(2)} $</span>
+              </div>
+            ))
+          ) : (
+            <p>No items to display</p>
+          )}
           <hr className="my-2" />
         </div>
 
