@@ -1,8 +1,8 @@
-
 import React, { useEffect, useState } from "react";
 import { Table, Card, Statistic, Button, Avatar, notification } from "antd";
 import { PrinterOutlined, LogoutOutlined } from "@ant-design/icons";
 import { fetchOrder } from "../../../api/order/order";
+import { fetchPayment } from "../../../api/payment/payment";
 
 const Shift = () => {
   const [orderData, setOrderData] = useState([]);
@@ -12,9 +12,9 @@ const Shift = () => {
     date: "Mon, 8 May",
     time: "08:56 AM - 06:00 PM",
     workingHours: "6h45m",
-    cashSales: "5678 $",
-    creditSales: "667$",
-    MembershipList: "667$",
+    cashSales: "5678 $", // Initial placeholder, will be updated
+    creditSales: "667$", // Initial placeholder, will be updated
+    MembershipList: "667$", // Initial placeholder, will be updated
     totalOrders: 89,
     currentTime: "03:34:12",
   });
@@ -60,18 +60,73 @@ const Shift = () => {
           description: "There was an issue fetching Order.",
         });
       }
-    } catch (error) {
+      
+    }
+     
+    
+    catch (error) {
       console.error("Error fetching Order:", error);
       notification.error({
         message: "Error fetching Order",
-        description:
-          error.message || "An error occurred while fetching Order.",
+        description: error.message || "An error occurred while fetching Order.",
       });
     }
   };
 
+  const handleFetchAllPayment = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        notification.error({
+          message: "Authorization Error",
+          description: "No token found. Please log in.",
+        });
+        return;
+      }
+  
+      const result = await fetchOrder(token);
+  
+      if (result) {
+        let totalCashSales = 0;
+        let totalMembershipSales = 0;
+  
+        result.forEach(payment => {
+          if (payment.paymentMethod === "cash") {
+            totalCashSales += payment.total;
+          } 
+ 
+          else if (payment.paymentMethod === "membership") {
+            totalMembershipSales += payment.total;
+          }
+        });
+  
+        const updatedShiftData = {
+          ...shiftData,
+          cashSales: `${totalCashSales} $`, 
+          creditSales: "0 $",  
+          MembershipList: `${totalMembershipSales} $`, 
+        };
+  
+        setShiftData(updatedShiftData);
+      } else {
+        notification.error({
+          message: "Failed to fetch Payment",
+          description: "There was an issue fetching Payment.",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching Payment:", error);
+      notification.error({
+        message: "Error fetching Payment",
+        description: error.message || "An error occurred while fetching Payment.",
+      });
+    }
+  };
+  
+
   useEffect(() => {
     handleFetchAllOrder();
+    handleFetchAllPayment();
   }, []);
 
   return (
@@ -100,7 +155,7 @@ const Shift = () => {
           <Avatar src={shiftData.avatar} size={50} />
           <div>
             <h3 className="text-lg font-medium">{shiftData.name}</h3>
-            <p className="text-gray-500">{shiftData.createdAt} | {shiftData.time}</p>
+            <p className="text-gray-500">{shiftData.date} | {shiftData.time}</p>
           </div>
           <span className="ml-auto text-blue-500 text-lg font-semibold">
             {shiftData.currentTime}
@@ -112,7 +167,7 @@ const Shift = () => {
           <Statistic title="Working Hours" value={shiftData.workingHours} />
           <Statistic title="Cash Sales" value={shiftData.cashSales} />
           <Statistic title="Credit Sales" value={shiftData.creditSales} />
-          <Statistic title="Membership Card Sales" value={shiftData.MembershipList} />
+          <Statistic title="Membership Sales" value={shiftData.MembershipList} />
           <Statistic title="Total Orders" value={shiftData.totalOrders} />
         </div>
       </Card>

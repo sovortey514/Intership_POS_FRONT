@@ -31,6 +31,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
         });
       }
 
+    
       setAmountDue(orderDetails.total.toString());
     }
   }, [orderDetails]);
@@ -116,7 +117,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
 
     const paymentData = {
       orderId: orderDetails.id,
-      amountPaid: membershipDataById.balance,
+      amountPaid: finalTotal,
       paymentMethod: paymentMethod,
       membershipId: membershipDataById ? membershipDataById.membershipId : null,
       totalAmount: finalTotal,
@@ -375,10 +376,10 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
               />
             </div>
 
-          )}
+          )} 
           {paymentMethod === "membership" && membershipDataById && membershipDataById.balance !== undefined && (
             <div className="mt-3">
-              <label className="block text-sm font-medium">Total Amount Due ({currency})</label>
+              <label className="block text-sm font-medium">Total balace ({currency})</label>
               <Input
                 type="number"
                 placeholder={`Amount due in ${currency}`}
