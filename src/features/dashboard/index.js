@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
-import { Card, Col, Row, Statistic, Tag, Input, Select, Button } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Card, Col, Row, Statistic, Tag, Input, Select, Button, notification } from 'antd';
 import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { PieChart, Pie, Cell, Tooltip, Legend, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { fetchFoods } from "../../api/Food_Category/food_category"
 
+import { fetchOrder } from "../../api/order/order"
+
+import { fetchuser } from "../../api/user/user"
+import staticMethods from 'antd/es/message';
 
 // Sample sales data for the pie chart
 const salesData = [
@@ -21,13 +26,7 @@ const lineChartData = [
   { day: 'Sun', sales: 18 },
 ];
 
-// Sample statistics data
-const stats = [
-  { title: 'Users', value: 4, image: '/user.png' },
-  { title: 'Menus', value: 18, image: '/menu.png' },
-  { title: 'Orders', value: 5, image: '/order.png' },
-  { title: 'Weekly Revenue', value: '15.50', image: '/revenue.png' },
-];
+
 
 // Sample ordered menus data
 const topMenus = [
@@ -40,6 +39,153 @@ const topMenus = [
 const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [timeFilter, setTimeFilter] = useState('Today');
+
+  const [topMenus, setTopMenus] = useState([]);
+  const [salesData, setSalesData] = useState([]);
+
+  const [stats, setStats] = useState([
+    // { title: 'Users', value: 4, image: '/user.png' },
+    // { title: 'Menus', value: 18, image: '/menu.png' },
+    // { title: 'Expen', value: 5, image: '/order.png' },
+    // { title: 'Income', value: 500, image: '/revenue.png' },
+  ]);
+
+
+  const handlefetchfoods = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const result = await fetchFoods(token);
+
+
+      const totalFoodsCount = result.length;
+
+      const user = { title: 'Menus', value: totalFoodsCount, image: '/menu.png' };
+      setStats((prevStats) => [...prevStats, user]);
+
+      return result;
+    } catch (error) {
+      console.error("🚨 Error fetching foods:", error);
+      notification.error({
+        message: "Error fetching foods",
+        description: error.message || "An error occurred while fetching foods.",
+      });
+    }
+  };
+
+  const handlefetchusers = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        notification.error({
+          message: "Authorization Error",
+          description: "No token found. Please log in.",
+        });
+        return;
+      }
+      const result = await fetchuser(token);
+      if (result && result.length > 0) {
+
+        const user = { title: 'Users', value: result.length, image: '/user.png' };
+
+      setStats((prevStats) => [...prevStats, user]);
+
+      } else {
+        notification.error({
+          message: "Failed to fetch Users",
+          description: result?.error || "No users found.",
+        });
+      }
+
+      return result;
+    } catch (error) {
+      console.error("🚨 Error fetching users:", error);
+      notification.error({
+        message: "Error fetching Users",
+        description: error.message || "An error occurred while fetching users.",
+      });
+    }
+  };
+
+  const handleFetchAllOrder = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        notification.error({
+          message: "Authorization Error",
+          description: "No token found. Please log in.",
+        });
+        return;
+      }
+
+      const result = await fetchOrder(token);
+     
+
+      const totalSales = result.reduce((total, order) => {
+        return total + order.orderItems.reduce((itemTotal, item) => {
+          return itemTotal + item.totalPrice;
+        }, 0);
+      }, 0);
+
+      const income = { title: 'Incomes', value: totalSales, image: '/revenue.png' };
+      setStats((prevStats) => [...prevStats, income]);
+      const foodOrdersCount = result.reduce((acc, order) => {
+        order.orderItems.forEach(item => {
+          if (acc[item.foodName]) {
+            acc[item.foodName].count += item.quantity;
+          } else {
+            acc[item.foodName] = { name: item.foodName, count: item.quantity };
+          }
+        });
+        return acc;
+      }, {});
+
+      const topOrderedFoods = Object.values(foodOrdersCount)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 4);
+
+      const topMenus = topOrderedFoods.map(food => ({
+        name: food.name,
+        items: food.count
+      }));
+
+      const newSalesData = topOrderedFoods.map(food => ({
+        name: food.name,
+        value: food.count * 2, 
+        color: getRandomPinkColor(), 
+      }));
+      setSalesData(newSalesData);
+      setTopMenus(topMenus);
+
+    } catch (error) {
+      console.error("Error fetching Order:", error);
+      notification.error({
+        message: "Error fetching Order",
+        description:
+          error.message || "An error occurred while fetching Order.",
+      });
+    }
+  };
+
+  const getRandomPinkColor = () => {
+    const pinkShades = [
+    
+      '#E69DB8',
+      '#FFD0C7',
+      '#EC7FA9',
+    ];
+
+   
+    const randomIndex = Math.floor(Math.random() * pinkShades.length);
+    return pinkShades[randomIndex];
+  };
+
+  useEffect(() => {
+    handlefetchfoods();
+    handleFetchAllOrder();
+    handlefetchusers();
+  }, []);
+
 
   return (
     <div className="mb-5 p-6 bg-gray-100 min-h-screen">
@@ -111,7 +257,6 @@ const Dashboard = () => {
 
       {/* 📌 Top Ordered Menus & Sales Chart */}
       <Row gutter={[16, 16]} className="mt-6">
-        {/* 🍕 Top Ordered Menus */}
         <Col span={12}>
           <Card
             title="Top 4 Most Ordered Menus"
@@ -141,7 +286,7 @@ const Dashboard = () => {
                     onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
                   >
                     <Tag
-                      color="pink" // Ant Design's predefined pink color
+                      color="pink" 
                       style={{
                         fontSize: '18px',
                         fontWeight: 'bold',
@@ -188,7 +333,7 @@ const Dashboard = () => {
                 data={salesData}
                 cx="50%"
                 cy="50%"
-                label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`}
+                // label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`}
                 outerRadius={120}
                 innerRadius={60}
                 dataKey="value"
@@ -211,7 +356,7 @@ const Dashboard = () => {
                   borderRadius: 8,
                   padding: 10,
                 }}
-              />
+              /> 
 
               <Legend align="center" verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: '14px', fontWeight: 'bold' }} />
             </PieChart>

@@ -4,6 +4,7 @@ import { FaHamburger, FaPizzaSlice, FaGlassMartiniAlt, FaCookie, FaPepperHot } f
 import { IoFastFoodOutline } from "react-icons/io5";
 import { ArrowRightOutlined, ArrowLeftOutlined, CloseOutlined } from "@ant-design/icons";
 
+import { fetchPaymentById } from "../../../api/payment/payment";
 
 
 
@@ -50,6 +51,7 @@ const Order = () => {
   const [editingOrder, setEditingOrder] = useState(false);
 
   const [paymentbyselectTable, setPaymentBySelectTable] = useState(null)
+  const [paymentDataById, setPaymentDataById] = useState(null);
 
   const clearItem = () => {
     setorder([]);
@@ -402,6 +404,42 @@ const Order = () => {
     }
   };
 
+  const handlePaymentById = async (id) => {
+      try {
+        const token = localStorage.getItem("token");
+  
+        if (!token) {
+          notification.error({
+            message: "Authorization Error",
+            description: "No token found. Please log in.",
+            duration: 1,
+          });
+          return;
+        }
+  
+        const payment = await fetchPaymentById(id, token);
+        console.log("Fetched Membership Data:", payment);
+  
+        if (payment) {
+          setPaymentDataById(payment);
+  
+        } else {
+          notification.error({
+            message: "Failed to fetch Payment",
+            description: "HIIIIIIIIIIIIIIIIIIIIIIIII",
+            duration: 15,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching Payment:", error);
+        notification.error({
+          message: "Error fetching Payment",
+          description: error.message || "An error occurred while fetching the Payment.",
+          duration: 1,
+        });
+      }
+    };
+
   const tax = subtotal * 0.05;
   const totalAmount = subtotal + tax;
 
@@ -598,15 +636,18 @@ const Order = () => {
               </Dropdown>
 
 
-              {showReceipt && (
+             {showReceipt && orderDetails && (
                 <OrderReceipt
                   orderItems={orderItems}
                   subtotal={subtotal}
                   tax={tax}
                   totalAmount={totalAmount}
+                  orderDetails={orderDetails} 
+                  paymentData={paymentDataById}
                   onClose={() => setShowReceipt(false)}
                 />
               )}
+
             </div>
           </div>
 
@@ -621,9 +662,9 @@ const Order = () => {
                 placeholder="Select a Table"
                 className="w-full"
               >
-                {/* Filter tables with status 'available' */}
+
                 {tables
-                  .filter((table) => table.status === "available") // Filter tables with available status
+                  .filter((table) => table.status === "available")
                   .map((table) => (
                     <Select.Option key={table.id} value={table.id}>
                       {`${table.name} - ${table.type}, ${table.location}`}
@@ -723,6 +764,7 @@ const Order = () => {
                         onClick={() => removeItem(item)}
                         className="shadow-sm"
                       />
+
                     </div>
                     <span className="font-semibold text-xs text-gray-700 mt-10">{item.price * item.quantity} $</span>
                   </div>

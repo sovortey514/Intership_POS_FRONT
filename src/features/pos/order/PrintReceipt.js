@@ -1,17 +1,26 @@
 
-import React, { useRef } from "react";
+import React, { useRef,useEffect } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Button } from "antd";
 
-const OrderReceipt = ({ orderItems, subtotal, tax, totalAmount, onClose }) => {
-  const receiptRef = useRef();
 
-  // Ensure contentRef is passed correctly to the useReactToPrint hook
+const OrderReceipt = ({  orderItems,
+  subtotal,
+  tax,
+  totalAmount,
+  orderDetails,
+  paymentData, 
+  onClose, }) => {
+  const receiptRef = useRef();
+  
+
   const handlePrint = useReactToPrint({
-    content: () => receiptRef.current ? receiptRef.current : null,  // Return null if the ref is invalid
+    content: () => receiptRef.current ? receiptRef.current : null,
     documentTitle: "Order Receipt",
     onAfterPrint: () => console.log("Receipt printed successfully!"),
   });
+
+  const { payment } = orderDetails || {};
   
 
   return (
@@ -26,13 +35,14 @@ const OrderReceipt = ({ orderItems, subtotal, tax, totalAmount, onClose }) => {
           <p className="text-xs text-gray-500">Phone: +123 456 7890</p>
           <hr className="my-2" />
         </div>
+        
 
         {/* 🧾 Receipt Details */}
         <div className="text-xs mb-2">
-          <p><strong>Order ID:</strong> #345672</p>
-          <p><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
-          <p><strong>Order By:</strong> Admin</p>
-        </div>
+        <p><strong>Order ID:</strong> {orderDetails?.customOrderId || "N/A"}</p>
+        <p><strong>Date:</strong> {orderDetails?.createdAt ? new Date(orderDetails.createdAt).toLocaleDateString() : "N/A"}</p>
+        <p><strong>Order By:</strong> {orderDetails?.userName || "N/A"}</p>
+      </div>
 
         {/* 🛒 Order Items */}
         <div className="text-sm">
@@ -63,6 +73,27 @@ const OrderReceipt = ({ orderItems, subtotal, tax, totalAmount, onClose }) => {
           <div className="flex justify-between text-lg font-bold">
             <span>Total:</span>
             <span>{totalAmount.toFixed(2)} $</span>
+          </div>
+        </div>
+          
+        {/* Payment Information */}
+        <div className="text-sm mt-4">
+          <hr className="my-2" />
+          <div className="flex justify-between">
+            <span><strong>Payment Method:</strong></span>
+            <span>{paymentData?.paymentMethod || "N/A"}</span>
+          </div>
+          <div className="flex justify-between">
+            <span><strong>Amount Paid:</strong></span>
+            <span>{paymentData?.amountPaid ? paymentData.amountPaid.toFixed(2) : "N/A"} $</span>
+          </div>
+          <div className="flex justify-between">
+            <span><strong>Cashback:</strong></span>
+            <span>{paymentData?.cashBack ? paymentData.cashBack.toFixed(2) : "N/A"} $</span>
+          </div>
+          <div className="flex justify-between">
+            <span><strong>Payment Date:</strong></span>
+            <span>{paymentData?.paymentDate ? new Date(paymentData.paymentDate).toLocaleString() : "N/A"}</span>
           </div>
         </div>
 

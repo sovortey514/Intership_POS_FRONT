@@ -34,7 +34,6 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/register" element={<Register />} />
         <Route path="/app/*" element={<PrivateRoute element={<Layout />} />} />
-
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>

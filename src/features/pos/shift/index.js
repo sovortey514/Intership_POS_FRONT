@@ -6,20 +6,71 @@ import { fetchPayment } from "../../../api/payment/payment";
 
 const Shift = () => {
   const [orderData, setOrderData] = useState([]);
+  const user =localStorage.getItem("username");
   const [shiftData, setShiftData] = useState({
-    name: "Vortey168$",
+    name: user || "Default User", 
     avatar: "/Myprofile.png",
     date: "Mon, 8 May",
     time: "08:56 AM - 06:00 PM",
-    workingHours: "6h45m",
-    cashSales: "5678 $", // Initial placeholder, will be updated
-    creditSales: "667$", // Initial placeholder, will be updated
-    MembershipList: "667$", // Initial placeholder, will be updated
-    totalOrders: 89,
+    totalOrders: "100",
+    cashSales: "5678 $",
+    creditSales: "667$",
+    MembershipList: "667$",
+    totalSales: 89,
     currentTime: "03:34:12",
   });
 
-  // Table Columns
+  const updateDateTime = () => {
+    const now = new Date();
+    const currentDate = now.toLocaleDateString('en-US', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    });
+
+    const currentTime = now.toLocaleTimeString('en-US', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+
+    setShiftData(prevState => ({
+      ...prevState,
+      date: currentDate,
+      currentTime: currentTime,
+    }));
+  };
+
+  const resetShiftIfNewDay = () => {
+    const storedDate = localStorage.getItem("shiftDate");
+    const today = new Date().toDateString();
+  
+    if (storedDate !== today) {
+      localStorage.setItem("shiftDate", today);
+
+      setOrderData([]);
+      setShiftData(prev => ({
+        ...prev,
+        totalOrders: 0,
+        cashSales: "0 $",
+        creditSales: "0 $",
+        MembershipList: "0 $",
+        totalSales: 0,
+      }));
+    }
+  };
+
+  useEffect(() => {
+
+    updateDateTime();
+
+
+    const intervalId = setInterval(updateDateTime, 1000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   const columns = [
     { title: "Order ID", dataIndex: "orderId", key: "orderId" },
     { title: "Order Details", dataIndex: "details", key: "details" },
@@ -60,10 +111,10 @@ const Shift = () => {
           description: "There was an issue fetching Order.",
         });
       }
-      
+
     }
-     
-    
+
+
     catch (error) {
       console.error("Error fetching Order:", error);
       notification.error({
@@ -83,30 +134,41 @@ const Shift = () => {
         });
         return;
       }
-  
+
       const result = await fetchOrder(token);
-  
+
       if (result) {
         let totalCashSales = 0;
         let totalMembershipSales = 0;
-  
+        let totalOrderToday = 0;
+        let totalOrdersCount = 0;
+
         result.forEach(payment => {
           if (payment.paymentMethod === "cash") {
             totalCashSales += payment.total;
-          } 
- 
+          }
+
           else if (payment.paymentMethod === "membership") {
             totalMembershipSales += payment.total;
           }
+
+          if (payment.paymentStatus === "PAID") {
+            totalOrdersCount += 1;
+          }
+
+          totalOrderToday += payment.total;
+
         });
-  
+
         const updatedShiftData = {
           ...shiftData,
-          cashSales: `${totalCashSales} $`, 
-          creditSales: "0 $",  
-          MembershipList: `${totalMembershipSales} $`, 
+          cashSales: `${totalCashSales} $`,
+          creditSales: "0 $",
+          MembershipList: `${totalMembershipSales} $`,
+          totalSales: totalOrderToday,
+          totalOrders: totalOrdersCount,
         };
-  
+
         setShiftData(updatedShiftData);
       } else {
         notification.error({
@@ -122,11 +184,12 @@ const Shift = () => {
       });
     }
   };
-  
+
 
   useEffect(() => {
     handleFetchAllOrder();
     handleFetchAllPayment();
+    resetShiftIfNewDay();
   }, []);
 
   return (
@@ -164,11 +227,11 @@ const Shift = () => {
 
         {/* Shift Statistics */}
         <div className="grid grid-cols-5 gap-4 mt-6">
-          <Statistic title="Working Hours" value={shiftData.workingHours} />
+          <Statistic title="Total Orders" value={shiftData.totalOrders} />
           <Statistic title="Cash Sales" value={shiftData.cashSales} />
           <Statistic title="Credit Sales" value={shiftData.creditSales} />
           <Statistic title="Membership Sales" value={shiftData.MembershipList} />
-          <Statistic title="Total Orders" value={shiftData.totalOrders} />
+          <Statistic title="Total Sale" value={shiftData.totalSales} />
         </div>
       </Card>
 

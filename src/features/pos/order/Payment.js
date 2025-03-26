@@ -7,6 +7,8 @@ import { processPaymentcash, PaymentcashByMembershipCard, completeOrder } from "
 
 import { fetchMembershipById, fetchMembership } from "../../../api/membership/memberships"
 
+import { fetchPaymentById } from "../../../api/payment/payment";
+
 const { Option } = Select;
 const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
   const [paymentMethod, setPaymentMethod] = useState("cash");
@@ -23,6 +25,9 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
   const [completepayment, setPaymentData] = useState([]);
   const [membershipDataById, setMembershipDataById] = useState([]);
 
+  const [paymentDataById, setPaymentDataById] = useState([]);
+
+
   useEffect(() => {
     if (orderDetails) {
 
@@ -31,7 +36,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
         });
       }
 
-    
+
       setAmountDue(orderDetails.total.toString());
     }
   }, [orderDetails]);
@@ -65,9 +70,6 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
       paymentMethod: paymentMethod,
     };
 
-
-    console.log("Payment Request Data:", paymentData);
-
     try {
       const token = localStorage.getItem("token");
 
@@ -75,8 +77,6 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
 
 
       if (response && !response.error) {
-        console.log("Payment Successful:", response);
-
 
         setShowReceipt(true);
 
@@ -125,7 +125,6 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
       tax: finalTotal * 0.05,
     };
 
-    console.log("Payment Request Data:", paymentData);
 
     try {
       const token = localStorage.getItem("token");
@@ -149,7 +148,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
     }
   };
 
- 
+
   const handleConfirmPayment = async () => {
     const due = parseFloat(amountDue);
     const paid = parseFloat(amountPaid);
@@ -248,6 +247,42 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
     }
   };
 
+  const handlePaymentById = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        notification.error({
+          message: "Authorization Error",
+          description: "No token found. Please log in.",
+          duration: 1,
+        });
+        return;
+      }
+
+      const payment = await fetchPaymentById(id, token);
+      console.log("Fetched Membership Data:", payment);
+
+      if (payment) {
+        setPaymentDataById(payment);
+
+      } else {
+        notification.error({
+          message: "Failed to fetch Payment",
+          description: "HIIIIIIIIIIIIIIIIIIIIIIIII",
+          duration: 15,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching Payment:", error);
+      notification.error({
+        message: "Error fetching Payment",
+        description: error.message || "An error occurred while fetching the Payment.",
+        duration: 1,
+      });
+    }
+  };
+
   const handleCompletePayment = async (id) => {
     try {
       const token = localStorage.getItem("token");
@@ -260,11 +295,11 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
         });
         return;
       }
-      // Safely access the first element of the array
+   
       const paymentData = {
         status: "COMPLETED",
         table: {
-          id: orderDetails.tableId,  // Access the tableId from the first element
+          id: orderDetails.tableId,  
           status: "available",
         },
       };
@@ -376,7 +411,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
               />
             </div>
 
-          )} 
+          )}
           {paymentMethod === "membership" && membershipDataById && membershipDataById.balance !== undefined && (
             <div className="mt-3">
               <label className="block text-sm font-medium">Total balace ({currency})</label>
@@ -483,18 +518,20 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
 
           {/* Show Receipt Modal When Payment is Confirmed */}
           {showReceipt && orderDetail && (
-            <OrderReceipt
-              orderItems={orderDetail.orderItems}
-              subtotal={orderDetail.subtotal}
-              discountAmount={orderDetail.discountAmount}
-              totalAfterDiscount={orderDetail.totalAfterDiscount}
-              tax={orderDetail.tax}
-              totalAmount={orderDetail.totalAmount}
-              onClose={() => {
-                setShowReceipt(false);
-                onBack();
-              }}
-            />
+
+            <>
+              {/* Debug */}
+              <OrderReceipt
+                orderItems={orderDetail.orderItems}
+                subtotal={orderDetail.subtotal}
+                tax={orderDetail.tax}
+                totalAmount={orderDetail.totalAmount}
+                onClose={() => {
+                  setShowReceipt(false);
+                  onBack();
+                }}
+              />
+            </>
           )}
         </div>
       </div>
