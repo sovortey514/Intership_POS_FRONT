@@ -49,9 +49,9 @@ const Order = () => {
   const [isEditingOrder, setIsEditingOrder] = useState(false);
   const [showorderdetail, setShowOrderDetail] = useState(true);
   const [editingOrder, setEditingOrder] = useState(false);
-
   const [paymentbyselectTable, setPaymentBySelectTable] = useState(null)
-  const [paymentDataById, setPaymentDataById] = useState(null);
+  const [paymentDataById, setPaymentDataById] = useState({});
+  
 
   const clearItem = () => {
     setorder([]);
@@ -62,13 +62,13 @@ const Order = () => {
     setIsDineIn(true);
     setShowReceipt(false);
     setShowPayment(false);
-    // setTables([]);
     setSelectedTable(null);
     setShowEditOrder(false);
     setShowAllFoods(true);
     setIsEditingOrder(false);
     setShowOrderDetail(true);
     setEditingOrder(false);
+    setPaymentDataById(null);
   };
 
   const showMoreProducts = () => {
@@ -280,7 +280,6 @@ const Order = () => {
     }
   };
 
-
   const handlePlaceOrder = async () => {
     if (!selectedTable) {
       notification.error({
@@ -403,42 +402,6 @@ const Order = () => {
       });
     }
   };
-
-  const handlePaymentById = async (id) => {
-      try {
-        const token = localStorage.getItem("token");
-  
-        if (!token) {
-          notification.error({
-            message: "Authorization Error",
-            description: "No token found. Please log in.",
-            duration: 1,
-          });
-          return;
-        }
-  
-        const payment = await fetchPaymentById(id, token);
-        console.log("Fetched Membership Data:", payment);
-  
-        if (payment) {
-          setPaymentDataById(payment);
-  
-        } else {
-          notification.error({
-            message: "Failed to fetch Payment",
-            description: "HIIIIIIIIIIIIIIIIIIIIIIIII",
-            duration: 15,
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching Payment:", error);
-        notification.error({
-          message: "Error fetching Payment",
-          description: error.message || "An error occurred while fetching the Payment.",
-          duration: 1,
-        });
-      }
-    };
 
   const tax = subtotal * 0.05;
   const totalAmount = subtotal + tax;
@@ -636,17 +599,17 @@ const Order = () => {
               </Dropdown>
 
 
-             {showReceipt && orderDetails && (
+             {/* {showReceipt && orderDetails && paymentDataById &&(
                 <OrderReceipt
                   orderItems={orderItems}
                   subtotal={subtotal}
                   tax={tax}
                   totalAmount={totalAmount}
                   orderDetails={orderDetails} 
-                  paymentData={paymentDataById}
+                  paymentDataById={'hi'}
                   onClose={() => setShowReceipt(false)}
                 />
-              )}
+              )} */}
 
             </div>
           </div>

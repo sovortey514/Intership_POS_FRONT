@@ -1,18 +1,20 @@
 
-import React, { useRef,useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Button } from "antd";
 
 
-const OrderReceipt = ({  orderItems,
+const OrderReceipt = ({ orderItems,
   subtotal,
   tax,
   totalAmount,
   orderDetails,
-  paymentData, 
+  paymentDataById,
   onClose, }) => {
+
+  console.log("Received Payment Data in OrderReceipt:", paymentDataById);
+
   const receiptRef = useRef();
-  
 
   const handlePrint = useReactToPrint({
     content: () => receiptRef.current ? receiptRef.current : null,
@@ -21,28 +23,27 @@ const OrderReceipt = ({  orderItems,
   });
 
   const { payment } = orderDetails || {};
-  
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75">
       <div className="bg-white p-6 rounded-lg shadow-lg w-[350px]" ref={receiptRef}>
-        
+
         {/* 🏢 Business Information */}
         <div className="text-center mb-4">
-          <img src="/favicon.ico" alt="Company Logo" className="mx-auto w-16 h-16 mb-2" /> 
+          <img src="/favicon.ico" alt="Company Logo" className="mx-auto w-16 h-16 mb-2" />
           <h2 className="font-bold text-lg">FastFood POS</h2>
           <p className="text-xs text-gray-500">123 Main Street, City, Country</p>
           <p className="text-xs text-gray-500">Phone: +123 456 7890</p>
           <hr className="my-2" />
         </div>
-        
+
 
         {/* 🧾 Receipt Details */}
         <div className="text-xs mb-2">
-        <p><strong>Order ID:</strong> {orderDetails?.customOrderId || "N/A"}</p>
-        <p><strong>Date:</strong> {orderDetails?.createdAt ? new Date(orderDetails.createdAt).toLocaleDateString() : "N/A"}</p>
-        <p><strong>Order By:</strong> {orderDetails?.userName || "N/A"}</p>
-      </div>
+          <p><strong>Order ID:</strong> {orderDetails?.customOrderId || "N/A"}</p>
+          <p><strong>Date:</strong> {orderDetails?.createdAt ? new Date(orderDetails.createdAt).toLocaleDateString() : "N/A"}</p>
+          <p><strong>Order By:</strong> {orderDetails?.userName || "N/A"}</p>
+        </div>
 
         {/* 🛒 Order Items */}
         <div className="text-sm">
@@ -50,7 +51,7 @@ const OrderReceipt = ({  orderItems,
           {orderItems && orderItems.length > 0 ? (
             orderItems.map((item) => (
               <div key={item.id} className="flex justify-between border-b pb-1 mb-1">
-                <span>{item.name} x {item.quantity}</span>
+                <span>{item.foodName} x {item.quantity}</span>
                 <span>{(item.price * item.quantity).toFixed(2)} $</span>
               </div>
             ))
@@ -75,27 +76,11 @@ const OrderReceipt = ({  orderItems,
             <span>{totalAmount.toFixed(2)} $</span>
           </div>
         </div>
-          
-        {/* Payment Information */}
-        <div className="text-sm mt-4">
-          <hr className="my-2" />
-          <div className="flex justify-between">
-            <span><strong>Payment Method:</strong></span>
-            <span>{paymentData?.paymentMethod || "N/A"}</span>
-          </div>
-          <div className="flex justify-between">
-            <span><strong>Amount Paid:</strong></span>
-            <span>{paymentData?.amountPaid ? paymentData.amountPaid.toFixed(2) : "N/A"} $</span>
-          </div>
-          <div className="flex justify-between">
-            <span><strong>Cashback:</strong></span>
-            <span>{paymentData?.cashBack ? paymentData.cashBack.toFixed(2) : "N/A"} $</span>
-          </div>
-          <div className="flex justify-between">
-            <span><strong>Payment Date:</strong></span>
-            <span>{paymentData?.paymentDate ? new Date(paymentData.paymentDate).toLocaleString() : "N/A"}</span>
-          </div>
-        </div>
+
+        <div>CashBack: {paymentDataById?.cashBack || "N/A"}</div>
+        <div>Payment Method: {paymentDataById?.paymentMethod || "N/A"}</div>
+        <div>Amount Paid: {paymentDataById?.amountPaid || "N/A"}</div>
+        <div>Payment Date: {paymentDataById?.paymentDate ? new Date(paymentDataById.paymentDate).toLocaleDateString() : "N/A"}</div>
 
         {/* 📌 Thank You Message */}
         <div className="text-center mt-4 text-xs text-gray-500">

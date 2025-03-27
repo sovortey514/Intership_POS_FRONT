@@ -7,7 +7,7 @@ import { processPaymentcash, PaymentcashByMembershipCard, completeOrder } from "
 
 import { fetchMembershipById, fetchMembership } from "../../../api/membership/memberships"
 
-import { fetchPaymentById } from "../../../api/payment/payment";
+import { fetchPaymentById, fetchPayment } from "../../../api/payment/payment";
 
 const { Option } = Select;
 const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
@@ -24,23 +24,26 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
   const [membershipData, setMembershipData] = useState([]);
   const [completepayment, setPaymentData] = useState([]);
   const [membershipDataById, setMembershipDataById] = useState([]);
-
-  const [paymentDataById, setPaymentDataById] = useState([]);
-
+  const [paymentDataById, setPaymentDataById] = useState({});
+  const [payments, setpayment] = useState([]);
+  const [paymentDatas, setPaymentDatas] = useState({})
 
   useEffect(() => {
     if (orderDetails) {
-
+      
       if (orderDetails.orderItems && Array.isArray(orderDetails.orderItems)) {
         orderDetails.orderItems.forEach((item, index) => {
         });
       }
-
-
+      setOrderDetail(orderDetails)
       setAmountDue(orderDetails.total.toString());
     }
   }, [orderDetails]);
 
+
+  // useEffect(() => {
+  //   console.log("Payment Data Updated:", paymentDataById);
+  // }, [paymentDataById]);
 
 
   const handleConfirmPaymentCahe = async () => {
@@ -65,7 +68,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
     }
 
     const paymentData = {
-      orderId: orderDetails.id,
+      orderId: orderDetail.id,
       amountPaid: paid,
       paymentMethod: paymentMethod,
     };
@@ -116,7 +119,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
     }
 
     const paymentData = {
-      orderId: orderDetails.id,
+      orderId: orderDetail.id,
       amountPaid: finalTotal,
       paymentMethod: paymentMethod,
       membershipId: membershipDataById ? membershipDataById.membershipId : null,
@@ -124,8 +127,8 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
       discountAmount: discountAmount,
       tax: finalTotal * 0.05,
     };
-
-
+    setPaymentDatas(paymentData)
+    
     try {
       const token = localStorage.getItem("token");
 
@@ -170,7 +173,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
     }
 
     const paymentData = {
-      orderId: orderDetails.id,
+      orderId: orderDetail.id,
       amountPaid: paid,
       paymentMethod: paymentMethod,
       membershipId: paymentMethod === "membership" ? membershipDataById.membershipId : null,
@@ -178,8 +181,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
       discountAmount: discountAmount,
       tax: finalTotal * 0.05,
     };
-
-    console.log("Payment Request Data:", paymentData);
+    setPaymentDatas(paymentData)
 
     try {
       const token = localStorage.getItem("token");
@@ -198,6 +200,11 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
       if (response && !response.error) {
         console.log("Payment Successful:", response);
         setShowReceipt(true);
+
+        const paymentId = response.paymentId || orderDetails.id;  // Use orderId or paymentId if available
+
+      // Fetch the payment data by its ID after confirmation
+      await handlePaymentById(paymentId);
 
         if (onPaymentComplete) {
           onPaymentComplete();
@@ -250,7 +257,6 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
   const handlePaymentById = async (id) => {
     try {
       const token = localStorage.getItem("token");
-
       if (!token) {
         notification.error({
           message: "Authorization Error",
@@ -260,16 +266,16 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
         return;
       }
 
-      const payment = await fetchPaymentById(id, token);
-      console.log("Fetched Membership Data:", payment);
-
+      const payment = await fetchPaymentById(id, token); 
       if (payment) {
         setPaymentDataById(payment);
-
+        setShowReceipt(true);
+        // console.log("Fetched Payment Data:", payment.paymentId); 
+     
       } else {
         notification.error({
           message: "Failed to fetch Payment",
-          description: "HIIIIIIIIIIIIIIIIIIIIIIIII",
+          description: "HII",
           duration: 15,
         });
       }
@@ -295,17 +301,16 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
         });
         return;
       }
-   
+
       const paymentData = {
         status: "COMPLETED",
         table: {
-          id: orderDetails.tableId,  
+          id: orderDetails.tableId,
           status: "available",
         },
       };
 
       const response = await completeOrder(id, token, paymentData);
-      console.log("Payment completed successfully:", response);
 
       if (response) {
         setPaymentData(response);
@@ -351,10 +356,34 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
     }
   };
 
+  const handlefetcPayment = async () => {
+    try {
+
+      const token = localStorage.getItem("token");
+      const result = await fetchPayment(token);
+
+      if (result) {
+        setpayment(result);
+      } else {
+        notification.error({
+          message: "Failed to fetch Payment",
+          description: "There was an issue fetching Payment.",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching Payment:", error);
+      notification.error({
+        message: "Error fetching Payment",
+        description:
+          error.message || "An error occurred while fetching Payment.",
+      });
+    }
+  };
+
   useEffect(() => {
     handlefetchMemberships();
+    handlefetcPayment();
   }, [])
-
 
   return (
     <div className="flex items-center justify-center w-full">
@@ -511,21 +540,32 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
             <Button onClick={onBack} className="bg-gray-500 text-white px-4 py-2 rounded-md">
               Cancel
             </Button>
-            <Button type="primary" className="bg-pink-500 text-white px-4 py-2 rounded-md" onClick={handleConfirmPayment}>
+            <Button
+              type="primary"
+              className="bg-pink-500 text-white px-4 py-2 rounded-md"
+              onClick={() => {
+                handleConfirmPayment();
+                handlePaymentById(payments[0].paymentId); 
+                // handlePaymentById(payments.paymentId);
+              }}
+              
+            >
               Confirm Payment
             </Button>
           </div>
 
           {/* Show Receipt Modal When Payment is Confirmed */}
-          {showReceipt && orderDetail && (
-
+          {/* {showReceipt && orderDetail && ( */}
+          {showReceipt  && (
             <>
-              {/* Debug */}
               <OrderReceipt
                 orderItems={orderDetail.orderItems}
-                subtotal={orderDetail.subtotal}
-                tax={orderDetail.tax}
-                totalAmount={orderDetail.totalAmount}
+                subtotal={paymentDatas.totalAmount}
+                tax={paymentDatas.tax}
+                orderDetails={orderDetail}
+                totalAmount={paymentDatas.totalAmount+paymentDatas.tax}
+                // totalAmount={paymentDatas.totalAmount+paymentDatas.tax}
+                paymentDataById={paymentDataById}
                 onClose={() => {
                   setShowReceipt(false);
                   onBack();
