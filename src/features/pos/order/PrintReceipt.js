@@ -10,9 +10,11 @@ const OrderReceipt = ({ orderItems,
   totalAmount,
   orderDetails,
   paymentDataById,
+  paymentDatas,
   onClose, }) => {
 
-  console.log("Received Payment Data in OrderReceipt:", paymentDataById);
+  console.log("Received Payment Data in orderDetailst:", paymentDatas);
+  // console.log("Received Payment Data in OrderReceipt:", paymentDataById);
 
   const receiptRef = useRef();
 
@@ -79,7 +81,7 @@ const OrderReceipt = ({ orderItems,
 
         <div>CashBack: {paymentDataById?.cashBack || "N/A"}</div>
         <div>Payment Method: {paymentDataById?.paymentMethod || "N/A"}</div>
-        <div>Amount Paid: {paymentDataById?.amountPaid || "N/A"}</div>
+        <div>Amount Paid: {paymentDatas?.amountPaid || "N/A"}</div>
         <div>Payment Date: {paymentDataById?.paymentDate ? new Date(paymentDataById.paymentDate).toLocaleDateString() : "N/A"}</div>
 
         {/* 📌 Thank You Message */}

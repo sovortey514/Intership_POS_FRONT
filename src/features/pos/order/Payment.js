@@ -28,31 +28,36 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
   const [payments, setpayment] = useState([]);
   const [paymentDatas, setPaymentDatas] = useState({})
 
+  const [finalTotal, setFinalTotal] = useState(0);  // State for final total
+  const [taxAmount, setTaxAmount] = useState(0); 
+
   useEffect(() => {
     if (orderDetails) {
+     
+      setOrderDetail(orderDetails);
+
+      const due = parseFloat(orderDetails.total);
+ 
+      const discountAmount = (due * discount) / 100;
+      const taxAmount = due * 0.05;  // 5% tax
+      const finalTotal = due + taxAmount - discountAmount;
       
-      if (orderDetails.orderItems && Array.isArray(orderDetails.orderItems)) {
-        orderDetails.orderItems.forEach((item, index) => {
-        });
-      }
-      setOrderDetail(orderDetails)
-      setAmountDue(orderDetails.total.toString());
+     
+      setAmountDue(due.toString());
+      setFinalTotal(finalTotal); 
+      setTaxAmount(taxAmount);  
     }
-  }, [orderDetails]);
-
-
-  // useEffect(() => {
-  //   console.log("Payment Data Updated:", paymentDataById);
-  // }, [paymentDataById]);
+  }, [orderDetails, discount]);
+  
 
 
   const handleConfirmPaymentCahe = async () => {
     const due = parseFloat(amountDue);
     const paid = parseFloat(amountPaid);
     const discountAmount = (due * discount) / 100;
-    const finalTotal = due - discountAmount;
+    const taxAmount = due * 0.05;
+    const finalTotal = due + taxAmount - discountAmount;
 
-    // Validate if the entered data is valid
     if (!due || isNaN(due) || due <= 0) {
       alert("Please enter a valid amount due.");
       return;
@@ -75,9 +80,8 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
 
     try {
       const token = localStorage.getItem("token");
-
+  
       const response = await processPaymentcash(paymentData, token);
-
 
       if (response && !response.error) {
 
@@ -103,7 +107,6 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
     const discountAmount = (due * discount) / 100;
     const finalTotal = due - discountAmount;
 
-    // Validate if the entered data is valid
     if (!due || isNaN(due) || due <= 0) {
       alert("Please enter a valid amount due.");
       return;
@@ -128,15 +131,11 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
       tax: finalTotal * 0.05,
     };
     setPaymentDatas(paymentData)
-    
     try {
       const token = localStorage.getItem("token");
-
       const response = await PaymentcashByMembershipCard(paymentData, token);
 
       if (response && !response.error) {
-        console.log("Payment Successful:", response);
-
         setShowReceipt(true);
 
         if (onPaymentComplete) {
@@ -158,11 +157,13 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
     const discountAmount = (due * discount) / 100;
     const finalTotal = due - discountAmount;
 
+
     if (!due || isNaN(due) || due <= 0) {
       alert("Please enter a valid amount due.");
       return;
     }
 
+    
     if (paymentMethod === "cash") {
       if (!paid || isNaN(paid) || paid < finalTotal) {
         alert("Insufficient cash provided. Please enter a valid amount.");
@@ -198,7 +199,6 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
       }
 
       if (response && !response.error) {
-        console.log("Payment Successful:", response);
         setShowReceipt(true);
 
         const paymentId = response.paymentId || orderDetails.id;  // Use orderId or paymentId if available
@@ -232,8 +232,6 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
       }
 
       const membership = await fetchMembershipById(id, token);
-      console.log("Fetched Membership Data:", membership);
-
       if (membership) {
         setMembershipDataById(membership);
 
@@ -270,8 +268,6 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
       if (payment) {
         setPaymentDataById(payment);
         setShowReceipt(true);
-        // console.log("Fetched Payment Data:", payment.paymentId); 
-     
       } else {
         notification.error({
           message: "Failed to fetch Payment",
@@ -309,6 +305,8 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
           status: "available",
         },
       };
+
+      console.log("Completed payment: ", paymentData)
 
       const response = await completeOrder(id, token, paymentData);
 
@@ -400,9 +398,9 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
             <Radio.Group
               onChange={(e) => {
                 setPaymentMethod(e.target.value);
-                // If the membership radio is selected, fetch the membership details
+             
                 if (e.target.value === "membership") {
-                  // Pass the appropriate `membershipId`
+                
                 }
               }}
               value={paymentMethod}
@@ -420,7 +418,6 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
 
           </div>
 
-          {/* Currency Selection */}
           <div className="mt-3">
             <label className="block text-sm font-medium">Select Currency</label>
             <Select value={currency} onChange={(value) => setCurrency(value)} className="w-full mt-2">
@@ -434,7 +431,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
               <Input
                 type="number"
                 placeholder={`Enter total amount due in ${currency}...`}
-                value={amountDue}
+                value={finalTotal}
                 onChange={(e) => setAmountDue(e.target.value)}
                 className="w-full mt-2 p-2 border rounded-md"
               />
@@ -447,8 +444,8 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
               <Input
                 type="number"
                 placeholder={`Amount due in ${currency}`}
-                value={membershipDataById.balance} // Display the balance from membershipDataById
-                onChange={(e) => setAmountDue(e.target.value)} // Set amount due on change
+                value={membershipDataById.balance} 
+                onChange={(e) => setAmountDue(e.target.value)} 
                 className="w-full mt-2 p-2 border rounded-md"
                 disabled
               />
@@ -461,7 +458,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
               <Input
                 type="number"
                 placeholder={`Enter total amount due in ${currency}...`}
-                value={amountDue}
+                value={finalTotal}
                 onChange={(e) => setAmountDue(e.target.value)}
                 className="w-full mt-2 p-2 border rounded-md"
               />
@@ -488,7 +485,6 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
             />
           </div>
 
-          {/* Amount Paid Input (only if cash payment is selected) */}
           {paymentMethod === "cash" && (
             <div className="mb-4">
               <label className="block text-sm font-medium">Amount Paid by Customer ({currency})</label>
@@ -516,13 +512,12 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
                 onChange={(membershipData) => {
                   setMembershipCard(membershipData);
                   handleMembershipById(membershipData);
-                  // handlefetchMemberships();
-
+         
                 }}
                 className="w-full mt-2 p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 bordered={false}
               >
-                {/* Map through the membershipList to populate the dropdown options */}
+         
                 {membershipData.map((membership) => (
                   <Option key={membership.id} value={membership.id}>
                     {membership.membershipId} - {membership.name}
@@ -534,10 +529,11 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
 
           )}
 
-
-          {/* Confirm & Cancel Buttons */}
           <div className="flex justify-between mt-5">
-            <Button onClick={onBack} className="bg-gray-500 text-white px-4 py-2 rounded-md">
+            <Button onClose={() => {
+                  setShowReceipt(false);
+                  onBack();
+                }} className="bg-gray-500 text-white px-4 py-2 rounded-md">
               Cancel
             </Button>
             <Button
@@ -545,8 +541,8 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
               className="bg-pink-500 text-white px-4 py-2 rounded-md"
               onClick={() => {
                 handleConfirmPayment();
-                handlePaymentById(payments[0].paymentId); 
-                // handlePaymentById(payments.paymentId);
+                
+                handlePaymentById(payments[payments.length - 1].paymentId);
               }}
               
             >
@@ -554,17 +550,16 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
             </Button>
           </div>
 
-          {/* Show Receipt Modal When Payment is Confirmed */}
-          {/* {showReceipt && orderDetail && ( */}
           {showReceipt  && (
             <>
+            
               <OrderReceipt
                 orderItems={orderDetail.orderItems}
                 subtotal={paymentDatas.totalAmount}
                 tax={paymentDatas.tax}
                 orderDetails={orderDetail}
                 totalAmount={paymentDatas.totalAmount+paymentDatas.tax}
-                // totalAmount={paymentDatas.totalAmount+paymentDatas.tax}
+                paymentDatas={paymentDatas}
                 paymentDataById={paymentDataById}
                 onClose={() => {
                   setShowReceipt(false);

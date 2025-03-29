@@ -418,7 +418,19 @@ const TableManagement = () => {
                               className="text-red-500 cursor-pointer text-lg hover:text-red-600 transition-colors"
                             />
                           </div>
-                        </Popconfirm>,
+                        </Popconfirm>
+                          {/* <span className="mt-2">
+                          <button onClick={onClickTable}
+                            className={`text-xs px-2 py-1 rounded-full font-semibold ${table.orders.some(order => order.paymentStatus === 'UNPAID')
+                                ? 'bg-red-500 text-white' 
+                                : 'bg-green-500 text-white' 
+                              }`}
+                          >
+                            {table.orders.some(order => order.paymentStatus === 'UNPAID')
+                              ? 'Unpaid'
+                              : 'Order'}
+                          </button>
+                        </span> */}
 
                       </div>
                     </div>

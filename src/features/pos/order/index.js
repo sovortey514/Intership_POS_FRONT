@@ -158,6 +158,9 @@ const Order = () => {
 
       const orderDetails = await FetchOrderById(orderId, token);
 
+      console.log("Detail data of order 1111111", orderDetails);
+      
+
       if (orderDetails && Array.isArray(orderDetails) && orderDetails.length > 0) {
         const order = orderDetails[0];
         setOrderDetails(order);
@@ -347,7 +350,9 @@ const Order = () => {
       });
       return;
     }
-
+    
+    console.log("Place to order 1232312321321: " + values);
+    
     const response = await placetoOrder(values, token);
 
     if (response.error) {
