@@ -114,13 +114,16 @@ export const processPaymentcash = async (values, token) => {
       body: JSON.stringify(values),
     });
 
-    const responseText = await response.text();
-
+    // Check if the response is ok (status 200-299)
     if (!response.ok) {
-      throw new Error(responseText || "Failed to Payment");
+      const responseText = await response.text();
+      console.error("Error response text:", responseText);
+      throw new Error(responseText || "Failed to process payment");
     }
 
-    return responseText ? JSON.parse(responseText) : {};
+    // If response is ok, parse and return it
+    const responseText = await response.text();
+    return JSON.parse(responseText);
 
   } catch (error) {
     console.error("❌ Error Payment:", error.message);

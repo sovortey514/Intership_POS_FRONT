@@ -413,7 +413,7 @@ const TableManagement = () => {
                             <DeleteOutlined
                               onClick={(e) => {
                                 e.stopPropagation();
-
+                                // handledeleteTables(table.id)
                               }}
                               className="text-red-500 cursor-pointer text-lg hover:text-red-600 transition-colors"
                             />

@@ -82,6 +82,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
 
       const response = await processPaymentcash(paymentData, token);
 
+      await handlePaymentById(response.id);
       if (response && !response.error) {
 
         setShowReceipt(true);
@@ -192,7 +193,6 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
         response = await handleConfirmPaymentCahe(paymentData, token);
       }
       await handleCompletePayment(orderDetails.id);
-  
       if (response && !response.error) {
         setShowReceipt(true);
         if (onPaymentComplete) {
@@ -524,7 +524,6 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
               className="bg-pink-500 text-white px-4 py-2 rounded-md"
               onClick={() => {
                 handleConfirmPayment();
-                handlePaymentById(payments[payments.length - 1]?.paymentId);
               }}
             >
               Confirm Payment
