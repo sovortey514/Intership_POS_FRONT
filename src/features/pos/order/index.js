@@ -34,8 +34,8 @@ const handlePrint = () => {
 const Order = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [visibleCount, setVisibleCount] = useState(8);
-  const [orderItems, setOrderItems] = useState([]); // static data of order items
-  const [orderDetails, setOrderDetails] = useState(null); // fetch from endpoint data of order items
+  const [orderItems, setOrderItems] = useState([]); 
+  const [orderDetails, setOrderDetails] = useState(null); 
   const [isDineIn, setIsDineIn] = useState(true);
   const [showReceipt, setShowReceipt] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
@@ -157,9 +157,6 @@ const Order = () => {
       }
 
       const orderDetails = await FetchOrderById(orderId, token);
-
-      console.log("Detail data of order 1111111", orderDetails);
-      
 
       if (orderDetails && Array.isArray(orderDetails) && orderDetails.length > 0) {
         const order = orderDetails[0];
@@ -312,7 +309,6 @@ const Order = () => {
             const userData = await userResponse.json();
             localStorage.setItem("userId", userData.id);
             userId = userData.id;
-            console.log("✅ Fetched and stored userId:", userId);
           } else {
             console.error("❌ Failed to fetch user ID");
           }
@@ -329,8 +325,6 @@ const Order = () => {
       });
       return;
     }
-
-    console.log("📌 Using User ID:", userId);
 
     const values = {
       userId: Number(userId),
@@ -350,9 +344,6 @@ const Order = () => {
       });
       return;
     }
-    
-    console.log("Place to order 1232312321321: " + values);
-    
     const response = await placetoOrder(values, token);
 
     if (response.error) {
@@ -365,8 +356,7 @@ const Order = () => {
         message: "Order Placed",
         description: "Your order has been placed successfully.",
       });
-      // handleFetchAllOrder();
-
+ 
       if (response.id) {
         handleFetchOrderById(response.id);
       } else {
@@ -434,7 +424,6 @@ const Order = () => {
               }}
             />
           ) : (
-
             <div className="w-3/5 pr-10 ml-[-25px] mt-[-25px]">
               <div className="flex justify-between items-center mb-3">
                 <h2 className="text-lg font-semibold">Categories</h2>
@@ -602,26 +591,12 @@ const Order = () => {
               <Dropdown overlay={menu} trigger={["click"]}>
                 <Button type="text" shape="circle" icon={<MenuOutlined style={{ fontSize: "18px" }} />} className="text-gray-500 hover:bg-gray-200 mt-2" />
               </Dropdown>
-
-
-             {/* {showReceipt && orderDetails && paymentDataById &&(
-                <OrderReceipt
-                  orderItems={orderItems}
-                  subtotal={subtotal}
-                  tax={tax}
-                  totalAmount={totalAmount}
-                  orderDetails={orderDetails} 
-                  paymentDataById={'hi'}
-                  onClose={() => setShowReceipt(false)}
-                />
-              )} */}
-
             </div>
           </div>
 
           {/* Divider Line */}
           <hr className="border-t border-gray-300 my-3 w-full pb-4" />
-          {!showPayment && (
+        {!showReceipt && !showPayment && (
             <div className="mb-4 mt-[-15px]">
               <h3 className="text-sm font-semibold mb-2">Select Table</h3>
               <Select

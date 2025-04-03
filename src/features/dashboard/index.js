@@ -47,7 +47,7 @@ const Dashboard = () => {
     // { title: 'Users', value: 4, image: '/user.png' },
     // { title: 'Menus', value: 18, image: '/menu.png' },
     // { title: 'Expen', value: 5, image: '/order.png' },
-    // { title: 'Income', value: 500, image: '/revenue.png' },
+    { title: 'Income', value: 500, image: '/revenue.png' },
   ]);
 
 

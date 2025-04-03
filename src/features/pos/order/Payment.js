@@ -20,7 +20,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
   const [exchangeRate, setExchangeRate] = useState(4000);
   const [showReceipt, setShowReceipt] = useState(false);
   const [orderDetail, setOrderDetail] = useState(null);
-  const [discount, setDiscount] = useState(0); // New Discount State
+  const [discount, setDiscount] = useState(0);
   const [membershipData, setMembershipData] = useState([]);
   const [completepayment, setPaymentData] = useState([]);
   const [membershipDataById, setMembershipDataById] = useState([]);
@@ -28,28 +28,27 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
   const [payments, setpayment] = useState([]);
   const [paymentDatas, setPaymentDatas] = useState({})
 
-  const [finalTotal, setFinalTotal] = useState(0);  // State for final total
-  const [taxAmount, setTaxAmount] = useState(0); 
+  const [finalTotal, setFinalTotal] = useState(0);
+  const [taxAmount, setTaxAmount] = useState(0);
+  const [loadingReceipt, setLoadingReceipt] = useState(false);
+
 
   useEffect(() => {
     if (orderDetails) {
-     
+
       setOrderDetail(orderDetails);
 
       const due = parseFloat(orderDetails.total);
- 
+
       const discountAmount = (due * discount) / 100;
-      const taxAmount = due * 0.05;  // 5% tax
+      const taxAmount = due * 0.05;
       const finalTotal = due + taxAmount - discountAmount;
-      
-     
+
       setAmountDue(due.toString());
-      setFinalTotal(finalTotal); 
-      setTaxAmount(taxAmount);  
+      setFinalTotal(finalTotal);
+      setTaxAmount(taxAmount);
     }
   }, [orderDetails, discount]);
-  
-
 
   const handleConfirmPaymentCahe = async () => {
     const due = parseFloat(amountDue);
@@ -80,7 +79,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
 
     try {
       const token = localStorage.getItem("token");
-  
+
       const response = await processPaymentcash(paymentData, token);
 
       if (response && !response.error) {
@@ -150,20 +149,18 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
     }
   };
 
-
   const handleConfirmPayment = async () => {
     const due = parseFloat(amountDue);
     const paid = parseFloat(amountPaid);
     const discountAmount = (due * discount) / 100;
     const finalTotal = due - discountAmount;
 
-
     if (!due || isNaN(due) || due <= 0) {
       alert("Please enter a valid amount due.");
       return;
     }
 
-    
+
     if (paymentMethod === "cash") {
       if (!paid || isNaN(paid) || paid < finalTotal) {
         alert("Insufficient cash provided. Please enter a valid amount.");
@@ -189,34 +186,26 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
       let response;
 
       if (paymentMethod === "membership") {
-        // Handle payment via membership
-        response = await handleConfirmPaymentWithMemberCard(paymentData, token);
-        await handleCompletePayment(orderDetails.id);
-      } else {
-        // Handle payment via cash
-        response = await handleConfirmPaymentCahe(paymentData, token);
-        await handleCompletePayment(orderDetails.id);
-      }
 
+        response = await handleConfirmPaymentWithMemberCard(paymentData, token);
+      } else {
+        response = await handleConfirmPaymentCahe(paymentData, token);
+      }
+      await handleCompletePayment(orderDetails.id);
+  
       if (response && !response.error) {
         setShowReceipt(true);
-
-        const paymentId = response.paymentId || orderDetails.id;  // Use orderId or paymentId if available
-
-      // Fetch the payment data by its ID after confirmation
-      await handlePaymentById(paymentId);
-
         if (onPaymentComplete) {
           onPaymentComplete();
         }
       }
+      await handlefetcPayment();
 
     } catch (error) {
       console.error("Payment Error:", error);
       alert("An error occurred during payment. Please try again.");
     }
   };
-
 
   const handleMembershipById = async (id) => {
     try {
@@ -234,11 +223,10 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
       const membership = await fetchMembershipById(id, token);
       if (membership) {
         setMembershipDataById(membership);
-
       } else {
         notification.error({
           message: "Failed to fetch Membership",
-          description: "HIIIIIIIIIIIIIIIIIIIIIIIII",
+          description: "HII",
           duration: 15,
         });
       }
@@ -263,8 +251,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
         });
         return;
       }
-
-      const payment = await fetchPaymentById(id, token); 
+      const payment = await fetchPaymentById(id, token);
       if (payment) {
         setPaymentDataById(payment);
         setShowReceipt(true);
@@ -282,6 +269,8 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
         description: error.message || "An error occurred while fetching the Payment.",
         duration: 1,
       });
+    } finally {
+      setLoadingReceipt(false);
     }
   };
 
@@ -306,8 +295,6 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
         },
       };
 
-      console.log("Completed payment: ", paymentData)
-
       const response = await completeOrder(id, token, paymentData);
 
       if (response) {
@@ -328,7 +315,6 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
       });
     }
   };
-
 
   const handlefetchMemberships = async () => {
     try {
@@ -356,10 +342,8 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
 
   const handlefetcPayment = async () => {
     try {
-
       const token = localStorage.getItem("token");
       const result = await fetchPayment(token);
-
       if (result) {
         setpayment(result);
       } else {
@@ -398,9 +382,9 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
             <Radio.Group
               onChange={(e) => {
                 setPaymentMethod(e.target.value);
-             
+
                 if (e.target.value === "membership") {
-                
+
                 }
               }}
               value={paymentMethod}
@@ -444,8 +428,8 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
               <Input
                 type="number"
                 placeholder={`Amount due in ${currency}`}
-                value={membershipDataById.balance} 
-                onChange={(e) => setAmountDue(e.target.value)} 
+                value={membershipDataById.balance}
+                onChange={(e) => setAmountDue(e.target.value)}
                 className="w-full mt-2 p-2 border rounded-md"
                 disabled
               />
@@ -512,12 +496,11 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
                 onChange={(membershipData) => {
                   setMembershipCard(membershipData);
                   handleMembershipById(membershipData);
-         
                 }}
                 className="w-full mt-2 p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 bordered={false}
               >
-         
+
                 {membershipData.map((membership) => (
                   <Option key={membership.id} value={membership.id}>
                     {membership.membershipId} - {membership.name}
@@ -531,9 +514,9 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
 
           <div className="flex justify-between mt-5">
             <Button onClose={() => {
-                  setShowReceipt(false);
-                  onBack();
-                }} className="bg-gray-500 text-white px-4 py-2 rounded-md">
+              setShowReceipt(false);
+              onBack();
+            }} className="bg-gray-500 text-white px-4 py-2 rounded-md">
               Cancel
             </Button>
             <Button
@@ -541,33 +524,40 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
               className="bg-pink-500 text-white px-4 py-2 rounded-md"
               onClick={() => {
                 handleConfirmPayment();
-                
-                handlePaymentById(payments[payments.length - 1].paymentId);
+                handlePaymentById(payments[payments.length - 1]?.paymentId);
               }}
-              
             >
               Confirm Payment
             </Button>
+            
           </div>
 
-          {showReceipt  && (
+
+          {showReceipt && (
             <>
-            
-              <OrderReceipt
-                orderItems={orderDetail.orderItems}
-                subtotal={paymentDatas.totalAmount}
-                tax={paymentDatas.tax}
-                orderDetails={orderDetail}
-                totalAmount={paymentDatas.totalAmount+paymentDatas.tax}
-                paymentDatas={paymentDatas}
-                paymentDataById={paymentDataById}
-                onClose={() => {
-                  setShowReceipt(false);
-                  onBack();
-                }}
-              />
+              {loadingReceipt ? (
+                <div className="flex justify-center items-center py-10">
+                  <span className="text-gray-600 text-lg">Loading receipt...</span>
+                </div>
+              ) : (
+                <OrderReceipt
+                  orderItems={orderDetail.orderItems}
+                  subtotal={paymentDatas.totalAmount}
+                  tax={paymentDatas.tax}
+                  orderDetails={orderDetail}
+                  totalAmount={paymentDatas.totalAmount + paymentDatas.tax}
+                  paymentDatas={paymentDatas}
+                  membershipDatas={membershipData}
+                  paymentDataById={paymentDataById}
+                  onClose={() => {
+                    setShowReceipt(false);
+                    onBack();
+                  }}
+                />
+              )}
             </>
           )}
+
         </div>
       </div>
     </div>

@@ -11,9 +11,10 @@ const OrderReceipt = ({ orderItems,
   orderDetails,
   paymentDataById,
   paymentDatas,
+  membershipData,
   onClose, }) => {
 
-  console.log("Received Payment Data in orderDetailst:", paymentDatas);
+  // console.log("Received Payment Data in orderDetailst:", paymentDatas);
   // console.log("Received Payment Data in OrderReceipt:", paymentDataById);
 
   const receiptRef = useRef();
@@ -25,6 +26,7 @@ const OrderReceipt = ({ orderItems,
   });
 
   const { payment } = orderDetails || {};
+  const paymentMethod = paymentDataById?.paymentMethod || orderDetails?.paymentMethod;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75">
@@ -83,7 +85,14 @@ const OrderReceipt = ({ orderItems,
         <div>Payment Method: {paymentDataById?.paymentMethod || "N/A"}</div>
         <div>Amount Paid: {paymentDatas?.amountPaid || "N/A"}</div>
         <div>Payment Date: {paymentDataById?.paymentDate ? new Date(paymentDataById.paymentDate).toLocaleDateString() : "N/A"}</div>
-
+        {paymentMethod === "membership" && (
+          <>
+            <div>CashBack: {paymentDataById?.cashBack || "N/A"}</div>
+            <div>Payment Method: {paymentDataById?.paymentMethod || "N/A"}</div>
+            <div>Amount Paid: {paymentDatas?.amountPaid || "N/A"}</div>
+            <div>Payment Date: {paymentDataById?.paymentDate ? new Date(paymentDataById.paymentDate).toLocaleDateString() : "N/A"}</div>
+          </>
+        )}
         {/* 📌 Thank You Message */}
         <div className="text-center mt-4 text-xs text-gray-500">
           <p>Thank you for your order!</p>

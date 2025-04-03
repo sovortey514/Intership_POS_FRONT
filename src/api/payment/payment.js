@@ -10,6 +10,7 @@ export const fetchPayment = async (token) => {
       },
     });
 
+
     if (!response.ok) {
       const errorMessage = await response.json();
       console.error("Error fetching Payment:", errorMessage);
