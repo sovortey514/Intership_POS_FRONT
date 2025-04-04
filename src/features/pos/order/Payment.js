@@ -12,12 +12,12 @@ import { fetchPaymentById, fetchPayment } from "../../../api/payment/payment";
 const { Option } = Select;
 const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
   const [paymentMethod, setPaymentMethod] = useState("cash");
-  const [currency, setCurrency] = useState("USD");
+  // const [currency, setCurrency] = useState("USD");
   const [amountDue, setAmountDue] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
   const [membershipCard, setMembershipCard] = useState("");
   const [cashBack, setCashBack] = useState(null);
-  const [exchangeRate, setExchangeRate] = useState(4000);
+  // const [exchangeRate, setExchangeRate] = useState(4000);
   const [showReceipt, setShowReceipt] = useState(false);
   const [orderDetail, setOrderDetail] = useState(null);
   const [discount, setDiscount] = useState(0);
@@ -27,11 +27,14 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
   const [paymentDataById, setPaymentDataById] = useState({});
   const [payments, setpayment] = useState([]);
   const [paymentDatas, setPaymentDatas] = useState({})
+  const [currency, setCurrency] = useState("USD");
 
   const [finalTotal, setFinalTotal] = useState(0);
   const [taxAmount, setTaxAmount] = useState(0);
   const [loadingReceipt, setLoadingReceipt] = useState(false);
 
+  const USD_TO_KHR = 4100;
+  const [exchangeRate, setExchangeRate] = useState(USD_TO_KHR);
 
   useEffect(() => {
     if (orderDetails) {
@@ -50,9 +53,11 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
     }
   }, [orderDetails, discount]);
 
-  const handleConfirmPaymentCahe = async () => {
+
+  const handlePaymentCash = async () => {
     const due = parseFloat(amountDue);
     const paid = parseFloat(amountPaid);
+
     const discountAmount = (due * discount) / 100;
     const taxAmount = due * 0.05;
     const finalTotal = due + taxAmount - discountAmount;
@@ -62,12 +67,23 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
       return;
     }
 
+    let finalAmount = finalTotal;
+
+    if (currency === "KHR") {
+      finalAmount = Math.round((finalTotal * exchangeRate) / 100) * 100;  
+    } else if (currency === "USD" || currency === "USDT") {
+    
+      finalAmount = finalTotal / exchangeRate;
+      paid = paid / exchangeRate;  
+    }
+
     if (paymentMethod === "cash") {
-      if (!paid || isNaN(paid) || paid < finalTotal) {
+      if (!paid || isNaN(paid) || paid < finalAmount) {
         alert("Insufficient cash provided. Please enter a valid amount.");
         return;
       }
-      const change = paid - finalTotal;
+
+      const change = paid - finalAmount;
       setCashBack(change);
     }
 
@@ -75,6 +91,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
       orderId: orderDetail.id,
       amountPaid: paid,
       paymentMethod: paymentMethod,
+      currency: currency,
     };
 
     try {
@@ -83,25 +100,23 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
       const response = await processPaymentcash(paymentData, token);
 
       await handlePaymentById(response.id);
-      if (response && !response.error) {
 
+      if (response && !response.error) {
         setShowReceipt(true);
 
         if (onPaymentComplete) {
           onPaymentComplete();
         }
       } else {
-
         alert("Payment failed. Please try again.");
       }
     } catch (error) {
-
       console.error("Payment Error:", error);
       alert("An error occurred during payment. Please try again.");
     }
   };
 
-  const handleConfirmPaymentWithMemberCard = async () => {
+  const handlePaymentWithMemberCard = async () => {
     const due = parseFloat(amountDue);
     const paid = parseFloat(amountPaid);
     const discountAmount = (due * discount) / 100;
@@ -188,9 +203,9 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
 
       if (paymentMethod === "membership") {
 
-        response = await handleConfirmPaymentWithMemberCard(paymentData, token);
+        response = await handlePaymentWithMemberCard(paymentData, token);
       } else {
-        response = await handleConfirmPaymentCahe(paymentData, token);
+        response = await handlePaymentCash(paymentData, token);
       }
       await handleCompletePayment(orderDetails.id);
       if (response && !response.error) {
@@ -404,7 +419,11 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
 
           <div className="mt-3">
             <label className="block text-sm font-medium">Select Currency</label>
-            <Select value={currency} onChange={(value) => setCurrency(value)} className="w-full mt-2">
+            <Select onChange={(value) => {
+              setCurrency(value);
+              setExchangeRate(value === "KHR" ? USD_TO_KHR : 1);
+            }}
+              className="w-full mt-2">
               <Select.Option value="USD">USD ($)</Select.Option>
               <Select.Option value="KHR">Khmer Riel (៛)</Select.Option>
             </Select>
@@ -415,7 +434,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
               <Input
                 type="number"
                 placeholder={`Enter total amount due in ${currency}...`}
-                value={finalTotal}
+                value={(currency === "KHR" ? finalTotal * exchangeRate : finalTotal).toFixed(2)}
                 onChange={(e) => setAmountDue(e.target.value)}
                 className="w-full mt-2 p-2 border rounded-md"
               />
@@ -442,13 +461,17 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
               <Input
                 type="number"
                 placeholder={`Enter total amount due in ${currency}...`}
-                value={finalTotal}
+                value={currency === "KHR"
+                  ? Math.round((finalTotal * exchangeRate) / 100) * 100 
+                  : finalTotal  
+                }
                 onChange={(e) => setAmountDue(e.target.value)}
                 className="w-full mt-2 p-2 border rounded-md"
               />
             </div>
-
           )}
+
+
 
 
 
@@ -480,7 +503,6 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
                 className="w-full mt-2 p-2 border rounded-md"
               />
             </div>
-
           )}
 
           {paymentMethod === "membership" && (
@@ -528,7 +550,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
             >
               Confirm Payment
             </Button>
-            
+
           </div>
 
 
