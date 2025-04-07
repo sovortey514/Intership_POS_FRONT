@@ -12,12 +12,10 @@ import { fetchPaymentById, fetchPayment } from "../../../api/payment/payment";
 const { Option } = Select;
 const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
   const [paymentMethod, setPaymentMethod] = useState("cash");
-  // const [currency, setCurrency] = useState("USD");
   const [amountDue, setAmountDue] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
   const [membershipCard, setMembershipCard] = useState("");
   const [cashBack, setCashBack] = useState(null);
-  // const [exchangeRate, setExchangeRate] = useState(4000);
   const [showReceipt, setShowReceipt] = useState(false);
   const [orderDetail, setOrderDetail] = useState(null);
   const [discount, setDiscount] = useState(0);
@@ -55,6 +53,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
 
 
   const handlePaymentCash = async () => {
+
     const due = parseFloat(amountDue);
     const paid = parseFloat(amountPaid);
 
@@ -62,19 +61,22 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
     const taxAmount = due * 0.05;
     const finalTotal = due + taxAmount - discountAmount;
 
+    const roundedFinalTotal = Math.round(finalTotal * 100) / 100;
+
     if (!due || isNaN(due) || due <= 0) {
       alert("Please enter a valid amount due.");
       return;
     }
 
     let finalAmount = finalTotal;
+    let paidConverted = paid;
 
     if (currency === "KHR") {
-      finalAmount = Math.round((finalTotal * exchangeRate) / 100) * 100;  
+      finalAmount = Math.round((finalTotal * exchangeRate) / 100) * 100;
     } else if (currency === "USD" || currency === "USDT") {
-    
+
       finalAmount = finalTotal / exchangeRate;
-      paid = paid / exchangeRate;  
+      paidConverted = paid / exchangeRate;
     }
 
     if (paymentMethod === "cash") {
@@ -83,13 +85,14 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
         return;
       }
 
-      const change = paid - finalAmount;
-      setCashBack(change);
+      const change = paidConverted - finalAmount;
+      // setCashBack(change);
+      setCashBack(Math.round(change * 100) / 100); 
     }
 
     const paymentData = {
       orderId: orderDetail.id,
-      amountPaid: paid,
+      amountPaid: paidConverted,
       paymentMethod: paymentMethod,
       currency: currency,
     };
@@ -417,17 +420,20 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
 
           </div>
 
-          <div className="mt-3">
-            <label className="block text-sm font-medium">Select Currency</label>
-            <Select onChange={(value) => {
-              setCurrency(value);
-              setExchangeRate(value === "KHR" ? USD_TO_KHR : 1);
-            }}
-              className="w-full mt-2">
-              <Select.Option value="USD">USD ($)</Select.Option>
-              <Select.Option value="KHR">Khmer Riel (៛)</Select.Option>
-            </Select>
-          </div>
+          {paymentMethod === "cash" && (
+            <div className="mt-3">
+              <label className="block text-sm font-medium">Select Currency</label>
+              <Select onChange={(value) => {
+                setCurrency(value);
+                setExchangeRate(value === "KHR" ? USD_TO_KHR : 1);
+              }}
+                className="w-full mt-2">
+                <Select.Option value="USD">USD ($)</Select.Option>
+                <Select.Option value="KHR">Khmer Riel (៛)</Select.Option>
+              </Select>
+            </div>
+          )}
+
           {paymentMethod === "membership" && (
             <div className="mt-3">
               <label className="block text-sm font-medium">Total Amount Due ({currency})</label>
@@ -462,18 +468,14 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
                 type="number"
                 placeholder={`Enter total amount due in ${currency}...`}
                 value={currency === "KHR"
-                  ? Math.round((finalTotal * exchangeRate) / 100) * 100 
-                  : finalTotal  
+                  ? Math.round((finalTotal * exchangeRate) / 100) * 100
+                  : finalTotal
                 }
                 onChange={(e) => setAmountDue(e.target.value)}
                 className="w-full mt-2 p-2 border rounded-md"
               />
             </div>
           )}
-
-
-
-
 
           {/* Discount Input */}
           <div className="mb-4">
