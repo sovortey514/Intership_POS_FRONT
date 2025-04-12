@@ -1,6 +1,5 @@
 const API_URL = "http://localhost:6060/admin";
 
-
 export const createTable = async (values, token) => {
     try {
         const response = await fetch(`${API_URL}/createtable`, {
@@ -75,8 +74,7 @@ export const deleteTablesById = async (id, token) => {
     }
 };
 
-
-  export const updateTables = async (id, values, token) => {
+export const updateTables = async (id, values, token) => {
     const response = await fetch(`${API_URL}/updateTable/${id}`, {
         method: "PUT",
         headers: {
@@ -86,8 +84,5 @@ export const deleteTablesById = async (id, token) => {
         body: JSON.stringify(values),
       });
     return response;
-  };
+};
   
-  
-
-

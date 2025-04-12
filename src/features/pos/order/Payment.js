@@ -51,7 +51,6 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
     }
   }, [orderDetails, discount]);
 
-
   const handlePaymentCash = async () => {
 
     const due = parseFloat(amountDue);
@@ -87,7 +86,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
 
       const change = paidConverted - finalAmount;
       // setCashBack(change);
-      setCashBack(Math.round(change * 100) / 100); 
+      setCashBack(Math.round(change * 100) / 100);
     }
 
     const paymentData = {
@@ -143,7 +142,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
       orderId: orderDetail.id,
       amountPaid: finalTotal,
       paymentMethod: paymentMethod,
-      membershipId: membershipDataById ? membershipDataById.membershipId : null,
+      membershipId: membershipDataById ? membershipDataById.id : null,
       totalAmount: finalTotal,
       discountAmount: discountAmount,
       tax: finalTotal * 0.05,
@@ -152,6 +151,10 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
     try {
       const token = localStorage.getItem("token");
       const response = await PaymentcashByMembershipCard(paymentData, token);
+
+      console.log("payment by Credit card", JSON.stringify(paymentData),  response)
+
+      await handleMembershipById(response.membershipId)
 
       if (response && !response.error) {
         setShowReceipt(true);
@@ -203,9 +206,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
     try {
       const token = localStorage.getItem("token");
       let response;
-
       if (paymentMethod === "membership") {
-
         response = await handlePaymentWithMemberCard(paymentData, token);
       } else {
         response = await handlePaymentCash(paymentData, token);
@@ -339,8 +340,10 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
 
       const token = localStorage.getItem("token");
       const result = await fetchMembership(token);
+      
 
       if (result) {
+      
         setMembershipData(result);
       } else {
         notification.error({
@@ -469,7 +472,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
                 placeholder={`Enter total amount due in ${currency}...`}
                 value={currency === "KHR"
                   ? Math.round((finalTotal * exchangeRate) / 100) * 100
-                  : finalTotal
+                  :  Math.round(finalTotal * 100) / 100
                 }
                 onChange={(e) => setAmountDue(e.target.value)}
                 className="w-full mt-2 p-2 border rounded-md"
@@ -477,22 +480,23 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
             </div>
           )}
 
-          {/* Discount Input */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium">Apply Discount (%)</label>
-            <Input
-              type="number"
-              placeholder="Enter discount percentage..."
-              value={discount}
-              onChange={(e) => {
-                let value = parseFloat(e.target.value);
-                if (value < 0) value = 0;
-                if (value > 100) value = 100;
-                setDiscount(value);
-              }}
-              className="w-full mt-2 p-2 border rounded-md"
-            />
-          </div>
+          {paymentMethod === "cash" && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Apply Discount (%)</label>
+              <Input
+                type="number"
+                placeholder="Enter discount percentage..."
+                value={discount}
+                onChange={(e) => {
+                  let value = parseFloat(e.target.value);
+                  if (value < 0) value = 0;
+                  if (value > 100) value = 100;
+                  setDiscount(value);
+                }}
+                className="w-full mt-2 p-2 border rounded-md"
+              />
+            </div>
+          )}
 
           {paymentMethod === "cash" && (
             <div className="mb-4">
@@ -513,6 +517,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
                 Membership Card Number
               </label>
 
+            
               <Select
                 showSearch
                 placeholder="Select Membership Card Number"
@@ -524,6 +529,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
                 className="w-full mt-2 p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 bordered={false}
               >
+
 
                 {membershipData.map((membership) => (
                   <Option key={membership.id} value={membership.id}>
