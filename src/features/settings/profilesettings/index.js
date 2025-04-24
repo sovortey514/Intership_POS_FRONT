@@ -29,9 +29,7 @@ const ProfileSettings = ({ userId }) => {
         const response = await fetch(`http://localhost:6060/auth/users/${userId}`);
         if (response.ok) {
           const userData = await response.json();
-          // Log the fetched data to the console
-          console.log('Fetched user data:', userData);
-          
+    
           setProfile({
             name: userData.name || '',
             username: userData.username || '', // Assuming 'username' should be used for email

@@ -141,7 +141,7 @@ const TotalAsset = () => {
   };
 
   const handleSearchClick = () => {
-    console.log("Search Term:", searchTerm);
+
   };
 
   useEffect(() => {

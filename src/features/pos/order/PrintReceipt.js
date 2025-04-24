@@ -11,10 +11,16 @@ const OrderReceipt = ({ orderItems,
   orderDetails,
   paymentDataById,
   paymentDatas,
-  membershipData,
+  // membershipData,
+  membershipDataById,
   onClose, }) => {
 
   const receiptRef = useRef();
+
+  console.log("Membership Data:", membershipDataById);
+  // console.log("Membership Data:", paymentDataById);
+
+
 
   const handlePrint = useReactToPrint({
     content: () => receiptRef.current ? receiptRef.current : null,
@@ -77,19 +83,21 @@ const OrderReceipt = ({ orderItems,
             <span>{totalAmount.toFixed(2)} $</span>
           </div>
         </div>
-
-        {/* <div>CashBack: {paymentDataById?.cashBack || "N/A"}</div>
-        <div>Payment Method: {paymentDataById?.paymentMethod || "N/A"}</div>
-        <div>Amount Paid: {paymentDatas?.amountPaid || "N/A"}</div>
-        <div>Payment Date: {paymentDataById?.paymentDate ? new Date(paymentDataById.paymentDate).toLocaleDateString() : "N/A"}</div> */}
-        {paymentMethod === "cash" && (
+   
+        {paymentMethod === "cash" ? (
           <>
             <div>CashBack: {paymentDataById?.cashBack || "N/A"}</div>
             <div>Payment Method: {paymentDataById?.paymentMethod || "N/A"}</div>
             <div>Amount Paid: {paymentDatas?.amountPaid || "N/A"}</div>
             <div>Payment Date: {paymentDataById?.paymentDate ? new Date(paymentDataById.paymentDate).toLocaleDateString() : "N/A"}</div>
           </>
+        ) : (
+          <>
+            <div>CashBack: {membershipDataById?.balance || "N/A"}</div>
+          </>
         )}
+
+
         {/* 📌 Thank You Message */}
         <div className="text-center mt-4 text-xs text-gray-500">
           <p>Thank you for your order!</p>

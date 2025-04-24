@@ -60,7 +60,6 @@ export const deleteCagoryFoodDrinkById = async (id, token) => {
         Authorization: `Bearer ${token}`,
       },
     });
-    console.log("Response", response);
 
     if (!response.status === 200) {
       const errorMessage = await response.json();
@@ -156,8 +155,7 @@ export const deleteSubCagoryFoodDrinkById = async (id, token) => {
         Authorization: `Bearer ${token}`,
       },
     });
-    console.log("Response", response);
-
+  
     if (!response.status === 200) {
       const errorMessage = await response.json();
       console.error("Error deleting Cagory by ID:", errorMessage);
@@ -183,8 +181,7 @@ export const updateSubCategory = async (id, values, token) => {
     });
 
     const data = await response.json();
-    console.log("Update Subcategory Response:", data);
-
+  
     return response;
   } catch (error) {
     console.error("Error updating subcategory:", error);
@@ -245,8 +242,7 @@ export const fetchSize = async (token) => {
 export const createFood = async (values, token) => {
   try {
 
-    console.log("✅ Sending FormData to API:");
-
+   
     const response = await fetch(`${API_URL}/Createfoods`, {
       method: "POST",
       headers: {
@@ -261,7 +257,7 @@ export const createFood = async (values, token) => {
     }
 
     const data = await response.json();
-    console.log("✅ Food Created Successfully:", data);
+
     return data;
 
   } catch (error) {
@@ -316,7 +312,6 @@ export const uploadFoodImage = async (foodId, imageFile, token) => {
       data = { message: responseText }; // Default message for success
     }
 
-    console.log("✅ Image uploaded successfully:", data);
     return data;
   } catch (error) {
     console.error("🚨 Error uploading food image:", error.message);
@@ -354,8 +349,6 @@ export const deleteFoodsById = async (foodId, token) => {
       throw new Error("Food ID is required.");
     }
 
-    console.log("🗑️ Deleting Food with ID:", foodId);
-
     const response = await fetch(`${API_URL}/deletefoods/${foodId}`, {
       method: "DELETE",
       headers: {
@@ -381,7 +374,6 @@ export const deleteFoodsById = async (foodId, token) => {
     const text = await response.text();
     const data = text ? JSON.parse(text) : {}; 
 
-    console.log("✅ Food deleted successfully:", data);
     return data;
 
   } catch (error) {
@@ -400,15 +392,14 @@ export const updateFood = async (foodId, values, token) => {
           body: values,
       });
 
-      console.log("Raw Response Status:", response.status);
-
+  
       if (response.status === 204) { 
-          console.log("No content returned from server.");
+       
           return { message: "No content" };
       }
 
       const textResponse = await response.text();
-      console.log("Raw Response:", textResponse);
+
 
       if (!textResponse) {
           console.warn("Empty response from server. Returning default object.");
@@ -416,7 +407,6 @@ export const updateFood = async (foodId, values, token) => {
       }
 
       const data = JSON.parse(textResponse);
-      console.log("Update Food Response:", data);
 
       return data; 
   } catch (error) {

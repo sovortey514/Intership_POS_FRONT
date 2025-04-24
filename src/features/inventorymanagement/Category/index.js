@@ -84,7 +84,6 @@ function CategoryFoodManagement() {
   );
 
   const showEditModal = (record) => {
-    console.log("Editing food item:", record);
 
     if (!record || (!record.id && !record.foodId)) {
           message.error("Invalid record selected for editing.");
@@ -148,7 +147,6 @@ function CategoryFoodManagement() {
   };
 
   const showViewModal = (record) => {
-    console.log("📄 Viewing Record:", record);
     setSelectedCategory(record);
     setIsViewMode(true);
 
@@ -179,7 +177,6 @@ function CategoryFoodManagement() {
       sizeId: record.sizeName || "N/A",
     });
 
-    console.log("🔎 Food View Details:", form.getFieldsValue());
 
     setFileList(imageUrl ? [{ uid: "-1", name: "food_image", status: "done", url: imageUrl }] : []);
 
@@ -282,16 +279,13 @@ function CategoryFoodManagement() {
 
   const handleUpdate = async () => {
     try {
-      console.log("Editing Data before update:", editingData);
-
+ 
       if (!editingData || !editingData.id) {
         message.error(
           "Invalid item ID. Please select a valid category or subcategory."
         );
         return;
       }
-
-      console.log("Updating item with ID:", editingData.id);
 
       const values = await form.validateFields();
 
@@ -334,7 +328,7 @@ function CategoryFoodManagement() {
 
   const handledeleteCategory = async (categories) => {
     const response = await deleteCagoryFoodDrinkById(categories.id, token);
-    console.log(response);
+  
     if (response.ok) {
       fetchCategories();
       notification.success({
@@ -351,7 +345,7 @@ function CategoryFoodManagement() {
 
   const handledeleteSubCategory = async (subcategory) => {
     const response = await deleteSubCagoryFoodDrinkById(subcategory.id, token);
-    console.log(response);
+
     if (response.ok) {
       handlefetchSubcategory();
       notification.success({
@@ -392,12 +386,12 @@ function CategoryFoodManagement() {
 
   const handlefetchfoods = async () => {
     try {
-      console.log("📡 Sending request to fetch foods...");
+      
       const token = localStorage.getItem("token");
 
 
       const result = await fetchFoods(token);
-      console.log("🔄 Updated Food List:", result);
+      
 
       setFoods(result);
 
@@ -416,7 +410,7 @@ function CategoryFoodManagement() {
       const values = await form.validateFields();
       const token = localStorage.getItem("token");
 
-      console.log("📤 Extracted Form Values:", values);
+    
 
       const formattedDate = values.date ? values.date.format("YYYY-MM-DD") : null;
 
@@ -444,11 +438,9 @@ function CategoryFoodManagement() {
         foodPayload.append("subCategoryId", values.subCategoryId);
       }
 
-      console.log("📤 Sending Food Data to API:", foodPayload);
-
-
+   
       const createdFood = await createFood(foodPayload, token);
-      console.log("✅ Food Created Successfully:", createdFood);
+ 
 
       if (!createdFood.id) {
         throw new Error("❌ Food ID is missing from the API response.");
@@ -457,8 +449,7 @@ function CategoryFoodManagement() {
 
       if (fileList.length > 0) {
         const imageFile = fileList[0].originFileObj;
-        console.log("📤 Uploading food image:", imageFile);
-
+  
         try {
           const uploadResponse = await uploadFoodImage(createdFood.id, imageFile, token);
           if (uploadResponse.error) {
@@ -595,8 +586,6 @@ function CategoryFoodManagement() {
       const values = await form.validateFields();
       const token = localStorage.getItem("token");
 
-      console.log("📤 Extracted Form Values for Update:", values);
-
       const formattedDate = values.date ? values.date.format("YYYY-MM-DD") : null;
 
       if (!values.name || !values.price || !values.categoryId || !values.sizeId || !formattedDate) {
@@ -618,10 +607,9 @@ function CategoryFoodManagement() {
         foodPayload.append("subCategoryId", values.subCategoryId);
       }
 
-      console.log("📤 Sending Updated Food Data to API:", foodPayload);
-
+  
       const updatedFood = await updateFood(editingData.foodId, foodPayload, token);
-      console.log("✅ Food Updated Successfully:", updatedFood);
+
 
       if (!updatedFood || !updatedFood.id) {
         throw new Error("❌ Food ID is missing from the API response.");
@@ -630,8 +618,7 @@ function CategoryFoodManagement() {
       // ✅ Check if a new image is uploaded and update it
       if (fileList.length > 0 && fileList[0].originFileObj) {
         const imageFile = fileList[0].originFileObj;
-        console.log("📤 Uploading new food image:", imageFile);
-
+    
         try {
           const uploadResponse = await uploadFoodImage(updatedFood.id, imageFile, token);
           if (uploadResponse.error) {

@@ -242,7 +242,7 @@ const TotalAsset = () => {
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
-      console.log("Form values:", values);
+   
       let message, description, success;
 
       if (modalType === "category") {
@@ -323,9 +323,7 @@ const TotalAsset = () => {
   };
 
   const handleEdit = (assetDetails) => {
-    console.log(assetDetails);
-    console.log("Asset Details:", assetDetails);
-    console.log(assetDetails.category.name);
+
     setModalType("Material");
     setEditKey(assetDetails);
     form.setFieldsValue({
@@ -347,7 +345,6 @@ const TotalAsset = () => {
   };
 
   const handleDelete = async (assetDetails) => {
-    console.log("Deleting asset with id:", assetDetails.id);
 
     try {
       const token = localStorage.getItem("token"); 

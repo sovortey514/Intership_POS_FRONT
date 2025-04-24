@@ -89,8 +89,7 @@ const Order = () => {
 
       const token = localStorage.getItem("token");
       const result = await CancelOrder(id, token);
-      console.log('Order cancelled successfully', result);
-
+ 
       clearItem();
       handleFetchAllOrder();
       handleFetchAllOrder();
@@ -214,7 +213,6 @@ const Order = () => {
   );
 
   const removeItem = (data) => {
-    console.log("User item:", data);
 
     const updatedItems = orderItems.filter((item) => item.id !== data.id || data.foodId);
 

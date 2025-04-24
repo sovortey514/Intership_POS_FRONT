@@ -61,8 +61,6 @@ function TotalUser() {
           formData.append("file", files[i]);
           formData.append("userId", userId);
 
-          console.log("Uploading file:", files[i].name);
-
           const uploadResponse = await fetch(
             "http://localhost:6060/admin/upload_image",
             {
@@ -211,7 +209,7 @@ function TotalUser() {
         headers,
       });
       const result = await response.json();
-      console.log(result);
+
       if (result) {
         const filteredUsers = result.filter((user) => user.role !== "ADMIN");
         setUser(filteredUsers || []);
@@ -221,7 +219,7 @@ function TotalUser() {
           description: result.error,
         });
       }
-      console.log(result);
+   
     } catch (error) {
       console.error("Error fetching user:", error);
     }
@@ -339,11 +337,10 @@ function TotalUser() {
       const response = await fetch(
         `http://localhost:6060/auth/users/${userId}`
       );
-      console.log(response);
+ 
       if (response.ok) {
         const userData = await response.json();
-        console.log("Fetched user data:", userData);
-
+      
         setProfile({
           name: userData.name || "",
           username: userData.username || "", // Assuming 'username' should be used for email
@@ -383,9 +380,9 @@ function TotalUser() {
           role,
         }),
       });
-      console.log(response);
+   
       const responseData = await response.json();
-      console.log(responseData);
+     
       if (responseData.statusCode === 200) {
         notification.success({
           message: "Create Successful",
@@ -402,7 +399,7 @@ function TotalUser() {
           description: responseData.message,
           duration: 3,
         });
-        console.log(responseData);
+       
         setErrorMessage(response.message || "Registration failed");
       }
     } catch (error) {
@@ -467,7 +464,7 @@ function TotalUser() {
     setProfile((prev) => ({ ...prev, [updateType.toLowerCase()]: value }));
     setErrorMessage("");
     setRegisterObj({ ...registerObj, [updateType]: value });
-    console.log("registerObj ", registerObj);
+   
   };
 
   const handleClick = (userId) => {

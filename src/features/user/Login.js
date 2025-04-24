@@ -16,61 +16,6 @@ function Login() {
 
  
 
-    // const submitForm = async (e) => {
-    //     e.preventDefault();
-    //     setErrorMessage(""); // Clear any existing error message
-
-    //    // Check if username or password fields are empty
-    //    if (loginObj.username.trim() === "" || loginObj.password.trim() === "") {
-    //     return setErrorMessage("Username and password are required!");
-    // }
-
-    // // Check if password length is sufficient
-    // if (loginObj.password.trim().length < 6) {
-    //     return setErrorMessage("Password must be at least 6 characters long");
-    // }
-
-    //     // Check if password length is sufficient
-    //     if (loginObj.password.trim().length < 8) {
-    //         return setErrorMessage("Password must be at least 6 characters long");
-    //     }
-
-    //     setLoading(true);
-    //     try {
-    //         console.log("jbudhugfed")
-    //         const response = await fetch('http://localhost:6060/auth/signin', {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //             },
-    //             body: JSON.stringify({
-    //                 username: loginObj.username,
-    //                 password: loginObj.password,
-    //             }),
-    //         });
-
-    //         const data = await response.json();
-    //         console.log(data);
-    //         if (data.statusCode ===200) {
-
-    //             localStorage.setItem("token", data.token);
-    //             const user = JSON.parse(localStorage.getItem("user"));
-    //             localStorage.setItem("username", loginObj.username);
-     
-    //             console.log("Retrieved User Data:", user);
-
-    //             setLoading(false);
-    //             window.location.href = '/app/welcome';
-    //         } else {
-    //             setLoading(false);
-    //             setErrorMessage(data.error || "An error occurred during login.");
-    //         }
-    //     } catch (error) {
-    //         setLoading(false);
-    //         setErrorMessage("An error occurred");
-    //     }
-    // };
-
     const submitForm = async (e) => {
         e.preventDefault();
         setErrorMessage(""); // Clear any existing error message
@@ -85,8 +30,7 @@ function Login() {
     
         setLoading(true);
         try {
-            console.log("Attempting login...");
-    
+       
             const response = await fetch('http://localhost:6060/auth/signin', {
                 method: 'POST',
                 headers: {
@@ -99,8 +43,7 @@ function Login() {
             });
     
             const data = await response.json();
-            console.log("Server Response:", data);
-    
+       
             if (data.statusCode === 200) {
                 // Store token and username
                 localStorage.setItem("token", data.token);
@@ -117,7 +60,7 @@ function Login() {
                 if (userResponse.ok) {
                     const userData = await userResponse.json();
                     localStorage.setItem("userId", userData.id); // ✅ Store userId
-                    console.log("✅ User ID stored in localStorage:", userData.id);
+                  
                 } else {
                     console.error("❌ Failed to fetch user data after login");
                 }
@@ -142,7 +85,7 @@ function Login() {
     const updateFormValue = ({ updateType, value }) => {
         setErrorMessage("");
         setLoginObj({ ...loginObj, [updateType]: value });
-    console.log("registerObj ", loginObj )
+  
 
     };
 

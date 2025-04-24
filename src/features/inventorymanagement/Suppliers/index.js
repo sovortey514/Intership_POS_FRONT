@@ -278,7 +278,6 @@ const Suppliers = () => {
   useEffect(() => {
     handlefetchSuppliers();
   }, [])
-  console.log(suppliers)
 
   const handleDragEnd = (result) => {
     if (!result.destination) return;

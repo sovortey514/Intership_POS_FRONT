@@ -21,7 +21,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
   const [discount, setDiscount] = useState(0);
   const [membershipData, setMembershipData] = useState([]);
   const [completepayment, setPaymentData] = useState([]);
-  const [membershipDataById, setMembershipDataById] = useState([]);
+  const [membershipDataById, setMembershipDataById] = useState({});
   const [paymentDataById, setPaymentDataById] = useState({});
   const [payments, setpayment] = useState([]);
   const [paymentDatas, setPaymentDatas] = useState({})
@@ -152,11 +152,10 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
       const token = localStorage.getItem("token");
       const response = await PaymentcashByMembershipCard(paymentData, token);
 
-      console.log("payment by Credit card", JSON.stringify(paymentData),  response)
-
       await handleMembershipById(response.membershipId)
 
       if (response && !response.error) {
+
         setShowReceipt(true);
 
         if (onPaymentComplete) {
@@ -578,6 +577,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
                   paymentDatas={paymentDatas}
                   membershipDatas={membershipData}
                   paymentDataById={paymentDataById}
+                  membershipDataById={membershipDataById}
                   onClose={() => {
                     setShowReceipt(false);
                     onBack();

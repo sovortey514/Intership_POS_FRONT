@@ -63,9 +63,6 @@ function Register() {
           role: registerObj.role
         }),
       });
-
-      console.log({response})
-
       const responseData = await response.json();
       if (response.ok) {
         if (responseData.statusCode === 200) {
@@ -86,14 +83,13 @@ function Register() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    console.log( "onchange", e);
+   
     setRegisterObj((prev) => ({ ...prev, [name]: value }));
   };
 
   const updateFormValue = ({ updateType, value }) => {
     setErrorMessage("");
     setRegisterObj({ ...registerObj, [updateType]: value });
-    console.log("registerObj ", registerObj )
 
 };
 
