@@ -322,7 +322,7 @@ const TableManagement = () => {
             className="w-48 border-2 border-gray-300 rounded-lg focus:outline-none"
             prefix={<SearchOutlined />}
           />
-          <Button type="default" onClick={handleMergeTables} className="bg-blue-500 text-white hover:bg-blue-600 transition-all duration-300 rounded-lg">
+          <Button type="default" onClick={handleMergeTables} className="bg-pink-500 text-white hover:bg-pink-600 transition-all duration-300 rounded-lg">
             Merge Tables
           </Button>
           <Select

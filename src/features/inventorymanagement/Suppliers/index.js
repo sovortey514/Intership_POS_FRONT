@@ -140,6 +140,7 @@ const Suppliers = () => {
       notification.success({
         message: "Supplier Created",
         description: "The supplier was created successfully!",
+        duration:1,
       });
 
     } catch (error) {
@@ -147,6 +148,7 @@ const Suppliers = () => {
       notification.error({
         message: "Error Creating Supplier",
         description: error.message || "An error occurred while creating the supplier.",
+        duration:1,
       });
     }
   };
@@ -158,6 +160,7 @@ const Suppliers = () => {
         notification.error({
           message: "Authentication Error",
           description: "Please log in again.",
+          duration:1,
         });
         return;
       }
@@ -183,6 +186,7 @@ const Suppliers = () => {
         notification.success({
           message: "Supplier Updated",
           description: "The supplier was updated successfully!",
+          duration:1,
         });
 
         setSuppliers((prevSuppliers) =>
@@ -196,6 +200,7 @@ const Suppliers = () => {
         notification.error({
           message: "Error Updating Supplier",
           description: "Could not update supplier. Please try again.",
+          duration:1,
         });
       }
 
@@ -206,6 +211,7 @@ const Suppliers = () => {
       notification.error({
         message: "Error Updating Supplier",
         description: error.message || "An error occurred while updating the supplier.",
+        duration:1,
       });
     }
   };
@@ -252,6 +258,7 @@ const Suppliers = () => {
         notification.error({
           message: "Authentication Error",
           description: "Please log in again.",
+          duration:1,
         });
         return;
       }
@@ -272,6 +279,7 @@ const Suppliers = () => {
       notification.error({
         message: "Error fetching size",
         description: error.message || "An error occurred while fetching suppliers.",
+        duration:1,
       });
     }
   }

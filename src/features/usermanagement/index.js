@@ -530,7 +530,7 @@ function TotalUser() {
                   onError={handleImageError}
                 />
                 <button
-                  className="absolute bottom-0 right-0 bg-white text-yellow-500 p-2 rounded-full shadow-lg transition-colors duration-300 ease-in-out hover:text-yellow-600"
+                  className="absolute bottom-0 right-0 bg-white text-pink-500 p-2 rounded-full shadow-lg transition-colors duration-300 ease-in-out hover:text-pink-600"
                   aria-label="Edit Profile Picture"
                 >
                   <svg
@@ -604,7 +604,7 @@ function TotalUser() {
             <div className="border-t border-gray-300 mt-8 mb-8"></div>
           </TitleCard>
         ) : (
-          <TitleCard title={"Update Auditor"} topMargin="mt-4">
+          <TitleCard title={"Update Staff"} topMargin="mt-4">
             {userData.length !== 0 ? (
               <div className="p-4">
                 <form onSubmit={Editform} className="space-y-4">

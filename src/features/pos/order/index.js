@@ -34,8 +34,8 @@ const handlePrint = () => {
 const Order = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [visibleCount, setVisibleCount] = useState(8);
-  const [orderItems, setOrderItems] = useState([]); 
-  const [orderDetails, setOrderDetails] = useState(null); 
+  const [orderItems, setOrderItems] = useState([]);
+  const [orderDetails, setOrderDetails] = useState(null);
   const [isDineIn, setIsDineIn] = useState(true);
   const [showReceipt, setShowReceipt] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
@@ -51,7 +51,7 @@ const Order = () => {
   const [editingOrder, setEditingOrder] = useState(false);
   const [paymentbyselectTable, setPaymentBySelectTable] = useState(null)
   const [paymentDataById, setPaymentDataById] = useState({});
-  
+
 
   const clearItem = () => {
     setorder([]);
@@ -89,7 +89,7 @@ const Order = () => {
 
       const token = localStorage.getItem("token");
       const result = await CancelOrder(id, token);
- 
+
       clearItem();
       handleFetchAllOrder();
       handleFetchAllOrder();
@@ -354,7 +354,7 @@ const Order = () => {
         message: "Order Placed",
         description: "Your order has been placed successfully.",
       });
- 
+
       if (response.id) {
         handleFetchOrderById(response.id);
       } else {
@@ -594,7 +594,7 @@ const Order = () => {
 
           {/* Divider Line */}
           <hr className="border-t border-gray-300 my-3 w-full pb-4" />
-        {!showReceipt && !showPayment && (
+          {!showReceipt && !showPayment && (
             <div className="mb-4 mt-[-15px]">
               <h3 className="text-sm font-semibold mb-2">Select Table</h3>
               <Select
@@ -602,6 +602,7 @@ const Order = () => {
                 onChange={handleTableSelection}
                 placeholder="Select a Table"
                 className="w-full"
+              // disabled={showPayment || showReceipt}
               >
 
                 {tables
@@ -866,6 +867,13 @@ const Order = () => {
               block
               className="mt-1 text-sm py-2 bg-pink-500"
               onClick={() => {
+                if (!selectedTable) {
+                  notification.error({
+                    message: "Please select a table.",
+                    duration: 1,
+                  });
+                  return;
+                }
                 handlePlaceOrder();
                 setShowPayment(true);
               }}

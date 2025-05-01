@@ -20,10 +20,8 @@ const OrderReceipt = ({ orderItems,
   console.log("Membership Data:", membershipDataById);
   // console.log("Membership Data:", paymentDataById);
 
-
-
   const handlePrint = useReactToPrint({
-    content: () => receiptRef.current ? receiptRef.current : null,
+    content: () => receiptRef.current,
     documentTitle: "Order Receipt",
     onAfterPrint: () => console.log("Receipt printed successfully!"),
   });
@@ -83,7 +81,7 @@ const OrderReceipt = ({ orderItems,
             <span>{totalAmount.toFixed(2)} $</span>
           </div>
         </div>
-   
+
         {paymentMethod === "cash" ? (
           <>
             <div>CashBack: {paymentDataById?.cashBack || "N/A"}</div>

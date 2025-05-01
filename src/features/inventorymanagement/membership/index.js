@@ -359,7 +359,7 @@ function MembershipList() {
             </Form.Item>
 
             <Form.Item label="Balance ($)">
-              <Input type="number" value={viewMember.balance} disabled />
+              <Input type="number" value={viewMember.balance.toFixed(2)} disabled />
             </Form.Item>
           </Form>
         )}
@@ -370,7 +370,7 @@ function MembershipList() {
         open={isEditModalVisible}
         onOk={handleUpdateMember}
         onCancel={() => setIsEditModalVisible(false)}
-        okButtonProps={{ style: { backgroundColor: "#ffa500", borderColor: "#ffa500", color: "white" } }}
+        okButtonProps={{ style: {  backgroundColor: "#ec4899", borderColor: "#ec4899", color: "white" } }}
       >
         {editMember && (
           <Form layout="vertical">
@@ -409,7 +409,7 @@ function MembershipList() {
             </Form.Item>
 
             <Form.Item label="Balance ($)">
-              <Input type="number" value={editMember.balance} onChange={(e) => setEditMember({ ...editMember, balance: parseFloat(e.target.value) || 0 })} />
+              <Input type="number" value={editMember.balance.toFixed(2)} onChange={(e) => setEditMember({ ...editMember, balance: parseFloat(e.target.value) || 0 })} />
             </Form.Item>
           </Form>
         )}
