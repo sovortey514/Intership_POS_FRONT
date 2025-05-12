@@ -171,3 +171,4 @@ export const deleteFixedAssetById = async (id, token) => {
 
 
 
+

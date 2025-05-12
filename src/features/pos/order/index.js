@@ -3,7 +3,8 @@ import { Button, Dropdown, Menu, Input, notification, Select } from "antd";
 import { FaHamburger, FaPizzaSlice, FaGlassMartiniAlt, FaCookie, FaPepperHot } from "react-icons/fa";
 import { IoFastFoodOutline } from "react-icons/io5";
 import { ArrowRightOutlined, ArrowLeftOutlined, CloseOutlined } from "@ant-design/icons";
-
+import { useNavigate } from "react-router-dom";
+import { editOrder } from "../../../api/order/order";
 import { fetchPaymentById } from "../../../api/payment/payment";
 
 
@@ -51,6 +52,8 @@ const Order = () => {
   const [editingOrder, setEditingOrder] = useState(false);
   const [paymentbyselectTable, setPaymentBySelectTable] = useState(null)
   const [paymentDataById, setPaymentDataById] = useState({});
+  const navigate = useNavigate();
+
 
 
   const clearItem = () => {
@@ -396,6 +399,44 @@ const Order = () => {
     }
   };
 
+  const handleEditOrderSubmit = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!orderDetails || !selectedTable || orderItems.length === 0) {
+      return newFunction();
+    }
+    const payload = {
+      tableId: orderDetails.tableId,
+      items: orderItems.map((item) => ({
+        foodId: item.id,
+        quantity: item.quantity,
+      })),
+    };
+
+    try {
+
+      const result = await editOrder(orderDetails.id, payload);
+
+      if (result.error) {
+        notification.error(result.error);
+      } else {
+        notification.success("✅ Order updated successfully!");
+        setShowEditOrder(false);
+        setEditingOrder(null);
+        setShowPayment(true);
+      }
+
+    } catch (err) {
+      console.error("❌ Error:", err);
+      notification.error("❌ Failed to update order.");
+    }
+
+    function newFunction() {
+      notification.warning("⚠️ Please select a table and add at least one food item.");
+      return;
+    }
+  };
+
   const tax = subtotal * 0.05;
   const totalAmount = subtotal + tax;
 
@@ -405,17 +446,27 @@ const Order = () => {
     handlefetchfoods();
   }, []);
 
+
   return (
     <div className="flex p-6 gap-12">
 
       {!showEditOrder && (
         <>
           {showReceipt ? (
-            <Payment onBack={() => setShowPayment(false)} className="pl-10" />
+            <Payment
+              onBack={() => {
+                setShowPayment(false);
+                navigate("/pos-order");
+              }}
+              className="pl-10"
+            />
           ) : showPayment ? (
             <Payment
               orderDetails={orderDetails}
-              onBack={() => setShowPayment(false)}
+              onBack={() => {
+                setShowPayment(false);
+                navigate("/pos-order");
+              }}
               onPaymentComplete={() => {
                 setShowReceipt(true);
                 setShowPayment(false);
@@ -829,6 +880,7 @@ const Order = () => {
                         shape="round"
                         icon={<SaveOutlined />}
                         className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 text-sm w-auto min-w-[140px] flex items-center justify-center"
+                        onClick={handleEditOrderSubmit}
                       >
                         Update Order
                       </Button>

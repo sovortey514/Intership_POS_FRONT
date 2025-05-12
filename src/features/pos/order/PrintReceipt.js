@@ -17,21 +17,19 @@ const OrderReceipt = ({ orderItems,
 
   const receiptRef = useRef();
 
-  console.log("Membership Data:", membershipDataById);
-  // console.log("Membership Data:", paymentDataById);
-
-  const handlePrint = useReactToPrint({
-    content: () => receiptRef.current,
-    documentTitle: "Order Receipt",
-    onAfterPrint: () => console.log("Receipt printed successfully!"),
-  });
+  const handlePrint = () => {
+    setTimeout(() => {
+      window.print();
+    }, 300);
+  };
+  
 
   const { payment } = orderDetails || {};
   const paymentMethod = paymentDataById?.paymentMethod || orderDetails?.paymentMethod;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-[350px]" ref={receiptRef}>
+      <div ref={receiptRef} className="print-area bg-white p-6 rounded-lg shadow-lg w-[350px]">
 
         {/* 🏢 Business Information */}
         <div className="text-center mb-4">
@@ -41,7 +39,6 @@ const OrderReceipt = ({ orderItems,
           <p className="text-xs text-gray-500">Phone: +123 456 7890</p>
           <hr className="my-2" />
         </div>
-
 
         {/* 🧾 Receipt Details */}
         <div className="text-xs mb-2">
@@ -91,7 +88,7 @@ const OrderReceipt = ({ orderItems,
           </>
         ) : (
           <>
-            <div>CashBack: {membershipDataById?.balance || "N/A"}</div>
+            <div>balance: {membershipDataById?.balance ? `${membershipDataById.balance} $` : "N/A"}</div>
           </>
         )}
 

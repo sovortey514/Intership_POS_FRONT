@@ -183,6 +183,38 @@ export const completeOrder = async (id, token) => {
   }
 };
 
+export const editOrder = async (orderId, values, token) => {
+  try {
+    const response = await fetch(`${API_URL}/${orderId}/edit`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        tableId: values.tableId,
+        items: values.items
+      }),
+    });
+
+    const responseText = await response.text();
+
+    if (!response.ok) {
+      throw new Error(responseText || "Failed to update order");
+    }
+
+    return responseText ? JSON.parse(responseText) : {};
+
+  } catch (error) {
+    console.error("❌ Error editing order:", error.message);
+    return { error: error.message || "An error occurred" };
+  }
+};
+
+
+
+
+
+
 
 
 

@@ -53,7 +53,7 @@ function Header(){
             <div className="navbar sticky top-0 bg-base-100  z-10 shadow-md ">
 
                 <div className="flex-1">
-                    <label htmlFor="left-sidebar-drawer" className="btn  drawer-button lg:hidden bg-pink-500 hover:bg-yellow-600 text-white">
+                    <label htmlFor="left-sidebar-drawer" className="btn  drawer-button lg:hidden bg-pink-500 hover:bg-pink-300 text-white">
                         <Bars3Icon className="h-5 inline-block w-5" />
                     </label>
                     <h1 className="text-2xl font-semibold ml-2">{pageTitle}</h1>

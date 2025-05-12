@@ -7,13 +7,11 @@ import WalletIcon from '@heroicons/react/24/outline/WalletIcon'
 import ArrowRightOnRectangleIcon from '@heroicons/react/24/outline/ArrowRightOnRectangleIcon'
 import UserIcon from '@heroicons/react/24/outline/UserIcon'
 import Cog6ToothIcon from '@heroicons/react/24/outline/Cog6ToothIcon'
-// import KeyIcon from '@heroicons/react/24/outline/KeyIcon'
 import { useEffect, useState } from 'react'
 import { ChartBarIcon, ShoppingBagIcon ,DocumentDuplicateIcon,NewspaperIcon ,BanknotesIcon } from '@heroicons/react/24/solid';
 import { BuildingStorefrontIcon ,BellAlertIcon,BookmarkSquareIcon, DocumentCurrencyDollarIcon ,UserCircleIcon  } from '@heroicons/react/24/outline';
 const iconClasses = `h-6 w-6`
 const submenuIconClasses = `h-5 w-5`
-
 
 const fetchUserById = async () => {
   try {
@@ -108,29 +106,7 @@ const SidebarRoutes = () => {
               },
             ],
           },
-          // {
-          //   path: "",
-          //   icon: <DocumentTextIcon className={`${iconClasses} inline`} />,
-          //   name: "Asset Management",
-          //   submenu: [
-          //     {
-          //       path: "/app/assetmanagement-totalasset",
-          //       icon: <WalletIcon className={submenuIconClasses} />,
-          //       name: "Total Asset",
-          //     },
-          //     {
-          //       path: "/app/assetmanagement-assetcount",
-          //       icon: <DocumentTextIcon className={submenuIconClasses} />,
-          //       name: "Audit Asset",
-          //     },
-          //     {
-          //       path: "/app/assetmanagement-historyasset",
-          //       icon: <TableCellsIcon className={submenuIconClasses} />,
-          //       name: "History",
-          //     },
-          //   ],
-          // },
-          
+  
           {
             path: "/app/usermanagement",
             icon: <UserCircleIcon  className={iconClasses} />,
@@ -156,11 +132,7 @@ const SidebarRoutes = () => {
         ]);
       }else{
         setRoutes([
-          // {
-          //   path: "/app/dashboard",
-          //   icon: <Squares2X2Icon className={iconClasses} />,
-          //   name: "Dashboard",
-          // },
+   
           {
             path: "",
             icon: <DocumentTextIcon className={`${iconClasses} inline`} />,

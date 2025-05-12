@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Table, Card, Statistic, Button, Avatar, notification } from "antd";
 import { PrinterOutlined, LogoutOutlined } from "@ant-design/icons";
 import { fetchOrder } from "../../../api/order/order";
 import { fetchPayment } from "../../../api/payment/payment";
+import ShiftReport from "./shiftReport";
 
 const Shift = () => {
   const [orderData, setOrderData] = useState([]);
-  const user =localStorage.getItem("username");
+  const user = localStorage.getItem("username");
   const [shiftData, setShiftData] = useState({
-    name: user || "Default User", 
+    name: user || "Default User",
     avatar: "/Myprofile.png",
     date: "Mon, 8 May",
     time: "08:56 AM - 06:00 PM",
@@ -19,6 +20,14 @@ const Shift = () => {
     totalSales: 89,
     currentTime: "03:34:12",
   });
+
+  const [handlePrintData, setChildPrintMethod] = useState(null);
+
+  const handlePrint = () => {
+    if (handlePrintData) {
+      handlePrintData(); 
+    }
+  };
 
   const updateDateTime = () => {
     const now = new Date();
@@ -42,10 +51,32 @@ const Shift = () => {
     }));
   };
 
+  const handleExitShift = () => {
+    // Reset shift data
+    setShiftData((prevState) => ({
+      ...prevState,
+      totalOrders: 0,
+      cashSales: "0 $",
+      creditSales: "0 $",
+      MembershipList: "0 $",
+      totalSales: 0,
+    }));
+
+    setOrderData([]);
+
+    const today = new Date().toDateString();
+    localStorage.setItem("shiftDate", today);
+
+    notification.success({
+      message: "Shift Ended",
+      description: "Your shift has been completed and data has been cleared.",
+    });
+  };
+
   const resetShiftIfNewDay = () => {
     const storedDate = localStorage.getItem("shiftDate");
     const today = new Date().toDateString();
-  
+
     if (storedDate !== today) {
       localStorage.setItem("shiftDate", today);
 
@@ -65,10 +96,10 @@ const Shift = () => {
 
     updateDateTime();
 
-
     const intervalId = setInterval(updateDateTime, 1000);
 
     return () => clearInterval(intervalId);
+
   }, []);
 
   const columns = [
@@ -113,7 +144,6 @@ const Shift = () => {
       }
 
     }
-
 
     catch (error) {
       console.error("Error fetching Order:", error);
@@ -195,18 +225,22 @@ const Shift = () => {
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       {/* Shift Summary Card */}
-      <Card className="shadow-md p-5 rounded-lg bg-white">
+      <Card className="shadow-md p-5 rounded-lg bg-white ">
         {/* Header Section */}
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold">Shift Summary</h2>
           <div className="flex space-x-2">
-            <Button icon={<PrinterOutlined />} className="bg-gray-200 text-gray-600">
+            <Button icon={<PrinterOutlined />} className="bg-gray-200 text-gray-600" onClick={handlePrint}>
               Print report
             </Button>
+            <div style={{ display: "none" }}>
+              <ShiftReport setChildPrintMethod={setChildPrintMethod} />
+            </div>
             <Button
               type="primary"
               icon={<LogoutOutlined />}
               className="bg-pink-500 text-gray-200"
+              onClick={handleExitShift}
             >
               Exit Shift
             </Button>

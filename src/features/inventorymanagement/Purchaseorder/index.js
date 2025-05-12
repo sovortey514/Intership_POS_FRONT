@@ -61,6 +61,10 @@ const TotalAsset = () => {
   const [filteredData, setFilteredData] = useState(data);
   const [a, setA] = useState(0);
   const [assetById, setAssetById] = useState([]);
+  const [data1, setData1] = useState([]);
+  const [totalExpense, setTotalExpense] = useState(0);
+
+
 
   const [searchTerm, setSearchTerm] = useState("");
   const columns = (handleEdit, handleDelete) => [
@@ -210,6 +214,7 @@ const TotalAsset = () => {
 
       if (result && result.statusCode === 200) {
         setData(result.fixedAssets || []);
+        console.log("Material" ,result.fixedAssets);
       } else {
         console.error("Failed to fetch Materials:", result.error);
         notification.error({
@@ -225,9 +230,14 @@ const TotalAsset = () => {
       });
     }
   };
+
+ 
+
+
   useEffect(() => {
     getCategories();
     fetchMaterail();
+   
   }, []);
 
   const showModal = (type) => {

@@ -67,6 +67,11 @@ function CategoryFoodManagement() {
   const [size, setSize] = useState([]);
   const [fileList, setFileList] = useState([]);
   const token = localStorage.getItem("token");
+  const [filteredCategories, setFilteredCategories] = useState([]);
+
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
+
+
 
   const showCreateModal = () => {
     form.resetFields();
@@ -86,26 +91,26 @@ function CategoryFoodManagement() {
   const showEditModal = (record) => {
 
     if (!record || (!record.id && !record.foodId)) {
-          message.error("Invalid record selected for editing.");
-          return;
-        }
-    
-        setEditingData(record);
-        setIsViewMode(false);
-    
-        let type = "category";
-        if (record.parentCategory) {
-          type = "subcategory";
-        } else if (record.foodId || record.categoryName) {
-          type = "food";
-        }
+      message.error("Invalid record selected for editing.");
+      return;
+    }
+
+    setEditingData(record);
+    setIsViewMode(false);
+
+    let type = "category";
+    if (record.parentCategory) {
+      type = "subcategory";
+    } else if (record.foodId || record.categoryName) {
+      type = "food";
+    }
     setCreateType(type);
 
     // const matchedCategory = categories.find((cat) => cat.name === record.categoryName);
     // const matchedSubCategory = subCategories.find((sub) => sub.name === record.subCategoryName);
     // const matchedSize = size.find((s) => s.name === record.sizeName);
 
-     const matchedCategory = categories.find((cat) => cat.id === record.categoryId || cat.name === record.categoryName);
+    const matchedCategory = categories.find((cat) => cat.id === record.categoryId || cat.name === record.categoryName);
     const matchedSubCategory = subCategories.find((sub) => sub.id === record.subCategoryId || sub.name === record.subCategoryName);
     const matchedSize = size.find((s) => s.id === record.sizeId || s.name === record.sizeName);
 
@@ -279,7 +284,7 @@ function CategoryFoodManagement() {
 
   const handleUpdate = async () => {
     try {
- 
+
       if (!editingData || !editingData.id) {
         message.error(
           "Invalid item ID. Please select a valid category or subcategory."
@@ -328,7 +333,7 @@ function CategoryFoodManagement() {
 
   const handledeleteCategory = async (categories) => {
     const response = await deleteCagoryFoodDrinkById(categories.id, token);
-  
+
     if (response.ok) {
       fetchCategories();
       notification.success({
@@ -368,6 +373,8 @@ function CategoryFoodManagement() {
 
       if (result) {
         setCategories(result);
+        setFilteredCategories(result);
+        console.log("categories", result);
       } else {
         notification.error({
           message: "Failed to fetch categories",
@@ -386,12 +393,12 @@ function CategoryFoodManagement() {
 
   const handlefetchfoods = async () => {
     try {
-      
+
       const token = localStorage.getItem("token");
 
 
       const result = await fetchFoods(token);
-      
+
 
       setFoods(result);
 
@@ -410,7 +417,7 @@ function CategoryFoodManagement() {
       const values = await form.validateFields();
       const token = localStorage.getItem("token");
 
-    
+
 
       const formattedDate = values.date ? values.date.format("YYYY-MM-DD") : null;
 
@@ -438,9 +445,9 @@ function CategoryFoodManagement() {
         foodPayload.append("subCategoryId", values.subCategoryId);
       }
 
-   
+
       const createdFood = await createFood(foodPayload, token);
- 
+
 
       if (!createdFood.id) {
         throw new Error("❌ Food ID is missing from the API response.");
@@ -449,7 +456,7 @@ function CategoryFoodManagement() {
 
       if (fileList.length > 0) {
         const imageFile = fileList[0].originFileObj;
-  
+
         try {
           const uploadResponse = await uploadFoodImage(createdFood.id, imageFile, token);
           if (uploadResponse.error) {
@@ -482,7 +489,7 @@ function CategoryFoodManagement() {
 
       const response = await deleteFoodsById(food.foodId, token);
 
-    
+
       await handlefetchfoods();
 
       notification.success({
@@ -502,11 +509,11 @@ function CategoryFoodManagement() {
 
   const handlefetchSubcategory = async () => {
     try {
-     
+
       const token = localStorage.getItem("token");
       const result = await fetchSubcategory(token);
 
-  
+
       if (result) {
         setSubcategories(result);
       } else {
@@ -551,7 +558,7 @@ function CategoryFoodManagement() {
 
   const handlefetchSize = async () => {
     try {
-     
+
       const token = localStorage.getItem("token");
 
       if (!token) {
@@ -563,7 +570,7 @@ function CategoryFoodManagement() {
       }
 
       const result = await fetchSize(token);
-    
+
       if (JSON.stringify(size) !== JSON.stringify(result)) {
         setSize(result);
       }
@@ -607,7 +614,7 @@ function CategoryFoodManagement() {
         foodPayload.append("subCategoryId", values.subCategoryId);
       }
 
-  
+
       const updatedFood = await updateFood(editingData.foodId, foodPayload, token);
 
 
@@ -618,7 +625,7 @@ function CategoryFoodManagement() {
       // ✅ Check if a new image is uploaded and update it
       if (fileList.length > 0 && fileList[0].originFileObj) {
         const imageFile = fileList[0].originFileObj;
-    
+
         try {
           const uploadResponse = await uploadFoodImage(updatedFood.id, imageFile, token);
           if (uploadResponse.error) {
@@ -643,7 +650,56 @@ function CategoryFoodManagement() {
       console.error("🚨 Error updating food:", error);
       message.error(error.message || "An error occurred. Please try again.");
     }
-};
+  };
+
+  const handleCategoryFilter = (e) => {
+    if (e.key === "all") {
+      setFilteredCategories(categories);
+      return;
+    }
+    const selected = categories.find((cat) => cat.id === parseInt(e.key));
+    if (selected) {
+      setFilteredCategories([selected]); // filter by selected name
+    }
+
+    setSelectedCategoryId(e.key);
+  };
+
+  const menu = (
+    <Menu onClick={handleCategoryFilter}>
+      <Menu.Item key="all">Show All</Menu.Item>
+      {categories.map((cat) => (
+        <Menu.Item key={cat.id}>{cat.name}</Menu.Item>
+      ))}
+    </Menu>
+  );
+
+  useEffect(() => {
+  const query = searchQuery.toLowerCase();
+
+  let filtered = [...categories];
+
+  // Filter by selected category (dropdown)
+  if (selectedCategoryId !== "all") {
+    filtered = filtered.filter(
+      (cat) => cat.id === parseInt(selectedCategoryId)
+    );
+  }
+
+  // Filter by search query (name or date)
+  filtered = filtered.filter((cat) => {
+    const nameMatch = cat.name.toLowerCase().includes(query);
+    const dateString = new Date(cat.create_at).toLocaleDateString(); // e.g., "2/19/2025"
+    const dateMatch =
+      cat.create_at.toLowerCase().includes(query) || dateString.includes(query);
+    return nameMatch || dateMatch;
+  });
+
+  setFilteredCategories(filtered);
+}, [searchQuery, selectedCategoryId, categories]);
+
+
+
 
   useEffect(() => {
     fetchCategories();
@@ -746,30 +802,32 @@ function CategoryFoodManagement() {
                     prefix={<SearchOutlined />}
                     allowClear
                     style={{ width: 250 }}
-                    value={searchQuery}
+                    kjvalue={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
 
-                  <Button
-                    icon={<FilterOutlined />}
-                    style={{
-                      borderRadius: "8px",
-                      border: "1px solid #ff4d94",
-                      color: "#ff4d94",
-                      backgroundColor: "white",
-                      fontWeight: "600",
-                      padding: "8px 16px",
-                      transition: "all 0.3s ease-in-out",
-                    }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#ffedf5")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.backgroundColor = "white")
-                    }
-                  >
-                    Filter Category
-                  </Button>
+                  <Dropdown overlay={menu} trigger={['click']}>
+                    <Button
+                      icon={<FilterOutlined />}
+                      style={{
+                        borderRadius: "8px",
+                        border: "1px solid #ff4d94",
+                        color: "#ff4d94",
+                        backgroundColor: "white",
+                        fontWeight: "600",
+                        padding: "8px 16px",
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.backgroundColor = "#ffedf5")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor = "white")
+                      }
+                    >
+                      Filter Category
+                    </Button>
+                  </Dropdown>
+
 
                   {currentView === "food" && (
                     <Dropdown overlay={sizeMenu} trigger={["click"]}>
@@ -997,7 +1055,7 @@ function CategoryFoodManagement() {
               ]}
               dataSource={
                 currentView === "category"
-                  ? categories
+                  ? filteredCategories
                   : currentView === "subcategory"
                     ? subCategories.map((sub) => ({
                       ...sub,

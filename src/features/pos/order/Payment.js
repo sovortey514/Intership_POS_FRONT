@@ -1,5 +1,7 @@
 
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
 import { Button, Input, Radio, Select, Alert, notification } from "antd";
 import { CreditCardOutlined, DollarOutlined, IdcardOutlined } from "@ant-design/icons";
 import OrderReceipt from "./PrintReceipt";
@@ -33,6 +35,8 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
 
   const USD_TO_KHR = 4100;
   const [exchangeRate, setExchangeRate] = useState(USD_TO_KHR);
+  const navigate = useNavigate();
+
 
   useEffect(() => {
     if (orderDetails) {
@@ -339,10 +343,10 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
 
       const token = localStorage.getItem("token");
       const result = await fetchMembership(token);
-      
+
 
       if (result) {
-      
+
         setMembershipData(result);
       } else {
         notification.error({
@@ -436,6 +440,39 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
             </div>
           )}
 
+          {paymentMethod === "card" && (
+            <div className="mt-3">
+              <label className="block text-sm font-medium">Select Currency</label>
+
+              <Select
+                onChange={(value) => {
+                  setCurrency(value);
+                  setExchangeRate(value === "KHR" ? USD_TO_KHR : 1);
+                }}
+                className="w-full mt-2"
+                value={currency}
+              >
+                <Select.Option value="USD">USD ($)</Select.Option>
+                <Select.Option value="KHR">Khmer Riel (៛)</Select.Option>
+              </Select>
+
+              {/* Big image display */}
+              {currency && (
+                <div className="flex items-center gap-4 mt-6">
+                  <img
+                    src={currency === "USD" ? "/AC_USD.png" : "/AC_Khmer.png"}
+                    alt={currency}
+                    className="object-contain"
+                    style={{ width: "200px", height: "200px" }} // ⬅️ Bigger image
+                  />
+                  <span className="text-lg font-bold">
+                    {currency === "USD" ? "USD ($)" : "Khmer Riel (៛)"}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
           {paymentMethod === "membership" && (
             <div className="mt-3">
               <label className="block text-sm font-medium">Total Amount Due ({currency})</label>
@@ -471,7 +508,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
                 placeholder={`Enter total amount due in ${currency}...`}
                 value={currency === "KHR"
                   ? Math.round((finalTotal * exchangeRate) / 100) * 100
-                  :  Math.round(finalTotal * 100) / 100
+                  : Math.round(finalTotal * 100) / 100
                 }
                 onChange={(e) => setAmountDue(e.target.value)}
                 className="w-full mt-2 p-2 border rounded-md"
@@ -516,7 +553,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
                 Membership Card Number
               </label>
 
-            
+
               <Select
                 showSearch
                 placeholder="Select Membership Card Number"
@@ -559,7 +596,6 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
             </Button>
 
           </div>
-
 
           {showReceipt && (
             <>

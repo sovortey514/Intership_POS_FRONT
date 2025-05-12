@@ -8,12 +8,13 @@ import { fetchOrder } from "../../api/order/order"
 
 import { fetchuser } from "../../api/user/user"
 import staticMethods from 'antd/es/message';
+import { fetchMaterials } from "../../api/materail/materail"
 
 // Sample sales data for the pie chart
 const salesData = [
-  { name: 'Hot Coffee', value: 16.7, color: '#FF69B4' }, // Pink (Hot Pink)
-  { name: 'Latte', value: 33.3, color: '#D3D3D3' }, // Gray (Light Gray)
-  { name: 'Pizza', value: 50.0, color: '#FFC0CB' }, // Lighter Pink (Optional)
+  { name: 'Hot Coffee', value: 16.7, color: '#FF69B4' },
+  { name: 'Latte', value: 33.3, color: '#D3D3D3' },
+  { name: 'Pizza', value: 50.0, color: '#FFC0CB' },
 ];
 
 const lineChartData = [
@@ -25,8 +26,6 @@ const lineChartData = [
   { day: 'Sat', sales: 15 },
   { day: 'Sun', sales: 18 },
 ];
-
-
 
 // Sample ordered menus data
 const topMenus = [
@@ -42,14 +41,9 @@ const Dashboard = () => {
 
   const [topMenus, setTopMenus] = useState([]);
   const [salesData, setSalesData] = useState([]);
-
-  const [stats, setStats] = useState([
-    // { title: 'Users', value: 4, image: '/user.png' },
-    // { title: 'Menus', value: 18, image: '/menu.png' },
-    // { title: 'Expen', value: 5, image: '/order.png' },
-    { title: 'Income', value: 500, image: '/revenue.png' },
-  ]);
-
+  const [data1, setData1] = useState([]);
+  const [totalExpense, setTotalExpense] = useState(0);
+  const [stats, setStats] = useState([]);
 
   const handlefetchfoods = async () => {
     try {
@@ -88,7 +82,7 @@ const Dashboard = () => {
 
         const user = { title: 'Users', value: result.length, image: '/user.png' };
 
-      setStats((prevStats) => [...prevStats, user]);
+        setStats((prevStats) => [...prevStats, user]);
 
       } else {
         notification.error({
@@ -119,7 +113,7 @@ const Dashboard = () => {
       }
 
       const result = await fetchOrder(token);
-     
+
 
       const totalSales = result.reduce((total, order) => {
         return total + order.orderItems.reduce((itemTotal, item) => {
@@ -151,8 +145,8 @@ const Dashboard = () => {
 
       const newSalesData = topOrderedFoods.map(food => ({
         name: food.name,
-        value: food.count * 2, 
-        color: getRandomPinkColor(), 
+        value: food.count * 2,
+        color: getRandomPinkColor(),
       }));
       setSalesData(newSalesData);
       setTopMenus(topMenus);
@@ -169,21 +163,66 @@ const Dashboard = () => {
 
   const getRandomPinkColor = () => {
     const pinkShades = [
-    
+
       '#E69DB8',
       '#FFD0C7',
       '#EC7FA9',
     ];
 
-   
+
     const randomIndex = Math.floor(Math.random() * pinkShades.length);
     return pinkShades[randomIndex];
+  };
+
+  const handlefetchtotalprice = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const result = await fetchMaterials(token);
+
+      if (result && result.statusCode === 200) {
+        const assets = result.fixedAssets || [];
+
+        setData1(assets);
+
+        const totalPrice = assets.reduce((sum, item) => {
+          return sum + (Number(item.price) || 0);
+        }, 0);
+
+        console.log("💰 Total Price:", totalPrice);
+
+        setTotalExpense(totalPrice);
+
+        // Create the expense stat object and add to stats
+        const expenseStat = {
+          title: 'Expense',
+          value: totalPrice,
+          image: '/revenue.png',
+        };
+
+        setStats((prevStats) => [...prevStats, expenseStat]);
+
+      } else {
+        console.error("Failed to fetch Materials:", result.error);
+        notification.error({
+          message: "Failed to fetch Materials",
+          description: result.error || "Unknown error",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching Materials:", error);
+      notification.error({
+        message: "Error fetching Materials",
+        description: error.message || "An unknown error occurred.",
+      });
+    }
   };
 
   useEffect(() => {
     handlefetchfoods();
     handleFetchAllOrder();
     handlefetchusers();
+    handlefetchtotalprice();
   }, []);
 
 
@@ -217,10 +256,17 @@ const Dashboard = () => {
           />
         </Col>
         <Col span={2}>
-          <Button type="primary" icon={<ReloadOutlined />} onClick={() => window.location.reload()}>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={() => window.location.reload()}
+            className="bg-pink-500 border-pink-500 text-white hover:bg-pink-600 hover:border-pink-600"
+            type="default"
+          >
             Refresh
           </Button>
         </Col>
+
+
       </Row>
 
       {/* 📊 Statistics Cards */}
@@ -286,7 +332,7 @@ const Dashboard = () => {
                     onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
                   >
                     <Tag
-                      color="pink" 
+                      color="pink"
                       style={{
                         fontSize: '18px',
                         fontWeight: 'bold',
@@ -356,7 +402,7 @@ const Dashboard = () => {
                   borderRadius: 8,
                   padding: 10,
                 }}
-              /> 
+              />
 
               <Legend align="center" verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: '14px', fontWeight: 'bold' }} />
             </PieChart>
