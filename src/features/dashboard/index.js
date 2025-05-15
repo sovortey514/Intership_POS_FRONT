@@ -4,7 +4,7 @@ import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { PieChart, Pie, Cell, Tooltip, Legend, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { fetchFoods } from "../../api/Food_Category/food_category"
 
-import { fetchOrder } from "../../api/order/order"
+import { fetchOrder ,fetchOrders} from "../../api/order/order"
 
 import { fetchuser } from "../../api/user/user"
 import staticMethods from 'antd/es/message';
@@ -112,7 +112,7 @@ const Dashboard = () => {
         return;
       }
 
-      const result = await fetchOrder(token);
+      const result = await fetchOrders(token);
 
 
       const totalSales = result.reduce((total, order) => {

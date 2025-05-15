@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Table, Card, Statistic, Button, Avatar, notification } from "antd";
 import { PrinterOutlined, LogoutOutlined } from "@ant-design/icons";
-import { fetchOrder } from "../../../api/order/order";
+import { fetchOrders } from "../../../api/order/order";
 import { fetchPayment } from "../../../api/payment/payment";
 import ShiftReport from "./shiftReport";
 
@@ -122,7 +122,7 @@ const Shift = () => {
         return;
       }
 
-      const result = await fetchOrder(token);
+      const result = await fetchOrders(token);
 
       if (result && result.length > 0) {
         const formattedOrders = result.map((order, index) => ({
@@ -165,7 +165,7 @@ const Shift = () => {
         return;
       }
 
-      const result = await fetchOrder(token);
+      const result = await fetchOrders(token);
 
       if (result) {
         let totalCashSales = 0;

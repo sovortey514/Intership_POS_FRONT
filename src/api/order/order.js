@@ -27,6 +27,30 @@ export const placetoOrder = async (values, token) => {
 
 export const fetchOrder = async (token) => {
   try {
+    const response = await fetch(`${API_URL}/getallorder`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        // Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorMessage = await response.json();
+      console.error("Error fetching Order:", errorMessage);
+      throw new Error(errorMessage.message || "Failed to fetch Order.");
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error("Error fetching Order:", error);
+    throw new Error(error.message || "An unknown error occurred.");
+  }
+};
+
+export const fetchOrders = async (token) => {
+  try {
     const response = await fetch(`${API_URL}/getallorders`, {
       method: "GET",
       headers: {

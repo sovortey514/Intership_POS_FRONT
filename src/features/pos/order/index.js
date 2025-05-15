@@ -163,6 +163,7 @@ const Order = () => {
       if (orderDetails && Array.isArray(orderDetails) && orderDetails.length > 0) {
         const order = orderDetails[0];
         setOrderDetails(order);
+        console.log("order", order);
         localStorage.setItem("orderDetails", JSON.stringify(order));
         setShowPayment(true);
 
@@ -420,7 +421,12 @@ const Order = () => {
       if (result.error) {
         notification.error(result.error);
       } else {
+
         notification.success("✅ Order updated successfully!");
+        if (result) {
+        setOrderDetails(result); 
+        console.log("object", result);
+      }
         setShowEditOrder(false);
         setEditingOrder(null);
         setShowPayment(true);
