@@ -12,7 +12,7 @@ import { fetchMembershipById, fetchMembership } from "../../../api/membership/me
 import { fetchPaymentById, fetchPayment } from "../../../api/payment/payment";
 
 const { Option } = Select;
-const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
+const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel }) => {
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [amountDue, setAmountDue] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
@@ -36,7 +36,6 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
   const USD_TO_KHR = 4100;
   const [exchangeRate, setExchangeRate] = useState(USD_TO_KHR);
   const navigate = useNavigate();
-
 
   useEffect(() => {
     if (orderDetails) {
@@ -579,9 +578,8 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
           )}
 
           <div className="flex justify-between mt-5">
-            <Button onClose={() => {
-              setShowReceipt(false);
-              onBack();
+            <Button onClick={() => {
+              if (onCancel) onCancel();
             }} className="bg-gray-500 text-white px-4 py-2 rounded-md">
               Cancel
             </Button>
@@ -616,7 +614,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete }) => {
                   membershipDataById={membershipDataById}
                   onClose={() => {
                     setShowReceipt(false);
-                    onBack();
+                    onCancel()
                   }}
                 />
               )}

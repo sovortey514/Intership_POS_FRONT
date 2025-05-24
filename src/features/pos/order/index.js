@@ -1,12 +1,13 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext, } from "react";
 import { Button, Dropdown, Menu, Input, notification, Select } from "antd";
 import { FaHamburger, FaPizzaSlice, FaGlassMartiniAlt, FaCookie, FaPepperHot } from "react-icons/fa";
 import { IoFastFoodOutline } from "react-icons/io5";
 import { ArrowRightOutlined, ArrowLeftOutlined, CloseOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { editOrder } from "../../../api/order/order";
 import { fetchPaymentById } from "../../../api/payment/payment";
-
+// import { OrderProvider, useOrder } from "../OrderContext";
+//import  TableManagement from "../table/index";
 
 
 import { placetoOrder, FetchOrderById, fetchOrder, CancelOrder } from "../../../api/order/order";
@@ -33,6 +34,12 @@ const handlePrint = () => {
 };
 
 const Order = () => {
+  // const { orderIdFromTable } = useOrder();
+  const location = useLocation();
+
+  const passedOrderId = location.state?.orderId || null;
+  const passedTable = location.state?.table || null;
+
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [visibleCount, setVisibleCount] = useState(8);
   const [orderItems, setOrderItems] = useState([]);
@@ -44,7 +51,7 @@ const Order = () => {
   const [tables, setTables] = useState([]);
   const [order, setorder] = useState([]);
   const printRef = useRef(null);
-  const [selectedTable, setSelectedTable] = useState(null);
+  const [selectedTable, setSelectedTable] = useState(passedTable);
   const [showEditOrder, setShowEditOrder] = useState(false);
   const [showAllFoods, setShowAllFoods] = useState(false);
   const [isEditingOrder, setIsEditingOrder] = useState(false);
@@ -52,7 +59,12 @@ const Order = () => {
   const [editingOrder, setEditingOrder] = useState(false);
   const [paymentbyselectTable, setPaymentBySelectTable] = useState(null)
   const [paymentDataById, setPaymentDataById] = useState({});
+  const [orderId, setOrderId] = useState(passedOrderId);
   const navigate = useNavigate();
+
+    
+  //  const passedOrderId = location.state?.orderId || null;
+  // const passedTable = location.state?.table || null;
 
 
 
@@ -424,9 +436,9 @@ const Order = () => {
 
         notification.success("✅ Order updated successfully!");
         if (result) {
-        setOrderDetails(result); 
-        console.log("object", result);
-      }
+          setOrderDetails(result);
+          console.log("object", result);
+        }
         setShowEditOrder(false);
         setEditingOrder(null);
         setShowPayment(true);
@@ -450,19 +462,36 @@ const Order = () => {
     handlefetchTables();
     handleFetchAllOrder();
     handlefetchfoods();
+    // if (orderIdFromTable) {
+    //   handleFetchOrderById(orderIdFromTable);
+    // }
   }, []);
+
+  useEffect(() => {
+    handleFetchOrderById(orderId);
+  }, [orderId]);
 
 
   return (
     <div className="flex p-6 gap-12">
-
+      {/* <OrderProvider>
+        <Order />
+      </OrderProvider> */}
       {!showEditOrder && (
         <>
           {showReceipt ? (
             <Payment
               onBack={() => {
                 setShowPayment(false);
-                navigate("/pos-order");
+                setShowOrderDetail(false);
+              }}
+              onCancel={() => {
+                setShowReceipt(false);
+                setShowPayment(false);
+                setShowOrderDetail(false);
+                setOrderDetails(null);
+                 setOrderItems([]);
+                setSelectedTable(null);
               }}
               className="pl-10"
             />
@@ -471,7 +500,15 @@ const Order = () => {
               orderDetails={orderDetails}
               onBack={() => {
                 setShowPayment(false);
-                navigate("/pos-order");
+                setShowOrderDetail(false);
+              }}
+              onCancel={() => {
+                setShowReceipt(false);
+                setShowPayment(false);
+                setShowOrderDetail(false);
+                setOrderDetails(null);
+                setOrderItems([]);
+                setSelectedTable(null);
               }}
               onPaymentComplete={() => {
                 setShowReceipt(true);

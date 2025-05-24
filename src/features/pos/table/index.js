@@ -5,12 +5,14 @@ import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { SearchOutlined } from '@ant-design/icons';
 import { DragDropContext, Droppable, Draggable, } from "react-beautiful-dnd";
 import { useNavigate } from 'react-router-dom';
+// import { useOrder } from "../OrderContext";
 
 
 import { createTable, fetchTable, deleteTablesById, updateTables } from "../../../api/table/table";
 
 
 const TableManagement = () => {
+  //const { setOrderId } = useOrder();
 
   const navigate = useNavigate();
   const [filter, setFilter] = useState("all");
@@ -24,10 +26,20 @@ const TableManagement = () => {
   const token = localStorage.getItem("token");
   const [showPayment, setShowPayment] = useState(false);
 
-  const onClickTable = (table) => {
+  // const onClickTable = (table) => {
+  //   //setOrderId(table.orderId || null); 
+  //   navigate('/app/pos-order');
+  // };
 
-    navigate('/app/pos-order');
+  const onClickTable = (table) => {
+    if (table.orders && table.orders.length > 0) {
+      const orderId = table.orders[0].id;
+      navigate('/app/pos-order', { state: { orderId } });
+    } else {
+      navigate('/app/pos-order', { state: { table } });
+    }
   };
+
 
   const handleAddTable = () => {
     setIsModalVisible(true);
@@ -98,7 +110,6 @@ const TableManagement = () => {
     });
   };
 
-
   const handleCreateTable = async () => {
     // Validate table type and location
     if (!newTableType || !newTableLocation) {
@@ -152,7 +163,6 @@ const TableManagement = () => {
     }
   };
 
-
   const handlefetchTables = async () => {
     try {
 
@@ -171,6 +181,7 @@ const TableManagement = () => {
       if (JSON.stringify(tables) !== JSON.stringify(result)) {
         setTables(result);
       }
+      console.log("table", result);
     } catch (error) {
       console.error("🚨 Error fetching table:", error);
       notification.error({
@@ -259,14 +270,12 @@ const TableManagement = () => {
     }
   };
 
-
   const handleEditTable = (table) => {
     setEditingTable(table);
     setNewTableType(table.type);
     setNewTableLocation(table.location);
     setIsModalVisible(true);
   };
-
 
   const onDragEnd = (result) => {
     if (!result.destination) return;
@@ -293,7 +302,6 @@ const TableManagement = () => {
       }
     });
   };
-
 
   const filteredTables = tables.filter((table) => {
     const matchesStatus = filter === "all" || table.status === filter;
@@ -420,20 +428,10 @@ const TableManagement = () => {
                           </div>
                         </Popconfirm>
 
-
                       </div>
                       <span className="mt-2">
-                        {/* <button onClick={onClickTable}
-                            className={`text-xs px-2 py-1 rounded-full font-semibold ${table.orders.some(order => order.paymentStatus === 'UNPAID')
-                                ? 'bg-red-500 text-white' 
-                                : 'bg-green-500 text-white' 
-                              }`}
-                          >
-                            {table.orders.some(order => order.paymentStatus === 'UNPAID')
-                              ? 'Unpaid'
-                              : 'Order'}
-                          </button> */}
-                        <button onClick={onClickTable}
+                        <button
+                          onClick={() => onClickTable(table)}
                           className={`text-xs px-2 py-1 rounded-full font-semibold ${table.orders?.some(order => order.paymentStatus === 'UNPAID')
                             ? 'bg-red-500 text-white'
                             : 'bg-green-500 text-white'
