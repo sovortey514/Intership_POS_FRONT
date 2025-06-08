@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:6060/admin";
+const API_URL = "http://localhost:6060/auth";
 
 
 export const createFood_Category = async (values, token) => {

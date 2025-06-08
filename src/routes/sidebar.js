@@ -132,21 +132,49 @@ const SidebarRoutes = () => {
         ]);
       }else{
         setRoutes([
-   
+          {
+            path: "/app/dashboard",
+            icon: <Squares2X2Icon className={iconClasses} />,
+            name: "Dashboard",
+          },
           {
             path: "",
-            icon: <DocumentTextIcon className={`${iconClasses} inline`} />,
-            name: "Asset Management",
+            icon: <ChartBarIcon className={`${iconClasses} inline`} />,
+            name: "POS",
             submenu: [
-            
               {
-                path: "/app/assetmanagement-assetcount",
-                icon: <DocumentTextIcon className={submenuIconClasses} />,
-                name: "Audit Asset",
+                path: "/app/pos-order",
+                icon: <ShoppingBagIcon className={submenuIconClasses} />,
+                name: "Order",
               },
-            
+              {
+                path: "/app/pos-table",
+                icon: <TableCellsIcon className={submenuIconClasses} />,
+                name: "Table",
+              },
+              {
+                path: "/app/pos-shift",
+                icon: <DocumentDuplicateIcon className={submenuIconClasses} />,
+                name: "Shift Summery",
+              },
             ],
+            
           },
+   
+          // {
+          //   path: "",
+          //   icon: <DocumentTextIcon className={`${iconClasses} inline`} />,
+          //   name: "Asset Management",
+          //   submenu: [
+            
+          //     {
+          //       path: "/app/assetmanagement-assetcount",
+          //       icon: <DocumentTextIcon className={submenuIconClasses} />,
+          //       name: "Audit Asset",
+          //     },
+            
+          //   ],
+          // },
           {
             path: "",
             icon: <Cog6ToothIcon className={`${iconClasses} inline`} />,

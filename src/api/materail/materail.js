@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:6060/admin";
+const API_URL = "http://localhost:6060/auth";
 
 export const updateCategory = async (id, values, token) => {
   const response = await fetch(`${API_URL}/categories/${id}`, {

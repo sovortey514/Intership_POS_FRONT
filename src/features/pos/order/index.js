@@ -468,15 +468,15 @@ const Order = () => {
   }, []);
 
   useEffect(() => {
+    if (orderId) {
     handleFetchOrderById(orderId);
+  }
   }, [orderId]);
 
 
   return (
     <div className="flex p-6 gap-12">
-      {/* <OrderProvider>
-        <Order />
-      </OrderProvider> */}
+
       {!showEditOrder && (
         <>
           {showReceipt ? (

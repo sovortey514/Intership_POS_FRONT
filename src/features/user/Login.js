@@ -106,6 +106,7 @@ function Login() {
                                     updateType="username"
                                     containerStyle="mt-4"
                                     labelTitle="Username"
+                                    placeholder="Enter username"
                                     updateFormValue={updateFormValue}
                                 />
                                 <InputText
@@ -114,6 +115,7 @@ function Login() {
                                     updateType="password"
                                     containerStyle="mt-4"
                                     labelTitle="Password"
+                                    placeholder="Enter password"
                                     updateFormValue={updateFormValue}
                                 />
                             </div>
