@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from 'axios';
 
-import { Button, Input, Radio, Select, Alert, notification } from "antd";
+import { Button, Input, Radio, Select, Alert, notification, Modal } from "antd";
 import { CreditCardOutlined, DollarOutlined, IdcardOutlined } from "@ant-design/icons";
 import OrderReceipt from "./PrintReceipt";
 import { processPaymentcash, PaymentcashByMembershipCard, completeOrder } from "../../../api/order/order"
@@ -10,9 +11,10 @@ import { processPaymentcash, PaymentcashByMembershipCard, completeOrder } from "
 import { fetchMembershipById, fetchMembership } from "../../../api/membership/memberships"
 
 import { fetchPaymentById, fetchPayment } from "../../../api/payment/payment";
-
+import { getBakongQR } from '../../../api/payway/BakongPay';
+import QRCode from "qrcode";
 const { Option } = Select;
-const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel }) => {
+const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }) => {
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [amountDue, setAmountDue] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
@@ -32,10 +34,20 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel }) => {
   const [finalTotal, setFinalTotal] = useState(0);
   const [taxAmount, setTaxAmount] = useState(0);
   const [loadingReceipt, setLoadingReceipt] = useState(false);
+  const [transactionRef, setTransactionRef] = useState(null);
 
   const USD_TO_KHR = 4100;
   const [exchangeRate, setExchangeRate] = useState(USD_TO_KHR);
   const navigate = useNavigate();
+
+  const [md5, setMd5] = useState('');
+  const [qrData, setQrData] = useState(null);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  const [isQRModalVisible, setIsQRModalVisible] = useState(false);
+
+
 
   useEffect(() => {
     if (orderDetails) {
@@ -385,10 +397,72 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel }) => {
     }
   };
 
+  // Generate QR code and fetch Bakong QR details
+  const generateQRCode = async () => {
+    try {
+      const result = await getBakongQR(amountDue);
+      console.log("QR", result)
+
+      const canvas = document.getElementById("qrcode");
+      QRCode.toCanvas(canvas, result.qr, (error) => {
+        if (error) {
+          console.error("Error generating QR code:", error);
+        }
+      });
+
+      setMd5(result.md5);
+      setQrData(result.data);
+      checkTransactionStatus(result.md5);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // Check transaction status
+  const checkTransactionStatus = async (md5) => {
+    const url = "https://api-bakong.nbc.gov.kh/v1/check_transaction_by_md5";
+    const accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjoiMTAxYjAwY2Y0NGMwNDU1MSJ9LCJpYXQiOjE3NDk5OTc3NjUsImV4cCI6MTc1Nzc3Mzc2NX0.0QKkt3d8JfZ6Bco_FYivXsvmJDuNQSiswqivYK9gFKI";
+
+
+    console.log("Checking url", url);
+
+    try {
+      const res = await axios.post(
+        url,
+        { md5 },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (res.data.responseMessage === "Success") {
+        setSuccess(true);
+
+      } else {
+        //setTimeout(() => checkTransactionStatus(md5), 5000); 
+      }
+    } catch (err) {
+      setError(err.response ? err.response.data : err.message);
+      setTimeout(() => checkTransactionStatus(md5), 5000);
+    }
+  };
+
+
+  useEffect(() => {
+    if (paymentMethod === 'card') {
+      generateQRCode();
+      setIsQRModalVisible(true);
+    }
+  }, [paymentMethod]);
+
   useEffect(() => {
     handlefetchMemberships();
     handlefetcPayment();
   }, [])
+
 
   return (
     <div className="flex items-center justify-center w-full">
@@ -416,7 +490,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel }) => {
                 <DollarOutlined className="text-green-500 mr-2" /> Cash
               </Radio>
               <Radio value="card">
-                <CreditCardOutlined className="text-blue-500 mr-2" /> Credit Card
+                <CreditCardOutlined className="text-blue-500 mr-2" /> Bakong
               </Radio>
               <Radio value="membership">
                 <IdcardOutlined className="text-purple-500 mr-2" /> Membership Card
@@ -439,38 +513,20 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel }) => {
             </div>
           )}
 
-          {paymentMethod === "card" && (
-            <div className="mt-3">
-              <label className="block text-sm font-medium">Select Currency</label>
+          {paymentMethod === 'card' && (
+            <div className="mt-4 text-center">
+              <h3 className="text-md font-semibold mb-2">Scan to Pay with Bakong</h3>
 
-              <Select
-                onChange={(value) => {
-                  setCurrency(value);
-                  setExchangeRate(value === "KHR" ? USD_TO_KHR : 1);
-                }}
-                className="w-full mt-2"
-                value={currency}
-              >
-                <Select.Option value="USD">USD ($)</Select.Option>
-                <Select.Option value="KHR">Khmer Riel (៛)</Select.Option>
-              </Select>
+              {/* Display the amount */}
+              <p className="text-lg font-bold text-gray-800 mb-2">
+                Amount Due: $ {parseFloat(amountDue).toLocaleString()}
+              </p>
 
-              {/* Big image display */}
-              {currency && (
-                <div className="flex items-center gap-4 mt-6">
-                  <img
-                    src={currency === "USD" ? "/AC_USD.png" : "/AC_Khmer.png"}
-                    alt={currency}
-                    className="object-contain"
-                    style={{ width: "200px", height: "200px" }} // ⬅️ Bigger image
-                  />
-                  <span className="text-lg font-bold">
-                    {currency === "USD" ? "USD ($)" : "Khmer Riel (៛)"}
-                  </span>
-                </div>
-              )}
+              {/* QR Canvas */}
+              <canvas id="qrcode" className="mx-auto" />
             </div>
           )}
+
 
           {paymentMethod === "membership" && (
             <div className="mt-3">
@@ -514,6 +570,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel }) => {
               />
             </div>
           )}
+
 
           {paymentMethod === "cash" && (
             <div className="mb-4">

@@ -514,6 +514,12 @@ const Order = () => {
                 setShowReceipt(true);
                 setShowPayment(false);
               }}
+
+              onChange={() => {
+               setShowPayment(false);
+                setShowOrderDetail(false);
+              }}
+
             />
           ) : (
             <div className="w-3/5 pr-10 ml-[-25px] mt-[-25px]">
