@@ -11,8 +11,10 @@ import { processPaymentcash, PaymentcashByMembershipCard, completeOrder } from "
 import { fetchMembershipById, fetchMembership } from "../../../api/membership/memberships"
 
 import { fetchPaymentById, fetchPayment } from "../../../api/payment/payment";
-import { getBakongQR } from '../../../api/payway/BakongPay';
+import { getBakongQR , Paymentbakong} from '../../../api/payway/BakongPay';
 import QRCode from "qrcode";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const { Option } = Select;
 const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }) => {
   const [paymentMethod, setPaymentMethod] = useState("cash");
@@ -34,7 +36,6 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }
   const [finalTotal, setFinalTotal] = useState(0);
   const [taxAmount, setTaxAmount] = useState(0);
   const [loadingReceipt, setLoadingReceipt] = useState(false);
-  const [transactionRef, setTransactionRef] = useState(null);
 
   const USD_TO_KHR = 4100;
   const [exchangeRate, setExchangeRate] = useState(USD_TO_KHR);
@@ -44,10 +45,12 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }
   const [qrData, setQrData] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
+  
   const [isQRModalVisible, setIsQRModalVisible] = useState(false);
+  const [bakongTransaction, setBakongTransaction] = useState(null);
 
-
+  // toast.configure();
 
   useEffect(() => {
     if (orderDetails) {
@@ -400,7 +403,9 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }
   // Generate QR code and fetch Bakong QR details
   const generateQRCode = async () => {
     try {
+      setIsLoading(true);
       const result = await getBakongQR(amountDue);
+      
       console.log("QR", result)
 
       const canvas = document.getElementById("qrcode");
@@ -413,6 +418,11 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }
       setMd5(result.md5);
       setQrData(result.data);
       checkTransactionStatus(result.md5);
+
+      setIsLoading(false);
+
+
+
     } catch (err) {
       setError(err.message);
     }
@@ -420,12 +430,10 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }
 
   // Check transaction status
   const checkTransactionStatus = async (md5) => {
+    const token = localStorage.getItem("token");
     const url = "https://api-bakong.nbc.gov.kh/v1/check_transaction_by_md5";
     const accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjoiMTAxYjAwY2Y0NGMwNDU1MSJ9LCJpYXQiOjE3NDk5OTc3NjUsImV4cCI6MTc1Nzc3Mzc2NX0.0QKkt3d8JfZ6Bco_FYivXsvmJDuNQSiswqivYK9gFKI";
-
-
-    console.log("Checking url", url);
-
+    const amountWithTax = parseFloat((amountDue * 1.05).toFixed(2));
     try {
       const res = await axios.post(
         url,
@@ -438,15 +446,61 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }
         }
       );
 
+      console.log("data", res.data);
+
       if (res.data.responseMessage === "Success") {
+        
+
+        const bakongData = {
+        hash: res.data.hash,
+        fromAccountId: res.data.fromAccountId,
+        toAccountId: res.data.toAccountId,
+        currency: res.data.currency,
+        amount: res.data.amount,
+        description: res.data.description,
+        createdDateMs: res.data.createdDateMs,
+        acknowledgedDateMs: res.data.acknowledgedDateMs,
+        trackingStatus: res.data.trackingStatus,
+        receiverBank: res.data.receiverBank,
+        receiverBankAccount: res.data.receiverBankAccount,
+        instructionRef: res.data.instructionRef,
+        externalRef: res.data.externalRef,
+      };
+      setBakongTransaction(bakongData);
+      const paymentData = {
+        orderId: orderDetail.id,  
+        amountPaid: amountWithTax,  
+        paymentMethod: paymentMethod,  
+        status: "PAID",  
+        isSuccessful: true, 
+        paymentDate: new Date().toISOString(), 
+        bakong: bakongData,
+      };
+
+
+
+      console.log("Payment Data:", paymentData);
+       console.log("Payment Data:", bakongData);
+
+      await Paymentbakong(paymentData);
+
+        notification.success({
+                message: "Transaction successful!",
+                description: "Your Payment has been placed successfully.",
+              });
+    
         setSuccess(true);
+        setQrData(res.data);
+        console.log("Transaction successful:", res.data);
+
+     
 
       } else {
-        //setTimeout(() => checkTransactionStatus(md5), 5000); 
+        setTimeout(() => checkTransactionStatus(md5), 10000);
       }
     } catch (err) {
       setError(err.response ? err.response.data : err.message);
-      setTimeout(() => checkTransactionStatus(md5), 5000);
+      setTimeout(() => checkTransactionStatus(md5), 10000);
     }
   };
 
@@ -514,19 +568,27 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }
           )}
 
           {paymentMethod === 'card' && (
-            <div className="mt-4 text-center">
-              <h3 className="text-md font-semibold mb-2">Scan to Pay with Bakong</h3>
+            <div className="qrcode-container rounded-xl w-[250px] mx-auto">
+              <svg width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" className="rounded-md">
+                <path d="M 0 0 H 250 Q 250 0 250 8 V 50 H 0 V 0 Z" fill="#F44336" />
+                <text x="50%" y="20" font-size="16" fill="white" font-weight="bold" text-anchor="middle" alignment-baseline="middle">KHQR</text>
+                <polygon points="250,50 250,80 200,50" fill="#F44336" />
+                <text x="20" y="80" font-size="12" fill="#212121" font-weight="600" text-anchor="start" alignment-baseline="middle">
+                  VTFOOD
+                </text>
+                <text x="20" y="120" font-size="24" fill="#212121" font-weight="bold" text-anchor="start" alignment-baseline="middle">
+                  $ {parseFloat(amountDue).toLocaleString()}
+                </text>
+              </svg>
+              <div>
+                <canvas id="qrcode" className="mx-auto pb-" style={{ width: '100px', height: '100px' }} />
+              </div>
 
-              {/* Display the amount */}
-              <p className="text-lg font-bold text-gray-800 mb-2">
-                Amount Due: $ {parseFloat(amountDue).toLocaleString()}
-              </p>
-
-              {/* QR Canvas */}
-              <canvas id="qrcode" className="mx-auto" />
             </div>
-          )}
 
+
+
+          )}
 
           {paymentMethod === "membership" && (
             <div className="mt-3">
@@ -570,7 +632,6 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }
               />
             </div>
           )}
-
 
           {paymentMethod === "cash" && (
             <div className="mb-4">
