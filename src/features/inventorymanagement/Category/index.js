@@ -206,14 +206,14 @@ function CategoryFoodManagement() {
       };
       const data = await createFood_Category(payload, token);
       const newItem = {
-        key: data.id.toString(),
+        key: data.id,
         name: data.name,
         description: data.description,
         category: createType === "food" ? values.category : null,
         parentCategory:
           createType === "subcategory" ? values.parentCategory : null,
       };
-      fetchCategories();
+      await fetchCategories();
       if (createType === "food") {
         setFoods([...foods, newItem]);
       } else if (createType === "subcategory") {
@@ -687,13 +687,25 @@ function CategoryFoodManagement() {
   }
 
   // Filter by search query (name or date)
+  // filtered = filtered.filter((cat) => {
+  //   const nameMatch = cat.name.toLowerCase().includes(query);
+  //   const dateString = new Date(cat.create_at).toLocaleDateString(); // e.g., "2/19/2025"
+  //   const dateMatch =
+  //     cat.create_at.toLowerCase().includes(query) || dateString.includes(query);
+  //   return nameMatch || dateMatch;
+  // });
+
   filtered = filtered.filter((cat) => {
-    const nameMatch = cat.name.toLowerCase().includes(query);
-    const dateString = new Date(cat.create_at).toLocaleDateString(); // e.g., "2/19/2025"
-    const dateMatch =
-      cat.create_at.toLowerCase().includes(query) || dateString.includes(query);
-    return nameMatch || dateMatch;
-  });
+  const nameMatch = cat.name?.toLowerCase().includes(query) || false;
+
+  const dateString = new Date(cat.create_at).toLocaleDateString();
+  const dateMatch =
+    (typeof cat.create_at === 'string' && cat.create_at.toLowerCase().includes(query)) ||
+    dateString.includes(query);
+
+  return nameMatch || dateMatch;
+});
+
 
   setFilteredCategories(filtered);
 }, [searchQuery, selectedCategoryId, categories]);
