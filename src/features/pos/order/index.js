@@ -62,12 +62,6 @@ const Order = () => {
   const [orderId, setOrderId] = useState(passedOrderId);
   const navigate = useNavigate();
 
-    
-  //  const passedOrderId = location.state?.orderId || null;
-  // const passedTable = location.state?.table || null;
-
-
-
   const clearItem = () => {
     setorder([]);
     setOrderItems([]);

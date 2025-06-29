@@ -7,7 +7,7 @@ export async function getBakongQR(amountDue) {
   }
    const amountWithTax = parseFloat((amountDue * 1.05).toFixed(2));
   try {
-    const result = await KHQR.generate({
+    const result = KHQR.generate({
       tag: TAG.INDIVIDUAL, 
       accountID: "sovortey_sorporn@aclb",
       merchantName: "VTFOOD", 
@@ -45,7 +45,6 @@ export const Paymentbakong = async (paymentData) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // Authorization: `Bearer ${token}`,
       },
        body: JSON.stringify(paymentData),
     });
@@ -64,4 +63,26 @@ export const Paymentbakong = async (paymentData) => {
     throw new Error(error.message || "An unknown error occurred.");
   }
 };
+
+export const sendTelegramMessage = async (message) => {
+  const telegramApiUrl = `https://api.telegram.org/bot7128384877:AAHUWtKgeZ0ZayZxoSeVPpsAdtDp5mc0IPk/sendMessage`;
+
+  const payload = {
+    chat_id: '1040676915',
+    text: message,
+  };
+
+  try {
+    await fetch(telegramApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    console.error('Error sending message:', error);
+  }
+};
+
 

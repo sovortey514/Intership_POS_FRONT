@@ -4,18 +4,12 @@ import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { PieChart, Pie, Cell, Tooltip, Legend, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { fetchFoods } from "../../api/Food_Category/food_category"
 
-import { fetchOrder ,fetchOrders} from "../../api/order/order"
+import { fetchOrder, fetchOrders } from "../../api/order/order"
 
 import { fetchuser } from "../../api/user/user"
 import staticMethods from 'antd/es/message';
 import { fetchMaterials } from "../../api/materail/materail"
 
-// Sample sales data for the pie chart
-const salesData = [
-  { name: 'Hot Coffee', value: 16.7, color: '#FF69B4' },
-  { name: 'Latte', value: 33.3, color: '#D3D3D3' },
-  { name: 'Pizza', value: 50.0, color: '#FFC0CB' },
-];
 
 const lineChartData = [
   { day: 'Mon', sales: 5 },
@@ -27,13 +21,6 @@ const lineChartData = [
   { day: 'Sun', sales: 18 },
 ];
 
-// Sample ordered menus data
-const topMenus = [
-  { name: 'Caffe Latte', items: 4 },
-  { name: 'Hawaiian Pizza', items: 2 },
-  { name: 'Pumpkin Latte', items: 1 },
-  { name: 'Hot Americano', items: 1 },
-];
 
 const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -113,6 +100,7 @@ const Dashboard = () => {
       }
 
       const result = await fetchOrders(token);
+      console.log("fetched Orders:", result);
 
 
       const totalSales = result.reduce((total, order) => {
@@ -121,33 +109,47 @@ const Dashboard = () => {
         }, 0);
       }, 0);
 
-      const income = { title: 'Incomes', value: totalSales, image: '/revenue.png' };
+      const totalWithTax = parseFloat((totalSales + (totalSales * 0.05)).toFixed(2));
+
+      console.log('Total sales with 5% tax:', totalWithTax);
+
+      const income = { title: 'Incomes', value: totalWithTax, image: '/revenue.png' };
       setStats((prevStats) => [...prevStats, income]);
+
+
       const foodOrdersCount = result.reduce((acc, order) => {
-        order.orderItems.forEach(item => {
-          if (acc[item.foodName]) {
-            acc[item.foodName].count += item.quantity;
+        // Iterate over each food item in the order
+        order.orderItems.forEach(food => {
+          if (acc[food.food.name]) {
+            // If food exists, accumulate the quantity
+            acc[food.food.name].count += food.quantity;
           } else {
-            acc[item.foodName] = { name: item.foodName, count: item.quantity };
+            // If food doesn't exist, create a new entry
+            acc[food.food.name] = { name: food.food.name, count: food.quantity };
           }
         });
         return acc;
       }, {});
 
+      // Sort the food by count and take the top 4
       const topOrderedFoods = Object.values(foodOrdersCount)
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 4);
+        .sort((a, b) => b.count - a.count) // Sort by count in descending order
+        .slice(0, 4); // Take the top 4
 
+      // Create top menu data
       const topMenus = topOrderedFoods.map(food => ({
         name: food.name,
         items: food.count
       }));
+
 
       const newSalesData = topOrderedFoods.map(food => ({
         name: food.name,
         value: food.count * 2,
         color: getRandomPinkColor(),
       }));
+
+
       setSalesData(newSalesData);
       setTopMenus(topMenus);
 

@@ -10,9 +10,6 @@ function LeftSidebar(){
     const dispatch = useDispatch()
     const routes = SidebarRoutes();
 
-
-console.log(routes)
-
     const close = (e) => {
         document.getElementById('left-sidebar-drawer').click()
     }

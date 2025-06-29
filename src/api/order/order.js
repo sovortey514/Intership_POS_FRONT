@@ -51,7 +51,7 @@ export const fetchOrder = async (token) => {
 
 export const fetchOrders = async (token) => {
   try {
-    const response = await fetch(`${API_URL}/getallorders`, {
+    const response = await fetch(`${API_URL}/getallorder`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

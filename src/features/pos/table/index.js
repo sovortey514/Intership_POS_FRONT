@@ -26,20 +26,15 @@ const TableManagement = () => {
   const token = localStorage.getItem("token");
   const [showPayment, setShowPayment] = useState(false);
 
-  // const onClickTable = (table) => {
-  //   //setOrderId(table.orderId || null); 
-  //   navigate('/app/pos-order');
-  // };
 
   const onClickTable = (table) => {
-    if (table.orders && table.orders.length > 0) {
-      const orderId = table.orders[0].id;
-      navigate('/app/pos-order', { state: { orderId } });
-    } else {
-      navigate('/app/pos-order', { state: { table } });
-    }
+    const unpaidOrder = table.orders.find(order => order.paymentStatus !== 'PAID');
+    if (unpaidOrder) {
+    navigate('/app/pos-order', { state: { orderId: unpaidOrder.id } });
+  } else {
+    navigate('/app/pos-order', { state: { table } });
+  }
   };
-
 
   const handleAddTable = () => {
     setIsModalVisible(true);
@@ -181,7 +176,6 @@ const TableManagement = () => {
       if (JSON.stringify(tables) !== JSON.stringify(result)) {
         setTables(result);
       }
-      console.log("table", result);
     } catch (error) {
       console.error("🚨 Error fetching table:", error);
       notification.error({
@@ -318,6 +312,26 @@ const TableManagement = () => {
     handlefetchTables();
   }, []);
 
+  const [userRole, setUserRole] = useState(null);
+
+  useEffect(() => {
+    const fetchUserById = async () => {
+      try {
+        const user = localStorage.getItem("username");
+        const response = await fetch(`http://localhost:6060/auth/user/${user}`);
+        if (response.ok) {
+          const userData = await response.json();
+          setUserRole(userData.role);
+        } else {
+          console.error('Failed to fetch user:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error);
+      }
+    };
+
+    fetchUserById();
+  }, []);
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
@@ -347,7 +361,9 @@ const TableManagement = () => {
             <Select.Option value="card-membership">Card Membership</Select.Option>
             <Select.Option value="dine-in">Dine-In</Select.Option>
           </Select>
-          <Button
+  
+          { userRole === "ADMIN" && (
+                <Button
             type="default"
             icon={<PlusOutlined />}
             onClick={handleAddTable}
@@ -355,6 +371,7 @@ const TableManagement = () => {
           >
             Add New Table
           </Button>
+          )}
         </div>
       </div>
 
@@ -405,32 +422,41 @@ const TableManagement = () => {
                       {/* Table Icons (Edit and Delete) */}
                       <div className="absolute top-2 right-2 flex space-x-1">
                         {/* Edit Icon */}
-                        <div className="p-1 rounded-full bg-white border border-gray-300 hover:bg-gray-200 transition-colors">
-                          <EditOutlined
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditTable(table);
-                            }}
-                            className="text-green-500 cursor-pointer text-lg hover:text-green-600 transition-colors"
-                          />
-                        </div>
+                        {userRole === "ADMIN" && (
+                          <>
+                            {/* Edit Icon */}
+                            <div className="p-1 rounded-full bg-white border border-gray-300 hover:bg-gray-200 transition-colors">
+                              <EditOutlined
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditTable(table);
+                                }}
+                                className="text-green-500 cursor-pointer text-lg hover:text-green-600 transition-colors"
+                              />
+                            </div>
 
-                        <Popconfirm title="Are you sure you want to delete this supplier?" okText="Yes" cancelText="No"
-                          onConfirm={() => handledeleteTables(table.id)}>
-                          <div className="p-1 rounded-full bg-white border border-gray-300 hover:bg-gray-200 transition-colors">
-                            <DeleteOutlined
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                // handledeleteTables(table.id)
-                              }}
-                              className="text-red-500 cursor-pointer text-lg hover:text-red-600 transition-colors"
-                            />
-                          </div>
-                        </Popconfirm>
+                            <Popconfirm
+                              title="Are you sure you want to delete this supplier?"
+                              okText="Yes"
+                              cancelText="No"
+                              onConfirm={() => handledeleteTables(table.id)}
+                            >
+                              <div className="p-1 rounded-full bg-white border border-gray-300 hover:bg-gray-200 transition-colors">
+                                <DeleteOutlined
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    // handledeleteTables(table.id)
+                                  }}
+                                  className="text-red-500 cursor-pointer text-lg hover:text-red-600 transition-colors"
+                                />
+                              </div>
+                            </Popconfirm>
+                          </>
+                        )}
 
                       </div>
                       <span className="mt-2">
-                        <button
+                        <Button
                           onClick={() => onClickTable(table)}
                           className={`text-xs px-2 py-1 rounded-full font-semibold ${table.orders?.some(order => order.paymentStatus === 'UNPAID')
                             ? 'bg-red-500 text-white'
@@ -440,7 +466,7 @@ const TableManagement = () => {
                           {table.orders?.some(order => order.paymentStatus === 'UNPAID')
                             ? 'Unpaid'
                             : 'Order'}
-                        </button>
+                        </Button>
 
                       </span>
                     </div>

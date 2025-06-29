@@ -17,12 +17,12 @@ const fetchUserById = async () => {
   try {
     const user =localStorage.getItem("username");
     const response = await fetch(`http://localhost:6060/auth/user/${user}`);
-    if (response.ok) {
+      if (response.ok) {
       const userData = await response.json();
       return userData.role
-    } else {
-      console.error('Failed to fetch user:', response.statusText);
-    }
+      } else {
+        console.error('Failed to fetch user:', response.statusText);
+      }
   } catch (error) {
     console.error('Error fetching user:', error);
   }

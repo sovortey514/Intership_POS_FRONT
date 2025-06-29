@@ -4,6 +4,7 @@ import { PrinterOutlined, LogoutOutlined } from "@ant-design/icons";
 import { fetchOrders } from "../../../api/order/order";
 import { fetchPayment } from "../../../api/payment/payment";
 import ShiftReport from "./shiftReport";
+import { fetchTable } from "../../../api/table/table";
 
 const Shift = () => {
   const [orderData, setOrderData] = useState([]);
@@ -15,7 +16,7 @@ const Shift = () => {
     time: "08:56 AM - 06:00 PM",
     totalOrders: "100",
     cashSales: "5678 $",
-    creditSales: "667$",
+    bakongSales: "667$",
     MembershipList: "667$",
     totalSales: 89,
     currentTime: "03:34:12",
@@ -25,7 +26,7 @@ const Shift = () => {
 
   const handlePrint = () => {
     if (handlePrintData) {
-      handlePrintData(); 
+      handlePrintData();
     }
   };
 
@@ -57,7 +58,7 @@ const Shift = () => {
       ...prevState,
       totalOrders: 0,
       cashSales: "0 $",
-      creditSales: "0 $",
+      bakongSales: "0 $",
       MembershipList: "0 $",
       totalSales: 0,
     }));
@@ -85,7 +86,7 @@ const Shift = () => {
         ...prev,
         totalOrders: 0,
         cashSales: "0 $",
-        creditSales: "0 $",
+        bakongSales: "0 $",
         MembershipList: "0 $",
         totalSales: 0,
       }));
@@ -111,7 +112,7 @@ const Shift = () => {
     { title: "Price", dataIndex: "price", key: "price" },
   ];
 
-  const handleFetchAllOrder = async () => {
+  const handleFetchAlltable = async () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -122,20 +123,31 @@ const Shift = () => {
         return;
       }
 
-      const result = await fetchOrders(token);
+      const result = await fetchTable(token);
 
       if (result && result.length > 0) {
-        const formattedOrders = result.map((order, index) => ({
-          key: index.toString(),
-          orderId: order.customOrderId,
-          details: `${order.orderItems[0]?.quantity} ${order.orderItems[0]?.foodName}`,
-          date: order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "N/A",
-          time: order.createdAt ? new Date(order.createdAt).toLocaleTimeString() : "N/A",
-          type: order.tableType || "Unknown",
-          price: `${order.total} USD`,
-        }));
+        const formattedOrders = result.flatMap((table, index) => {
+          if (!table.orders || table.orders.length === 0) {
+            return [];
+          }
+
+          return table.orders.map((order, orderIndex) => {
+            const tax = order.total * 0.05;
+            const totalWithTax = order.total + tax;
+            return {
+              key: `${index}-${orderIndex}`, // Unique key combining table and order index
+              orderId: order.customOrderId || "N/A",
+              details: `${order.orderItems[0]?.quantity || 0} ${order.orderItems[0]?.food?.name || "N/A"}`,
+              date: order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "N/A",
+              time: order.createdAt ? new Date(order.createdAt).toLocaleTimeString() : "N/A",
+              type: table.name || "Unknown",
+              price: `${totalWithTax.toFixed(2)} USD`,
+            };
+          });
+        });
 
         setOrderData(formattedOrders);
+
       } else {
         notification.error({
           message: "Failed to fetch Order",
@@ -170,33 +182,46 @@ const Shift = () => {
       if (result) {
         let totalCashSales = 0;
         let totalMembershipSales = 0;
+        let totalBakongSales = 0;
         let totalOrderToday = 0;
-        let totalOrdersCount = 0;
+        let orderCount = 0;
 
-        result.forEach(payment => {
-          if (payment.paymentMethod === "cash") {
-            totalCashSales += payment.total;
+        result.forEach(orders => {
+          const payment = orders.payment;
+
+          const tax = orders.total * 0.05;
+          let totalWithTax = orders.total + tax;
+          totalWithTax = parseFloat(totalWithTax.toFixed(2));
+
+          if (orders.customOrderId) {
+            orderCount += 1;
           }
 
-          else if (payment.paymentMethod === "membership") {
-            totalMembershipSales += payment.total;
+
+          if (payment) {
+            if (payment.paymentMethod === "cash") {
+              totalCashSales += totalWithTax;
+            } else if (payment.paymentMethod === "membership") {
+              totalMembershipSales += payment.amountPaid;
+            } else if (payment.paymentMethod === "bakong") {
+              totalBakongSales += totalWithTax
+            }
+
+            // if (payment.status === "PAID") {
+            //   totalOrdersCount += 1;
+            // }
+
+            totalOrderToday = totalCashSales + totalBakongSales + totalMembershipSales;
           }
-
-          if (payment.paymentStatus === "PAID") {
-            totalOrdersCount += 1;
-          }
-
-          totalOrderToday += payment.total;
-
         });
 
         const updatedShiftData = {
           ...shiftData,
           cashSales: `${totalCashSales} $`,
-          creditSales: "0 $",
+          bakongSales: `${totalBakongSales} $`,
           MembershipList: `${totalMembershipSales} $`,
           totalSales: totalOrderToday,
-          totalOrders: totalOrdersCount,
+          totalOrders: orderCount,
         };
 
         setShiftData(updatedShiftData);
@@ -217,9 +242,10 @@ const Shift = () => {
 
 
   useEffect(() => {
-    handleFetchAllOrder();
+    //handleFetchAllOrder();
     handleFetchAllPayment();
     resetShiftIfNewDay();
+    handleFetchAlltable();
   }, []);
 
   return (
@@ -263,7 +289,7 @@ const Shift = () => {
         <div className="grid grid-cols-5 gap-4 mt-6">
           <Statistic title="Total Orders" value={shiftData.totalOrders} />
           <Statistic title="Cash Sales" value={shiftData.cashSales} />
-          <Statistic title="Credit Sales" value={shiftData.creditSales} />
+          <Statistic title="Bakong Sales" value={shiftData.bakongSales} />
           <Statistic title="Membership Sales" value={shiftData.MembershipList} />
           <Statistic title="Total Sale" value={shiftData.totalSales} />
         </div>

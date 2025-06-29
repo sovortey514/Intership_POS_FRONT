@@ -11,7 +11,7 @@ import { processPaymentcash, PaymentcashByMembershipCard, completeOrder } from "
 import { fetchMembershipById, fetchMembership } from "../../../api/membership/memberships"
 
 import { fetchPaymentById, fetchPayment } from "../../../api/payment/payment";
-import { getBakongQR , Paymentbakong} from '../../../api/payway/BakongPay';
+import { getBakongQR, Paymentbakong, sendTelegramMessage } from '../../../api/payway/BakongPay';
 import QRCode from "qrcode";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -45,8 +45,8 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }
   const [qrData, setQrData] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  
+  // const [isLoading, setIsLoading] = useState(false);
+
   const [isQRModalVisible, setIsQRModalVisible] = useState(false);
   const [bakongTransaction, setBakongTransaction] = useState(null);
 
@@ -403,9 +403,8 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }
   // Generate QR code and fetch Bakong QR details
   const generateQRCode = async () => {
     try {
-      setIsLoading(true);
       const result = await getBakongQR(amountDue);
-      
+
       console.log("QR", result)
 
       const canvas = document.getElementById("qrcode");
@@ -418,11 +417,6 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }
       setMd5(result.md5);
       setQrData(result.data);
       checkTransactionStatus(result.md5);
-
-      setIsLoading(false);
-
-
-
     } catch (err) {
       setError(err.message);
     }
@@ -446,67 +440,77 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }
         }
       );
 
-      console.log("data", res.data);
+      console.log("data", res.data, res.data.responseMessage);
 
       if (res.data.responseMessage === "Success") {
-        
+
 
         const bakongData = {
-        hash: res.data.hash,
-        fromAccountId: res.data.fromAccountId,
-        toAccountId: res.data.toAccountId,
-        currency: res.data.currency,
-        amount: res.data.amount,
-        description: res.data.description,
-        createdDateMs: res.data.createdDateMs,
-        acknowledgedDateMs: res.data.acknowledgedDateMs,
-        trackingStatus: res.data.trackingStatus,
-        receiverBank: res.data.receiverBank,
-        receiverBankAccount: res.data.receiverBankAccount,
-        instructionRef: res.data.instructionRef,
-        externalRef: res.data.externalRef,
-      };
-      setBakongTransaction(bakongData);
-      const paymentData = {
-        orderId: orderDetail.id,  
-        amountPaid: amountWithTax,  
-        paymentMethod: paymentMethod,  
-        status: "PAID",  
-        isSuccessful: true, 
-        paymentDate: new Date().toISOString(), 
-        bakong: bakongData,
-      };
+          hash: res.data.hash,
+          fromAccountId: res.data.fromAccountId,
+          toAccountId: res.data.toAccountId,
+          currency: res.data.currency,
+          amount: res.data.amount,
+          description: res.data.description,
+          createdDateMs: res.data.createdDateMs,
+          acknowledgedDateMs: res.data.acknowledgedDateMs,
+          trackingStatus: res.data.trackingStatus,
+          receiverBank: res.data.receiverBank,
+          receiverBankAccount: res.data.receiverBankAccount,
+          instructionRef: res.data.instructionRef,
+          externalRef: res.data.externalRef,
+        };
+        setBakongTransaction(bakongData);
+        const paymentData = {
+          orderId: orderDetail.id,
+          amountPaid: amountWithTax,
+          paymentMethod: paymentMethod,
+          status: "PAID",
+          isSuccessful: true,
+          paymentDate: new Date().toISOString(),
+          bakong: bakongData,
+        };
 
-
-
-      console.log("Payment Data:", paymentData);
-       console.log("Payment Data:", bakongData);
-
-      await Paymentbakong(paymentData);
+        await Paymentbakong(paymentData);
+        await handleCompletePayment(orderDetail.id);
 
         notification.success({
-                message: "Transaction successful!",
-                description: "Your Payment has been placed successfully.",
-              });
-    
+          message: "Transaction successful!",
+          description: "Your Payment has been placed successfully.",
+        });
+
         setSuccess(true);
         setQrData(res.data);
+        onCancel();
         console.log("Transaction successful:", res.data);
 
-     
+        await sendTelegramMessage(`
+  Transaction successful for order #${orderDetail.id}.
+  
+  Details:
+  - Amount Paid: ${amountWithTax} ${bakongData.currency}
+  - Tracking Status: ${bakongData.trackingStatus}
+  - Payment Method: ${paymentMethod}
+  - Payment Date: ${new Date().toISOString()}
+  - Instruction Reference: ${bakongData.instructionRef}
+  - External Reference: ${paymentData.bakong.externalRef}
+  
+  Please review the transaction and confirm.
+`);
+
 
       } else {
         setTimeout(() => checkTransactionStatus(md5), 10000);
       }
     } catch (err) {
       setError(err.response ? err.response.data : err.message);
-      setTimeout(() => checkTransactionStatus(md5), 10000);
+      // setTimeout(() => checkTransactionStatus(md5), 10000);
     }
   };
 
 
   useEffect(() => {
-    if (paymentMethod === 'card') {
+    if (paymentMethod === 'bakong') {
       generateQRCode();
       setIsQRModalVisible(true);
     }
@@ -543,8 +547,8 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }
               <Radio value="cash">
                 <DollarOutlined className="text-green-500 mr-2" /> Cash
               </Radio>
-              <Radio value="card">
-                <CreditCardOutlined className="text-blue-500 mr-2" /> Bakong
+              <Radio value="bakong">
+                <CreditCardOutlined className="text-blue-500 mr-2" /> Bakong QR
               </Radio>
               <Radio value="membership">
                 <IdcardOutlined className="text-purple-500 mr-2" /> Membership Card
@@ -567,7 +571,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }
             </div>
           )}
 
-          {paymentMethod === 'card' && (
+          {/* {paymentMethod === 'bakong' && (
             <div className="qrcode-container rounded-xl w-[250px] mx-auto">
               <svg width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" className="rounded-md">
                 <path d="M 0 0 H 250 Q 250 0 250 8 V 50 H 0 V 0 Z" fill="#F44336" />
@@ -577,7 +581,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }
                   VTFOOD
                 </text>
                 <text x="20" y="120" font-size="24" fill="#212121" font-weight="bold" text-anchor="start" alignment-baseline="middle">
-                  $ {parseFloat(amountDue).toLocaleString()}
+                  $ {parseFloat(amountDue * 1.05).toLocaleString()}
                 </text>
               </svg>
               <div>
@@ -585,10 +589,36 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }
               </div>
 
             </div>
+          )} */}
 
+          {paymentMethod === 'bakong' && (
+  <div className="qrcode-container rounded-l w-[300px] mx-auto mt-5 bg-white shadow-lg p-4">
+    {/* SVG for the Bakong QR Code */}
+    <svg width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" className="rounded-md">
+      <path d="M 0 0 H 300 Q 300 0 300 8 V 50 H 0 V 0 Z" fill="#F44336" />
+      <text x="50%" y="20" fontSize="16" fill="white" fontWeight="bold" textAnchor="middle" alignmentBaseline="middle">KHQR</text>
+      <polygon points="300,50 300,80 250,50" fill="#F44336" />
+      <text x="20" y="80" fontSize="12" fill="#212121" fontWeight="600" textAnchor="start" alignmentBaseline="middle">
+        VTFOOD
+      </text>
+      <text x="20" y="120" fontSize="24" fill="#212121" fontWeight="bold" textAnchor="start" alignmentBaseline="middle">
+        ${parseFloat(amountDue * 1.05).toLocaleString()}
+      </text>
+    </svg>
 
+    {/* Placeholder for QR Code Canvas */}
+    <div className="text-center mt-4">
+      <canvas id="qrcode" className="mx-auto" style={{ width: '120px', height: '120px' }} />
+    </div>
 
-          )}
+    {/* Description Text */}
+    <div className="text-center mt-4">
+      <p className="text-sm text-gray-600">Scan to pay via Bakong QR</p>
+      <p className="text-lg font-semibold">{`$ ${parseFloat(amountDue * 1.05).toLocaleString()}`}</p>
+    </div>
+  </div>
+)}
+
 
           {paymentMethod === "membership" && (
             <div className="mt-3">
@@ -609,7 +639,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }
               <Input
                 type="number"
                 placeholder={`Amount due in ${currency}`}
-                value={membershipDataById.balance}
+                value={membershipDataById.balance.toFixed(2)}
                 onChange={(e) => setAmountDue(e.target.value)}
                 className="w-full mt-2 p-2 border rounded-md"
                 disabled
@@ -741,7 +771,9 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }
 
         </div>
       </div>
+      
     </div>
+    
   );
 };
 
