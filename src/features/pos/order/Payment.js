@@ -45,6 +45,7 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }
   const [qrData, setQrData] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  
   // const [isLoading, setIsLoading] = useState(false);
 
   const [isQRModalVisible, setIsQRModalVisible] = useState(false);
@@ -571,53 +572,38 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }
             </div>
           )}
 
-          {/* {paymentMethod === 'bakong' && (
-            <div className="qrcode-container rounded-xl w-[250px] mx-auto">
-              <svg width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" className="rounded-md">
-                <path d="M 0 0 H 250 Q 250 0 250 8 V 50 H 0 V 0 Z" fill="#F44336" />
-                <text x="50%" y="20" font-size="16" fill="white" font-weight="bold" text-anchor="middle" alignment-baseline="middle">KHQR</text>
-                <polygon points="250,50 250,80 200,50" fill="#F44336" />
-                <text x="20" y="80" font-size="12" fill="#212121" font-weight="600" text-anchor="start" alignment-baseline="middle">
-                  VTFOOD
-                </text>
-                <text x="20" y="120" font-size="24" fill="#212121" font-weight="bold" text-anchor="start" alignment-baseline="middle">
-                  $ {parseFloat(amountDue * 1.05).toLocaleString()}
-                </text>
-              </svg>
-              <div>
-                <canvas id="qrcode" className="mx-auto pb-" style={{ width: '100px', height: '100px' }} />
-              </div>
-
-            </div>
-          )} */}
-
           {paymentMethod === 'bakong' && (
-  <div className="qrcode-container rounded-l w-[300px] mx-auto mt-5 bg-white shadow-lg p-4">
-    {/* SVG for the Bakong QR Code */}
-    <svg width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" className="rounded-md">
-      <path d="M 0 0 H 300 Q 300 0 300 8 V 50 H 0 V 0 Z" fill="#F44336" />
-      <text x="50%" y="20" fontSize="16" fill="white" fontWeight="bold" textAnchor="middle" alignmentBaseline="middle">KHQR</text>
-      <polygon points="300,50 300,80 250,50" fill="#F44336" />
-      <text x="20" y="80" fontSize="12" fill="#212121" fontWeight="600" textAnchor="start" alignmentBaseline="middle">
-        VTFOOD
-      </text>
-      <text x="20" y="120" fontSize="24" fill="#212121" fontWeight="bold" textAnchor="start" alignmentBaseline="middle">
-        ${parseFloat(amountDue * 1.05).toLocaleString()}
-      </text>
-    </svg>
+            <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+              <div className="qrcode-container rounded-md w-[300px] bg-white shadow-lg p-4">
 
-    {/* Placeholder for QR Code Canvas */}
-    <div className="text-center mt-4">
-      <canvas id="qrcode" className="mx-auto" style={{ width: '120px', height: '120px' }} />
-    </div>
 
-    {/* Description Text */}
-    <div className="text-center mt-4">
-      <p className="text-sm text-gray-600">Scan to pay via Bakong QR</p>
-      <p className="text-lg font-semibold">{`$ ${parseFloat(amountDue * 1.05).toLocaleString()}`}</p>
-    </div>
-  </div>
-)}
+                {/* SVG for the Bakong QR Code */}
+                <svg width="100%" height="auto" viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg" className="rounded">
+                  <path d="M 0 0 H 300 Q 300 0 300 8 V 50 H 0 V 0 Z" fill="#F44336" />
+                  <text x="50%" y="20" fontSize="12" fill="white" fontWeight="bold" textAnchor="middle" alignmentBaseline="middle">KHQR</text>
+                  <polygon points="300,50 300,70 250,50" fill="#F44336" />
+                  <text x="20" y="75" fontSize="10" fill="#212121" fontWeight="600" textAnchor="start" alignmentBaseline="middle">
+                    VTFOOD
+                  </text>
+                  <text x="20" y="110" fontSize="18" fill="#212121" fontWeight="bold" textAnchor="start" alignmentBaseline="middle">
+                    ${parseFloat(amountDue * 1.05).toLocaleString()}
+                  </text>
+                </svg>
+
+                {/* QR Code Canvas (moved above SVG) */}
+                <div className="text-center mb-2">
+                  <canvas id="qrcode" className="mx-auto" style={{ width: '90px', height: '90px' }} />
+                </div>
+
+                {/* Description Text */}
+                <div className="text-center mt-3">
+                  <p className="text-xs text-gray-600">Scan to pay via Bakong QR</p>
+                  <p className="text-sm font-semibold">{`$ ${parseFloat(amountDue * 1.05).toLocaleString()}`}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
 
 
           {paymentMethod === "membership" && (
@@ -771,9 +757,9 @@ const Payment = ({ orderDetails, onBack, onPaymentComplete, onCancel, onChange }
 
         </div>
       </div>
-      
+
     </div>
-    
+
   );
 };
 

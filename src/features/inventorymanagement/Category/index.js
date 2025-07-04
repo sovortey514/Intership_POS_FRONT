@@ -38,10 +38,12 @@ import {
   createFood_Category,
   fetchcreateFood_Category,
   deleteCagoryFoodDrinkById,
+  updateCategoryStatusById,
   updateCategory,
   createSubCategory,
   fetchSubcategory,
   deleteSubCagoryFoodDrinkById,
+  updateSubCategoryStatusById,
   updateSubCategory,
   createSize,
   fetchSize,
@@ -68,6 +70,7 @@ function CategoryFoodManagement() {
   const [fileList, setFileList] = useState([]);
   const token = localStorage.getItem("token");
   const [filteredCategories, setFilteredCategories] = useState([]);
+   const [filteredSubCategories, setFilteredSubCategories] = useState([]);
 
   const [selectedCategoryId, setSelectedCategoryId] = useState("all");
 
@@ -332,7 +335,8 @@ function CategoryFoodManagement() {
   };
 
   const handledeleteCategory = async (categories) => {
-    const response = await deleteCagoryFoodDrinkById(categories.id, token);
+    const response = await updateCategoryStatusById(categories.id, token);
+    fetchCategories();
 
     if (response.ok) {
       fetchCategories();
@@ -349,7 +353,8 @@ function CategoryFoodManagement() {
   };
 
   const handledeleteSubCategory = async (subcategory) => {
-    const response = await deleteSubCagoryFoodDrinkById(subcategory.id, token);
+    const response = await updateSubCategoryStatusById(subcategory.id, token);
+
 
     if (response.ok) {
       handlefetchSubcategory();
@@ -372,9 +377,10 @@ function CategoryFoodManagement() {
       const result = await fetchcreateFood_Category(token);
 
       if (result) {
-        setCategories(result);
-        setFilteredCategories(result);
-        console.log("categories", result);
+        const visibleCategories = result.filter(category => category.status === 1);
+
+      setCategories(visibleCategories);
+      setFilteredCategories(visibleCategories); 
       } else {
         notification.error({
           message: "Failed to fetch categories",
@@ -512,22 +518,25 @@ function CategoryFoodManagement() {
 
       const token = localStorage.getItem("token");
       const result = await fetchSubcategory(token);
-
-
       if (result) {
-        setSubcategories(result);
+
+  
+        const visibleSubCategories = result.filter(subCategory => subCategory.status === 1); 
+
+        setSubcategories(visibleSubCategories);
+        //setFilteredSubCategories(visibleSubCategories)
       } else {
         notification.error({
-          message: "Failed to fetch categories",
+          message: "Failed to fetch subcategories",
           description: "There was an issue fetching subcategories.",
         });
       }
     } catch (error) {
-      console.error("Error fetching categories:", error);
+      console.error("Error fetching subcategories:", error);
       notification.error({
-        message: "Error fetching categories",
+        message: "Error fetching Subcategories",
         description:
-          error.message || "An error occurred while fetching categories.",
+          error.message || "An error occurred while fetching subcategories.",
       });
     }
   };

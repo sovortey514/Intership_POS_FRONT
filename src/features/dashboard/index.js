@@ -3,6 +3,7 @@ import { Card, Col, Row, Statistic, Tag, Input, Select, Button, notification } f
 import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { PieChart, Pie, Cell, Tooltip, Legend, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { fetchFoods } from "../../api/Food_Category/food_category"
+import dayjs from 'dayjs';
 
 import { fetchOrder, fetchOrders } from "../../api/order/order"
 
@@ -32,6 +33,20 @@ const Dashboard = () => {
   const [totalExpense, setTotalExpense] = useState(0);
   const [stats, setStats] = useState([]);
 
+  const setOrUpdateStat = (newStat) => {
+    setStats(prevStats => {
+      const exists = prevStats.find(stat => stat.title === newStat.title);
+      if (exists) {
+        // Update stat
+        return prevStats.map(stat => stat.title === newStat.title ? newStat : stat);
+      } else {
+        // Add new stat
+        return [...prevStats, newStat];
+      }
+    });
+  };
+
+
   const handlefetchfoods = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -40,8 +55,9 @@ const Dashboard = () => {
 
       const totalFoodsCount = result.length;
 
-      const user = { title: 'Menus', value: totalFoodsCount, image: '/menu.png' };
-      setStats((prevStats) => [...prevStats, user]);
+      //const user = { title: 'Menus', value: totalFoodsCount, image: '/menu.png' };
+      //setStats((prevStats) => [...prevStats, user]);
+      setOrUpdateStat({ title: 'Menus', value: totalFoodsCount, image: '/menu.png' });
 
       return result;
     } catch (error) {
@@ -56,29 +72,12 @@ const Dashboard = () => {
   const handlefetchusers = async () => {
     try {
       const token = localStorage.getItem("token");
+      if (!token) return;
 
-      if (!token) {
-        notification.error({
-          message: "Authorization Error",
-          description: "No token found. Please log in.",
-        });
-        return;
-      }
       const result = await fetchuser(token);
-      if (result && result.length > 0) {
-
-        const user = { title: 'Users', value: result.length, image: '/user.png' };
-
-        setStats((prevStats) => [...prevStats, user]);
-
-      } else {
-        notification.error({
-          message: "Failed to fetch Users",
-          description: result?.error || "No users found.",
-        });
+      if (result) {
+        setOrUpdateStat({ title: 'Users', value: result.length, image: '/user.png' });
       }
-
-      return result;
     } catch (error) {
       console.error("🚨 Error fetching users:", error);
       notification.error({
@@ -87,6 +86,7 @@ const Dashboard = () => {
       });
     }
   };
+
 
   const handleFetchAllOrder = async () => {
     try {
@@ -102,53 +102,63 @@ const Dashboard = () => {
       const result = await fetchOrders(token);
       console.log("fetched Orders:", result);
 
+      const now = dayjs();
+      const filteredOrders = result.filter(order => {
+        const orderDate = dayjs(order.createdAt); // Adjust this field name if necessary
+        if (!orderDate.isValid()) return false;
 
-      const totalSales = result.reduce((total, order) => {
+        if (timeFilter === 'Today') {
+          return orderDate.isSame(now, 'day');
+        }
+        if (timeFilter === 'This Week') {
+          return orderDate.isSame(now, 'week');
+        }
+        if (timeFilter === 'This Month') {
+          return orderDate.isSame(now, 'month');
+        }
+        return true;
+      });
+
+      // ➤ Calculate total sales from filtered orders
+      const totalSales = filteredOrders.reduce((total, order) => {
         return total + order.orderItems.reduce((itemTotal, item) => {
           return itemTotal + item.totalPrice;
         }, 0);
       }, 0);
 
       const totalWithTax = parseFloat((totalSales + (totalSales * 0.05)).toFixed(2));
-
       console.log('Total sales with 5% tax:', totalWithTax);
 
-      const income = { title: 'Incomes', value: totalWithTax, image: '/revenue.png' };
-      setStats((prevStats) => [...prevStats, income]);
+      setOrUpdateStat({ title: 'Incomes', value: totalWithTax, image: '/revenue.png' });
 
 
-      const foodOrdersCount = result.reduce((acc, order) => {
-        // Iterate over each food item in the order
+      const foodOrdersCount = filteredOrders.reduce((acc, order) => {
         order.orderItems.forEach(food => {
           if (acc[food.food.name]) {
-            // If food exists, accumulate the quantity
             acc[food.food.name].count += food.quantity;
           } else {
-            // If food doesn't exist, create a new entry
             acc[food.food.name] = { name: food.food.name, count: food.quantity };
           }
         });
         return acc;
       }, {});
 
-      // Sort the food by count and take the top 4
-      const topOrderedFoods = Object.values(foodOrdersCount)
-        .sort((a, b) => b.count - a.count) // Sort by count in descending order
-        .slice(0, 4); // Take the top 4
 
-      // Create top menu data
+      const topOrderedFoods = Object.values(foodOrdersCount)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 4);
+
+
       const topMenus = topOrderedFoods.map(food => ({
         name: food.name,
-        items: food.count
+        items: food.count,
       }));
-
 
       const newSalesData = topOrderedFoods.map(food => ({
         name: food.name,
         value: food.count * 2,
         color: getRandomPinkColor(),
       }));
-
 
       setSalesData(newSalesData);
       setTopMenus(topMenus);
@@ -157,11 +167,16 @@ const Dashboard = () => {
       console.error("Error fetching Order:", error);
       notification.error({
         message: "Error fetching Order",
-        description:
-          error.message || "An error occurred while fetching Order.",
+        description: error.message || "An error occurred while fetching Order.",
       });
     }
   };
+
+  useEffect(() => {
+    handleFetchAllOrder();
+    handlefetchtotalprice();
+  }, [timeFilter]);
+
 
   const getRandomPinkColor = () => {
     const pinkShades = [
@@ -187,7 +202,24 @@ const Dashboard = () => {
 
         setData1(assets);
 
-        const totalPrice = assets.reduce((sum, item) => {
+        const now = dayjs();
+        const filteredAssets = assets.filter(item => {
+          const itemDate = dayjs(item.createdAt);
+          if (!itemDate.isValid()) return false;
+
+          if (timeFilter === 'Today') {
+            return itemDate.isSame(now, 'day');
+          }
+          if (timeFilter === 'This Week') {
+            return itemDate.isSame(now, 'week');
+          }
+          if (timeFilter === 'This Month') {
+            return itemDate.isSame(now, 'month');
+          }
+          return true;
+        });
+
+        const totalPrice = filteredAssets.reduce((sum, item) => {
           return sum + (Number(item.price) || 0);
         }, 0);
 
@@ -195,14 +227,15 @@ const Dashboard = () => {
 
         setTotalExpense(totalPrice);
 
-        // Create the expense stat object and add to stats
+
         const expenseStat = {
           title: 'Expense',
           value: totalPrice,
           image: '/revenue.png',
         };
 
-        setStats((prevStats) => [...prevStats, expenseStat]);
+        setOrUpdateStat(expenseStat);
+
 
       } else {
         console.error("Failed to fetch Materials:", result.error);
@@ -220,13 +253,14 @@ const Dashboard = () => {
     }
   };
 
+
+
   useEffect(() => {
     handlefetchfoods();
-    handleFetchAllOrder();
     handlefetchusers();
+    handleFetchAllOrder();
     handlefetchtotalprice();
-  }, []);
-
+  }, [timeFilter]);
 
   return (
     <div className="mb-5 p-6 bg-gray-100 min-h-screen">

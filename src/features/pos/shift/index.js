@@ -5,6 +5,7 @@ import { fetchOrders } from "../../../api/order/order";
 import { fetchPayment } from "../../../api/payment/payment";
 import ShiftReport from "./shiftReport";
 import { fetchTable } from "../../../api/table/table";
+import {sendPdfToTelegram} from "../../../api/payway/BakongPay"
 
 const Shift = () => {
   const [orderData, setOrderData] = useState([]);
@@ -24,11 +25,23 @@ const Shift = () => {
 
   const [handlePrintData, setChildPrintMethod] = useState(null);
 
-  const handlePrint = () => {
+  // const handlePrint = () => {
+  //   if (handlePrintData) {
+  //     handlePrintData();
+  //   }
+  // };
+
+ const handlePrint = () => {
     if (handlePrintData) {
-      handlePrintData();
+      handlePrintData(); 
+    } else {
+      notification.error({
+        message: "Error",
+        description: "Report is not ready yet.",
+      });
     }
   };
+
 
   const updateDateTime = () => {
     const now = new Date();
@@ -50,6 +63,16 @@ const Shift = () => {
       date: currentDate,
       currentTime: currentTime,
     }));
+  };
+
+  const isToday = (dateString) => {
+    const today = new Date();
+    const date = new Date(dateString);
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
   };
 
   const handleExitShift = () => {
@@ -126,25 +149,27 @@ const Shift = () => {
       const result = await fetchTable(token);
 
       if (result && result.length > 0) {
+  
         const formattedOrders = result.flatMap((table, index) => {
-          if (!table.orders || table.orders.length === 0) {
-            return [];
-          }
+          if (!table.orders || table.orders.length === 0) return [];
 
-          return table.orders.map((order, orderIndex) => {
-            const tax = order.total * 0.05;
-            const totalWithTax = order.total + tax;
-            return {
-              key: `${index}-${orderIndex}`, // Unique key combining table and order index
-              orderId: order.customOrderId || "N/A",
-              details: `${order.orderItems[0]?.quantity || 0} ${order.orderItems[0]?.food?.name || "N/A"}`,
-              date: order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "N/A",
-              time: order.createdAt ? new Date(order.createdAt).toLocaleTimeString() : "N/A",
-              type: table.name || "Unknown",
-              price: `${totalWithTax.toFixed(2)} USD`,
-            };
-          });
+          return table.orders
+            .filter(order => isToday(order.createdAt))
+            .map((order, orderIndex) => {
+              const tax = order.total * 0.05;
+              const totalWithTax = order.total + tax;
+              return {
+                key: `${index}-${orderIndex}`,
+                orderId: order.customOrderId || "N/A",
+                details: `${order.orderItems[0]?.quantity || 0} ${order.orderItems[0]?.food?.name || "N/A"}`,
+                date: order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "N/A",
+                time: order.createdAt ? new Date(order.createdAt).toLocaleTimeString() : "N/A",
+                type: table.name || "Unknown",
+                price: `${totalWithTax.toFixed(2)} USD`,
+              };
+            });
         });
+
 
         setOrderData(formattedOrders);
 
@@ -186,17 +211,17 @@ const Shift = () => {
         let totalOrderToday = 0;
         let orderCount = 0;
 
-        result.forEach(orders => {
-          const payment = orders.payment;
+        result.forEach(order => {
+          if (!isToday(order.createdAt)) return;
 
-          const tax = orders.total * 0.05;
-          let totalWithTax = orders.total + tax;
+          const payment = order.payment;
+          const tax = order.total * 0.05;
+          let totalWithTax = order.total + tax;
           totalWithTax = parseFloat(totalWithTax.toFixed(2));
 
-          if (orders.customOrderId) {
+          if (order.customOrderId) {
             orderCount += 1;
           }
-
 
           if (payment) {
             if (payment.paymentMethod === "cash") {
@@ -204,23 +229,17 @@ const Shift = () => {
             } else if (payment.paymentMethod === "membership") {
               totalMembershipSales += payment.amountPaid;
             } else if (payment.paymentMethod === "bakong") {
-              totalBakongSales += totalWithTax
+              totalBakongSales += totalWithTax;
             }
-
-            // if (payment.status === "PAID") {
-            //   totalOrdersCount += 1;
-            // }
-
-            totalOrderToday = totalCashSales + totalBakongSales + totalMembershipSales;
           }
         });
 
         const updatedShiftData = {
           ...shiftData,
-          cashSales: `${totalCashSales} $`,
-          bakongSales: `${totalBakongSales} $`,
-          MembershipList: `${totalMembershipSales} $`,
-          totalSales: totalOrderToday,
+          cashSales: `${totalCashSales.toFixed(2)} $`,
+          bakongSales: `${totalBakongSales.toFixed(2)} $`,
+          MembershipList: `${totalMembershipSales.toFixed(2)} $`,
+          totalSales: (totalCashSales + totalBakongSales + totalMembershipSales).toFixed(2),
           totalOrders: orderCount,
         };
 
@@ -260,7 +279,12 @@ const Shift = () => {
               Print report
             </Button>
             <div style={{ display: "none" }}>
-              <ShiftReport setChildPrintMethod={setChildPrintMethod} />
+              <ShiftReport
+  shiftData={shiftData}
+  orderData={orderData}
+  setChildPrintMethod={setChildPrintMethod}
+/>
+
             </div>
             <Button
               type="primary"

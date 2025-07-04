@@ -135,8 +135,12 @@ function MembershipList() {
       if (!response || response.error) {
         alert(`❌ Error: ${response.error || "Failed to create membership"}`);
       } else {
-        alert("✅ Membership created successfully!");
 
+         notification.success({
+                  message: "Membership created successfully!",
+                  description: "Your Membership has been create successfully.",
+                });
+        
         setMembershipData([...membershipData, { ...response, key: String(membershipData.length + 1) }]);
         // setIsCreateModalVisible(false);
 

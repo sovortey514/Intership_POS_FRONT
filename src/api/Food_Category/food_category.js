@@ -51,28 +51,54 @@ export const fetchcreateFood_Category = async (token) => {
   }
 };
 
-export const deleteCagoryFoodDrinkById = async (id, token) => {
+export const updateCategoryStatusById = async (id, token) => {
   try {
-    const response = await fetch(`${API_URL}/deleteCagoryFoodDrink/${id}`, {
-      method: "DELETE",
+    const status = 0; // Set status to 0 when updating
+    const response = await fetch(`${API_URL}/${id}/subcategorystatus?status=${status}`, {
+      method: "PUT",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
     });
 
-    if (!response.status === 200) {
+    if (response.status !== 200) {
       const errorMessage = await response.json();
-      console.error("Error deleting Cagory by ID:", errorMessage);
-      throw new Error(errorMessage.message || "Failed to delete fixed asset by ID.");
+      console.error("Error updating category status by ID:", errorMessage);
+      throw new Error(errorMessage.message || "Failed to update category status by ID.");
     }
 
     return response;
   } catch (error) {
-    console.error("Error deleting Cagory by ID:", error);
+    console.error("Error updating category status by ID:", error);
     throw new Error(error.message || "An unknown error occurred.");
   }
 };
+
+export const updateSubCategoryStatusById = async (id, token) => {
+  try {
+    const status = 0; // Set status to 0 when updating
+    const response = await fetch(`${API_URL}/${id}/subcategorystatus?status=${status}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (response.status !== 200) {
+      const errorMessage = await response.json();
+      console.error("Error updating Subcategory status by ID:", errorMessage);
+      throw new Error(errorMessage.message || "Failed to update subcategory status by ID.");
+    }
+
+    return response;
+  } catch (error) {
+    console.error("Error updating Subcategory status by ID:", error);
+    throw new Error(error.message || "An unknown error occurred.");
+  }
+};
+
 
 export const updateCategory = async (id, values, token) => {
   const response = await fetch(`${API_URL}/UpdateCategoryFoodDrink/${id}`, {

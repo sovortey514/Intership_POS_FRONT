@@ -20,7 +20,7 @@ export async function getBakongQR(amountDue) {
       additionalData: {
         mobileNumber: "855087609971",  
         billNumber: "INV-2022-12-25",  
-        storeLabel: "Ishin Shop",
+        storeLabel: "VTFoodShop",
         terminalLabel: "012345", 
         purposeOfTransaction: "Payment",  
       },
@@ -85,4 +85,31 @@ export const sendTelegramMessage = async (message) => {
   }
 };
 
+export const sendPdfToTelegram = async (pdfBlob, fileName) => {
+  const formData = new FormData();
+
+  // Convert the Blob to a File with a filename and correct MIME type
+  const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
+
+  formData.append('chat_id', 1040676915);
+  formData.append('document', pdfFile);
+
+  const telegramApiUrl = `https://api.telegram.org/bot7128384877:AAHUWtKgeZ0ZayZxoSeVPpsAdtDp5mc0IPk/sendDocument`;
+
+  try {
+    const response = await fetch(telegramApiUrl, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Telegram API error: ${response.statusText}`);
+    }
+
+    console.log('✅ PDF sent to Telegram successfully.');
+  } catch (error) {
+    console.error('❌ Telegram API error:', error);
+    throw error;
+  }
+};
 

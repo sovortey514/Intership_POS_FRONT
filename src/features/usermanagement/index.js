@@ -179,20 +179,10 @@ function TotalUser() {
           />
           <Button
             icon={<EyeOutlined />}
-            className="bg-white hover:bg-yellow-500 text-yellow-500 border-none rounded-full p-2 shadow-md"
+            className="bg-white hover:bg-pink-500 text-pink-500 border-none rounded-full p-2 shadow-md"
             onClick={() => (handleClick(user), fetchUserById(user.id))}
           />
-           {/* <Popconfirm
-          title="Are you sure you want to delete this user?"
-          onConfirm={() => handleUserDelete(user.id)}
-          okText="Yes"
-          cancelText="No"
-        >
-          <Button
-            icon={<DeleteOutlined />}
-            className="bg-white hover:bg-red-700 text-red-600 border-none rounded-full p-2 shadow-md transition-colors duration-300 ease-in-out"
-          />
-        </Popconfirm> */}
+    
         </Space>
       ),
     },
@@ -472,29 +462,6 @@ function TotalUser() {
     setIsModalVisible(true);
   };
   
-
-  // const handleDelete = (userId) => {
-  //   Modal.confirm({
-  //     title: "Are you sure you want to delete this user?",
-  //     // content: "This action cannot be undone.",
-  //     okText: "Yes",
-  //     okType: "danger",
-  //     cancelText: "No",
-  //     onOk: () => {
-  //       // Call your delete function here
-  //       handleUserDelete(userId);
-  //     },
-  //     onCancel() {
-  //       // Handle cancel action if needed
-  //     },
-  //   });
-  // };
-
-  // const handleInputChange = (e) => {
-  //   const { name, value } = e.target;
-  //   console.log("onchange", e);
-  //   setRegisterObj((prev) => ({ ...prev, [name]: value }));
-  // };
   return (
     <>
       <div className="flex justify-between mb-4">
